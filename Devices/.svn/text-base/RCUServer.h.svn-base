@@ -1,0 +1,38 @@
+#ifndef _RCUSERVER_H_
+#define _RCUSERVER_H_
+
+#include "AgilisProtocol.h"
+#include "RCUProtocol.h"
+
+#define RCU_SERVER_UART_PORT_FOR_CLIENT_1 "uart0" // uart port connected to client 1 (PC/ASRC)
+#define RCU_SERVER_UART_PORT_FOR_CLIENT_2 "uart1" // uart port connected to client 2 (PC/ASRC)
+#define RCU_SERVER_UART_PORT_FOR_SERVER_1 "uart2" // uart port connected to server 1 (BUC-1)
+#define RCU_SERVER_UART_PORT_FOR_SERVER_2 "uart3" // uart port connected to server 2 (BUC-2)
+
+#define RCU_SERVER_BUC_UART_PORT_0	0
+#define RCU_SERVER_BUC_UART_PORT_1	1
+
+
+void RCUServerInit(rom char *UartForPCClient, rom char *UartForLCDClient, rom char *UartForWiFiClient, rom char *UartForBUCServer0, rom char *UartForBUCServer1);
+
+AgilisCmdStatus_t RCUServerDecodeReqGetDeviceId (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqSetDeviceId (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqGetFirmwareVersion (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqGetAlarmStatus (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqSetAlarmStatus (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqGetDeviceStatus (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqSetDeviceStatus (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqGetSummaryStatus (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqGetPartNumber (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqSetPartNumber (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqGetSerialNumber (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqSetSerialNumber (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerDecodeReqFactoryReset (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+
+AgilisCmdStatus_t RCUServerProxyFMBUCReq (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerForwardCmd (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum);
+AgilisCmdStatus_t RCUServerCmdLookUp(UINT8 *pData, UINT8 *pNumCmd);
+
+
+
+#endif // _RCUSERVER_H_

@@ -1,0 +1,1548 @@
+#if defined(__18F97J60) || defined(_18F97J60)
+#include "TCPIP Stack/TCPIP.h"
+#endif
+#include "UARTISR.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Include functions specific to this stack application
+#include "Main.h"
+#include "define.h"
+#include "Global.h"
+#include "timers.h"
+#include "task.h"
+#include "list.h"
+#include "AgilisDualUART.h"
+#include <usart.h>
+#include "UART.h"
+#include "Hardwareprofile.h"
+
+
+
+
+tAgilisCircBuf agilisUART0RxCircBuf;
+tAgilisCircBuf agilisUART1RxCircBuf;
+
+#pragma udata grp7
+tAgilisCircBuf agilisUART2RxCircBuf;
+tAgilisCircBuf agilisUART3RxCircBuf;
+tAgilisCircBuf agilisUART4RxCircBuf;
+
+volatile BYTE Uart2THREmpty = 1,Uart3THREmpty = 1,Uart4THREmpty = 1;
+
+void uart0init(uartDBC_t* pUart,BYTE mode)
+{
+#if defined(__18F97J60) || defined(_18F97J60)
+    Open1USART(USART_TX_INT_ON & USART_RX_INT_ON & USART_ASYNCH_MODE & USART_EIGHT_BIT & USART_CONT_RX & USART_BRGH_LOW, 1); 
+
+	SPBRGH1 = 0;
+	SPBRG1 = 40;
+	BAUDCON1bits.BRG16 = 0;
+	TXSTA1bits.BRGH = 0;
+	PIR1=PIR1&(~0x30);//*TX1IF,RC1IF
+	//PIE1=PIE1|0x20;//*RC1IE
+	IPR1bits.RC1IP=0;
+	RCSTA1bits.CREN=1;
+
+	RCONbits.IPEN=1;	// yt: should enable IPEN before GIE
+	INTCONbits.GIEL=1;
+	INTCONbits.GIEH = 1;		
+	INTCONbits.GIE = 1;		//Enable global interrupts
+	INTCONbits.PEIE = 1;	//Enable peripheral interrupts
+#else
+	// PIC18F8722
+	// initialized in P18F8722Init()...
+#endif
+
+	/*
+	pUart->UARTFIFODataErrorCount = 0;
+	pUart->UARTFramingErrorCount = 0;
+	pUart->UARTParityErrorCount = 0;
+	pUart->UARTOverrunErrorCount = 0;
+	*/
+
+	//pUart->devname = 0;
+	pUart->mode = mode;
+	if(mode == RS232)
+		Comm0Mode232();
+
+	else if(mode == RS485)
+		Comm0Mode485Rx();
+
+	else if(mode == RS422)	
+		Comm0Mode422();
+		
+
+	//pUart->uartfifoinit = InitFifo0;
+	pUart->uartisr = UARTISR0;
+	pUart->uartread = UARTBufferTask;
+	pUart->uartwrite =  UART0write;
+	//pUart->uartwriterom = UART0writerom;
+	pUart->receiveflag = 0;
+
+	InitFifo0();
+
+	// configure UART0 receive interrupt
+	UART0_RX_INT_PRIORITY = INT_PRIORITY_LOW;
+	// enable UART0 receive interrupt
+	UART0_RX_INT_ENABLE = TRUE;
+}
+
+void uart1init(uartDBC_t* pUart,BYTE mode)
+{
+#if defined(__18F97J60) || defined(_18F97J60)
+	Open2USART(USART_TX_INT_ON & USART_RX_INT_ON & USART_ASYNCH_MODE & USART_EIGHT_BIT & USART_CONT_RX & USART_BRGH_LOW, 1); 
+
+	SPBRGH2 = 0;
+	SPBRG2 = 40;
+
+	BAUDCON2bits.BRG16 = 0;
+	TXSTA2bits.BRGH = 0;
+
+	//PIE3bits.RC2IE = 1;
+	//IPR3bits.RC2IP = 0;//*high priority interrupt
+
+	RCONbits.IPEN=1;	// yt: should enable IPEN before GIE
+	INTCONbits.GIEL=1;
+	INTCONbits.GIEH = 1;		
+	INTCONbits.GIE = 1;		//Enable global interrupts
+	INTCONbits.PEIE = 1;	//Enable peripheral interrupts
+#else
+	// PIC18F8722
+	// initialized in P18F8722Init()...
+#endif
+	/*
+	pUart->UARTFIFODataErrorCount = 0;
+	pUart->UARTFramingErrorCount = 0;
+	pUart->UARTParityErrorCount = 0;
+	pUart->UARTOverrunErrorCount = 0;
+	*/
+	//pUart->devname = 1;
+	pUart->mode = mode;
+	if(mode == RS232)
+		Comm1Mode232();
+
+	else if(mode == RS485)
+		Comm1Mode485Rx();
+
+	else if(mode == RS422)	
+		Comm1Mode422Rx();	
+
+	//pUart->uartfifoinit = InitFifo1;
+	pUart->uartisr = UARTISR1;
+	pUart->uartread = UARTBufferTask;
+	pUart->uartwrite =  UART1write;
+	//pUart->uartwriterom = UART0writerom;	
+	pUart->receiveflag = 0;
+
+	InitFifo1();
+
+	UART1_RX_INT_PRIORITY = INT_PRIORITY_LOW;
+	UART1_RX_INT_ENABLE = TRUE;
+}
+
+
+void uart2init(uartDBC_t* pUart,BYTE mode)
+{
+	/*
+	pUart->UARTFIFODataErrorCount = 0;
+	pUart->UARTFramingErrorCount = 0;
+	pUart->UARTParityErrorCount = 0;
+	pUart->UARTOverrunErrorCount = 0;
+	*/
+	//pUart->devname = 2;
+	pUart->mode = mode;
+	if(mode == RS232)
+		Comm2Mode232();
+
+	else if(mode == RS485)
+		Comm2Mode485Rx();
+
+	else if(mode == RS422)	
+		Nop();	
+
+	//pUart->uartfifoinit = InitFifo2;
+	pUart->uartisr = UARTISR2;
+	pUart->uartread = UARTBufferTask;
+	pUart->uartwrite = UART2write;
+	//pUart->uartwriterom = UART2writerom;
+	pUart->receiveflag = 0;
+
+	InitFifo2();	
+
+	// configure UART2 interrupt
+	// UART2 INT use INT0 which is high priority only
+	UART2_INT_EDGE = INT_RISING_EDGE; // rising edge
+
+	// enable UART2 interrupt
+	UART2_INT_ENABLE = TRUE;
+}
+
+
+void uart3init(uartDBC_t* pUart,BYTE mode)
+{
+	/*
+	pUart->UARTFIFODataErrorCount = 0;
+	pUart->UARTFramingErrorCount = 0;
+	pUart->UARTParityErrorCount = 0;
+	pUart->UARTOverrunErrorCount = 0;
+	*/
+	  //pUart->devname = 3;
+	  pUart->mode = mode;
+	  if(mode == RS232)
+		  Comm3Mode232();
+	  
+	  else if(mode == RS485)
+		  Comm3Mode485Rx();
+	  
+	  else if(mode == RS422)  
+		  Nop(); 
+
+	//pUart->uartfifoinit = InitFifo3;
+	pUart->uartisr = UARTISR3;
+	pUart->uartread = UARTBufferTask;
+	pUart->receiveflag = 0;
+	pUart->uartwrite = UART3write;
+	//pUart->uartwriterom = UART3writerom;
+
+	InitFifo3();
+
+	// configure UART3 interrupt
+	UART3_INT_EDGE = INT_RISING_EDGE;
+	UART3_INT_PRIORITY = INT_PRIORITY_HIGH;
+
+	// enable UART3 interrupt
+	UART3_INT_ENABLE = 1;
+}
+
+#ifdef SUPPORT_2ND_DUALUART
+void uart4init(uartDBC_t* pUart,BYTE mode)
+{
+	  //pUart->devname = 4;
+	  pUart->mode = mode;
+	  if(mode == RS232)
+		  Comm4Mode232();
+	  
+	  else if(mode == RS485)
+		  Comm4Mode485Rx();
+	  
+	  else if(mode == RS422)  
+		  Nop(); 
+
+	//pUart->uartfifoinit = InitFifo4;
+	pUart->uartisr = UARTISR4;
+	pUart->uartread = UARTBufferTask;
+	pUart->uartwrite =  UART4write;
+	//pUart->uartwriterom = UART4writerom;
+	pUart->receiveflag = 0;
+
+	InitFifo4();
+
+	// configure UART4 interrupt
+	UART4_INT_EDGE = 1; // rising edge
+	UART4_INT_PRIORITY = INT_PRIORITY_HIGH;
+	// enable UART4 interrupt
+	UART4_INT_ENABLE = TRUE;
+
+}
+#endif
+
+/*********************************************************************
+ * Function:        void InitFifo0(void)
+ *
+ * PreCondition:    UART FIFO ininitialization
+ *
+ * Input:           None
+ *
+ * Output:          None
+ *
+ * Side Effects:    None
+ *
+ * Overview:        None
+ *
+ * Note:            This function is supposed to be called in the ISR 
+ *					context.
+ ********************************************************************/
+
+void InitFifo0(void) {
+	
+
+	Uart0.RXBuff = agilisUART0RxCircBuf.ai8AgilisCircBuf;
+
+	AGILIS_UART0_FIFO_RD_PTR = Uart0.RXBuff;
+	AGILIS_UART0_FIFO_WR_PTR = Uart0.RXBuff;
+	AGILIS_UART0_FIFO_START_PTR = Uart0.RXBuff;
+	AGILIS_UART0_FIFO_END_PTR = Uart0.RXBuff + (AGILIS_FIFO_SIZE - 1);
+	
+}
+
+/*********************************************************************
+ * Function:        void InitFifo1(void)
+ *
+ * PreCondition:    UART FIFO ininitialization
+ *
+ * Input:           None
+ *
+ * Output:          None
+ *
+ * Side Effects:    None
+ *
+ * Overview:        None
+ *
+ * Note:            This function is supposed to be called in the ISR 
+ *					context.
+ ********************************************************************/
+
+void InitFifo1() {
+	
+
+	Uart1.RXBuff = agilisUART1RxCircBuf.ai8AgilisCircBuf;
+
+	AGILIS_UART1_FIFO_RD_PTR = Uart1.RXBuff;
+	AGILIS_UART1_FIFO_WR_PTR = Uart1.RXBuff;
+	AGILIS_UART1_FIFO_START_PTR = Uart1.RXBuff;
+	AGILIS_UART1_FIFO_END_PTR = Uart1.RXBuff + (AGILIS_FIFO_SIZE - 1);
+}
+
+
+/***********************************
+**********************************
+ * Function:        void InitFifo2(void)
+ *
+ * PreCondition:    UARTFIFO ininitialization
+ *
+ * Input:           None
+ *
+ * Output:          None
+ *
+ * Side Effects:    None
+ *
+ * Overview:        None
+ *
+ * Note:            This function is supposed to be called in the ISR 
+ *					context.
+ ********************************************************************/
+
+void InitFifo2() {
+	
+
+	Uart2.RXBuff = agilisUART2RxCircBuf.ai8AgilisCircBuf;
+
+	AGILIS_UART2_FIFO_RD_PTR = Uart2.RXBuff;
+	AGILIS_UART2_FIFO_WR_PTR = Uart2.RXBuff;
+	AGILIS_UART2_FIFO_START_PTR = Uart2.RXBuff;
+	AGILIS_UART2_FIFO_END_PTR = Uart2.RXBuff + (AGILIS_FIFO_SIZE - 1);
+	
+}
+
+/*********************************************************************
+ * Function:        void InitFifo3(void)
+ *
+ * PreCondition:    UART FIFO ininitialization
+ *
+ * Input:           None
+ *
+ * Output:          None
+ *
+ * Side Effects:    None
+ *
+ * Overview:        None
+ *
+ * Note:            This function is supposed to be called in the ISR 
+ *					context.
+ ********************************************************************/
+
+void InitFifo3() {
+	
+
+	Uart3.RXBuff = agilisUART3RxCircBuf.ai8AgilisCircBuf;
+
+	AGILIS_UART3_FIFO_RD_PTR = Uart3.RXBuff;
+	AGILIS_UART3_FIFO_WR_PTR = Uart3.RXBuff;
+	AGILIS_UART3_FIFO_START_PTR = Uart3.RXBuff;
+	AGILIS_UART3_FIFO_END_PTR = Uart3.RXBuff + (AGILIS_FIFO_SIZE - 1);
+	
+}
+
+#ifdef SUPPORT_2ND_DUALUART
+void InitFifo4() {
+	
+
+	Uart4.RXBuff = agilisUART4RxCircBuf.ai8AgilisCircBuf;
+
+	AGILIS_UART4_FIFO_RD_PTR = Uart4.RXBuff;
+	AGILIS_UART4_FIFO_WR_PTR = Uart4.RXBuff;
+	AGILIS_UART4_FIFO_START_PTR = Uart4.RXBuff;
+	AGILIS_UART4_FIFO_END_PTR = Uart4.RXBuff + (AGILIS_FIFO_SIZE - 1);
+	
+}
+#endif
+
+/*********************************************************************
+ * Function:        void UARTISR(void)
+ *
+ * PreCondition:    UART ininitialization
+ *
+ * Input:           None
+ *
+ * Output:          None
+ *
+ * Side Effects:    None
+ *
+ * Overview:        None
+ *
+ * Note:            This function is supposed to be called in the ISR 
+ *					context.
+ ********************************************************************/
+
+
+void UARTISR0(void)
+{
+	static BYTE i;
+	
+	if(UART0_RX_INT_FLAG)
+	{
+		UART0_RX_INT_ENABLE = FALSE;
+
+		i = RCREG;
+
+		if (RCSTA1bits.FERR)
+		{
+			//Uart0.UARTFramingErrorCount++;
+		}
+		if (RCSTA1bits.OERR)
+		{
+			//Uart0.UARTOverrunErrorCount++;
+			RCSTA1bits.CREN = 0; // 
+			RCSTA1bits.CREN = 1; // 
+		}
+		if (AGILIS_UART0_FIFO_RD_PTR == AGILIS_UART0_FIFO_WR_PTR_NEXT)
+		{
+			//Comm0Mode485Tx();
+			//putrsUART("Fifo is full\r\n"); //??
+			//Comm0Mode485Rx();
+
+			// if fifo is full as data is not taken fast enough
+			// ask for data to be received by uart driver now
+			Uart0.receiveflag = 1; //ask for clearing buffer
+		}
+		else 
+		{
+			*(AGILIS_UART0_FIFO_WR_PTR) = i;
+
+			AGILIS_UART0_FIFO_WR_PTR = AGILIS_UART0_FIFO_WR_PTR_NEXT;
+
+
+			if(i == END_PROMT) //??
+			{
+				Uart0.receiveflag  = 1; //ask for clearing buffer
+
+			}
+		}
+		UART0_RX_INT_FLAG = 0; // yt added to clear interrupt flag
+		UART0_RX_INT_ENABLE = TRUE;
+	}
+
+}
+
+/*********************************************************************
+ * Function:        void UARTISR2(void)
+ *
+ * PreCondition:    UART interrupt has occured
+ *
+ * Input:           None
+ *
+ * Output:          None
+ *
+ * Side Effects:    None
+ *
+ * Overview:        None
+ *
+ * Note:            This function is supposed to be called in the ISR 
+ *					context.
+ ********************************************************************/
+
+
+void UARTISR1(void)
+{
+	// NOTE: All local variables used here should be declared static
+	static BYTE i;
+	
+	// Store a received byte, if pending, if possible
+	if(UART1_RX_INT_FLAG)
+	{
+		UART1_RX_INT_ENABLE = FALSE;
+
+		i = RCREG2;
+
+		if (RCSTA2bits.FERR)
+		{
+			//Uart1.UARTFramingErrorCount++;
+		}
+		if (RCSTA2bits.OERR)
+		{
+			RCSTA2bits.CREN = 0; // 
+			RCSTA2bits.CREN = 1; // 
+			//Uart1.UARTOverrunErrorCount++;
+		}
+		if (AGILIS_UART1_FIFO_RD_PTR == AGILIS_UART1_FIFO_WR_PTR_NEXT)
+		{
+			// if fifo is full as data is not taken fast enough
+			// ask for data to be received by uart driver now
+			//putrsUART2("Fifo is full\r\n"); //??
+			Uart1.receiveflag  = 1;
+		}
+		else 
+		{
+			*(AGILIS_UART1_FIFO_WR_PTR) = i;
+
+			AGILIS_UART1_FIFO_WR_PTR = AGILIS_UART1_FIFO_WR_PTR_NEXT;
+
+
+			if(i == END_PROMT) //??
+			{
+				Uart1.receiveflag  = 1;
+
+			}
+		}
+		UART1_RX_INT_FLAG = 0;
+		UART1_RX_INT_ENABLE = TRUE;
+	}
+}
+
+void UARTISR2(void)
+{
+	BOOL error;
+	static BYTE i, val_lsr,IIR;
+
+	if (UART2_INT_FLAG) // INTA/B pin swap, if hardware correct this error, we also need change it back
+	{
+		UART2_INT_ENABLE = FALSE;
+
+		val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_B);
+
+		/*
+		if ((val_lsr & 0x02) == 0x02)
+		{
+			Uart2.UARTOverrunErrorCount++;
+		}
+		if ((val_lsr & 0x04) == 0x04)
+		{
+			Uart2.UARTParityErrorCount++;
+		}
+		if ((val_lsr & 0x08) == 0x08)
+		{
+			Uart2.UARTFramingErrorCount++;
+		}
+		if ((val_lsr & 0x80) == 0x80)
+		{
+			Uart2.UARTFIFODataErrorCount++;
+		}
+		*/
+
+		if ((val_lsr & 0x40) || (val_lsr & 0x20))
+		{
+			Uart2THREmpty = 1;
+		}
+
+		IIR = ReadDualUartConf(0x2, DUAL_UART_B);		
+
+		error = FALSE;
+
+		// if frame error, parity error, break indication, and no overrun error, just read fifo
+		if ((val_lsr & 0x80) && !(val_lsr & 0x02))
+		{
+			i = ReadDataFromUartISR(DUAL_UART_B);
+			error = TRUE;
+		}
+
+		// if OE, just read LSR
+		if (val_lsr & 0x02){
+			val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_B);
+			error = TRUE;
+		}
+
+		IIR = ReadDualUartConf(0x2, DUAL_UART_B);
+		if(error){
+			UART2_INT_FLAG = 0;
+			UART2_INT_ENABLE = TRUE;
+			return;
+		}
+	
+		//if ((val_lsr & 0x01) == 0x01)
+		while ((val_lsr & 0x01) == 0x01)
+		{
+			i = ReadDataFromUartISR(DUAL_UART_B);
+			val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_B);
+
+			// if frame error, parity error, break indication, then discard fifo data
+			if (val_lsr & 0x80)
+				continue;
+
+			if (AGILIS_UART2_FIFO_RD_PTR == AGILIS_UART2_FIFO_WR_PTR_NEXT)
+			{
+				// if fifo is full as data is not taken fast enough
+				// ask for data to be received by uart driver now
+				Uart2.receiveflag  = 1;
+			}
+			else 
+			{
+				*(AGILIS_UART2_FIFO_WR_PTR) = i;
+	
+				AGILIS_UART2_FIFO_WR_PTR = AGILIS_UART2_FIFO_WR_PTR_NEXT;
+	
+	
+				if(i == END_PROMT) //??
+				{
+					Uart2.receiveflag  = 1;
+	
+				}
+			}
+		}
+
+		UART2_INT_FLAG = 0;
+		UART2_INT_ENABLE = TRUE;
+	}
+}
+
+
+void UARTISR3(void)
+{
+	BOOL error;
+	static BYTE i, val_lsr,IIR;
+
+	if (UART3_INT_FLAG) // INTA/B pin swap, if hardware correct this error, we also need change it back
+	{
+		UART3_INT_ENABLE = FALSE;
+
+		val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_A);
+		/*
+		if ((val_lsr & 0x02) == 0x02)
+		{
+			Uart3.UARTOverrunErrorCount++;
+		}
+		if ((val_lsr & 0x04) == 0x04)
+		{
+			Uart3.UARTParityErrorCount++;
+		}
+		if ((val_lsr & 0x08) == 0x08)
+		{
+			Uart3.UARTFramingErrorCount++;
+		}
+		if ((val_lsr & 0x80) == 0x80)
+		{
+			Uart3.UARTFIFODataErrorCount++;
+		}
+		*/
+		if ((val_lsr & 0x40) || (val_lsr & 0x20))
+		{
+			Uart3THREmpty = 1;
+		}
+
+		IIR = ReadDualUartConf(0x2, DUAL_UART_A);	
+
+		error = FALSE;
+
+		// if FE, PE, BI, just read fifo
+		// if frame error, parity error, break indication, and no overrun error, just read fifo
+		if ((val_lsr & 0x80) && !(val_lsr & 0x02))
+		{
+			i = ReadDataFromUartISR(DUAL_UART_A);
+			error = TRUE;
+		}
+
+		// if OE, just read LSR
+		if (val_lsr & 0x02){
+			val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_A);
+			error = TRUE;
+		}
+
+		if(error){
+			UART3_INT_FLAG = 0;
+			UART3_INT_ENABLE = 1;
+			return;
+		}
+
+		//if ((val_lsr & 0x01) == 0x01)
+		while ((val_lsr & 0x01) == 0x01)
+		{
+			i = ReadDataFromUartISR(DUAL_UART_A);
+			val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_A);
+
+			// if frame error, parity error, break indication, then discard fifo data
+			if (val_lsr & 0x80)
+				continue;
+
+			if (AGILIS_UART3_FIFO_RD_PTR == AGILIS_UART3_FIFO_WR_PTR_NEXT)
+			{
+				// if fifo is full as data is not taken fast enough
+				// ask for data to be received by uart driver now
+				Uart3.receiveflag  = 1;
+			}
+			else 
+			{
+				*(AGILIS_UART3_FIFO_WR_PTR) = i;
+	
+				AGILIS_UART3_FIFO_WR_PTR = AGILIS_UART3_FIFO_WR_PTR_NEXT;
+	
+	
+				if(i == END_PROMT) //??
+				{
+					Uart3.receiveflag  = 1;
+	
+				}
+			}
+		}	
+   
+		UART3_INT_FLAG = 0;
+		UART3_INT_ENABLE = 1;
+	}
+}
+
+
+
+#ifdef SUPPORT_2ND_DUALUART
+void UARTISR4(void)
+{
+	BOOL error;
+	static BYTE i,val_lsr,IIR;
+
+	if (UART4_INT_FLAG) 
+	{
+		UART4_INT_ENABLE = FALSE;
+
+		val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_A2);
+
+		/*
+		if ((val_lsr & 0x02) == 0x02)
+		{
+			Uart4.UARTOverrunErrorCount++;
+		}
+		if ((val_lsr & 0x04) == 0x04)
+		{
+			Uart4.UARTParityErrorCount++;
+		}
+		if ((val_lsr & 0x08) == 0x08)
+		{
+			Uart4.UARTFramingErrorCount++;
+		}
+		if ((val_lsr & 0x80) == 0x80)
+		{
+			Uart4.UARTFIFODataErrorCount++;
+		}
+		*/
+
+		if (((val_lsr & 0x40) == 0x40)||((val_lsr & 0x20) == 0x20))
+		{
+			Uart4THREmpty = 1;
+		}
+
+		
+
+		IIR = ReadDualUartConf(0x2, DUAL_UART_A2);
+
+		error = FALSE;
+		
+		// if FE, PE, BI, just read fifo
+		// if frame error, parity error, break indication, and no overrun error, just read fifo
+		if ((val_lsr & 0x80) && !(val_lsr & 0x02))
+		{
+			i = ReadDataFromUartISR(DUAL_UART_A2);
+			error = TRUE;
+		}
+		
+		// if OE, just read LSR
+		if (val_lsr & 0x02){
+			val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_A2);
+			error = TRUE;
+		}
+		
+		if(error){
+			UART4_INT_FLAG = 0;
+			UART4_INT_ENABLE = TRUE;
+			return;
+		}
+		
+
+	while ((val_lsr & 0x01) == 0x01)
+	{	
+		
+		i = ReadDataFromUartISR(DUAL_UART_A2);
+#if 1
+		val_lsr = ReadDualUartConf(DUAL_UART_LSR, DUAL_UART_A2);
+
+		// if frame error, parity error, break indication, then discard fifo data
+		if (val_lsr & 0x80)
+			continue;
+#endif	
+
+		if (AGILIS_UART4_FIFO_RD_PTR == AGILIS_UART4_FIFO_WR_PTR_NEXT)
+		{
+				Uart4.receiveflag  = 1;
+				//return -1;
+		}
+		else 
+		{
+			*(AGILIS_UART4_FIFO_WR_PTR) = i;
+
+			AGILIS_UART4_FIFO_WR_PTR = AGILIS_UART4_FIFO_WR_PTR_NEXT;
+
+
+			if(i == END_PROMT) //??
+			{
+				Uart4.receiveflag  = 1;
+
+			}
+		}
+		}
+   
+		UART4_INT_FLAG = 0;
+		UART4_INT_ENABLE = TRUE;
+	}
+}
+#endif
+
+void UART0write(BYTE* data)
+{
+
+  if(RCUinfo.comMode == RS485 )
+	 Comm0Mode485Tx();
+
+	putsUSART(data);
+
+  if(RCUinfo.comMode == RS485 )
+	Comm0Mode485Rx();
+}
+
+void UART1write(BYTE* data)
+{
+	if(Uart1.mode == RS485 )
+		Comm1Mode485Tx();
+	else if(Uart1.mode == RS422 )
+		Comm1Mode422Tx();
+
+	putsUSART2(data);
+
+	if(Uart1.mode == RS485 )
+		Comm1Mode485Rx();	
+	else if(Uart1.mode == RS422 )
+		Comm1Mode422Rx();
+
+}
+
+
+void UART2write(BYTE* data)
+{
+	WORD counter,maxlen;
+
+	if(Uart2.mode == RS485 )
+		Comm2Mode485Tx();
+
+	// enable THR and LHR interrupt
+	SetDualUartInterrupt(DUAL_UART_IER,DUAL_UART_THR_INT | DUAL_UART_LSR_INT, DUAL_UART_B);
+
+	maxlen = 100; // limit max transfer packet to avoid infinite while loop
+
+	while(*(data) && maxlen--)
+	{
+		Uart2THREmpty = 0;	
+
+		SendDataToUart(*data++, DUAL_UART_B);
+		
+		counter=1000;
+	
+		while(!Uart2THREmpty && counter){
+			Nop();
+			counter--;
+		}
+	}
+
+	// disable THR interrupt, enable RHR and LHR interrupt
+	SetDualUartInterrupt(DUAL_UART_IER,DUAL_UART_RHR_INT | DUAL_UART_LSR_INT, DUAL_UART_B);	
+
+	// wait 1 ms for last byte to latch electrically
+	DelayMS(1);
+
+	if(Uart2.mode == RS485 )
+		Comm2Mode485Rx();	
+
+	if(counter == 0)
+		InitialiseDualUart();
+}
+
+
+void UART3write(BYTE* data)
+{
+	WORD counter,maxlen;
+
+	if(Uart3.mode == RS485 )
+		Comm3Mode485Tx();
+
+	// enable THR and LHR interrupt
+	SetDualUartInterrupt(DUAL_UART_IER,DUAL_UART_THR_INT | DUAL_UART_LSR_INT, DUAL_UART_A);
+
+	maxlen = 100; // limit max transfer packet to avoid infinite while loop
+
+	while(*(data) && maxlen--)
+	{
+		Uart3THREmpty = 0;	
+
+		SendDataToUart(*data, DUAL_UART_A);
+		data++;
+	
+		counter = 1000;
+
+		while(!Uart3THREmpty && counter){
+			Nop();
+			counter--;
+		}
+	}
+
+	// disable THR interrupt, enable RHR and LHR interrupt
+	SetDualUartInterrupt(DUAL_UART_IER,DUAL_UART_RHR_INT | DUAL_UART_LSR_INT, DUAL_UART_A);	
+
+	// wait 1 ms for last byte to latch electrically
+	DelayMS(1);
+
+	if(Uart3.mode == RS485 )
+		Comm3Mode485Rx();	
+
+	if(counter == 0)
+		InitialiseDualUart();
+
+}
+
+
+#ifdef SUPPORT_2ND_DUALUART
+void UART4write(BYTE* data)
+{
+	WORD counter,maxlen;
+
+	if(Uart4.mode == RS485 )
+		Comm4Mode485Tx();
+
+	// enable THR and LHR interrupt
+	SetDualUartInterrupt(DUAL_UART_IER,DUAL_UART_THR_INT | DUAL_UART_LSR_INT, DUAL_UART_A2);
+
+	maxlen = 100; // limit max transfer packet to avoid infinite while loop
+
+	while(*(data) && maxlen--)
+	{
+		Uart4THREmpty = 0;	
+
+		SendDataToUart(*data, DUAL_UART_A2);
+		data++;
+	
+		counter = 1000;
+
+		while(!Uart4THREmpty && counter){
+			Nop();
+			counter--;
+		}
+	}
+
+	// disable THR interrupt, enable RHR and LHR interrupt
+	SetDualUartInterrupt(DUAL_UART_IER,DUAL_UART_RHR_INT | DUAL_UART_LSR_INT, DUAL_UART_A2);	
+
+	// wait 1 ms for last byte to latch electrically
+	DelayMS(1);
+
+	if(Uart4.mode == RS485 )
+		Comm4Mode485Rx();	
+
+	if(counter == 0)
+		InitialiseDualUart();
+}
+#endif
+
+/*
+void UART0writerom(rom char* data)
+{
+#if 0
+	if(Uart0.mode == RS485 )
+		Comm0Mode485Tx();
+
+	putrsUSART(data);
+
+	if(Uart0.mode == RS485 )
+		Comm0Mode485Rx();	
+#endif
+}
+
+void UART1writerom(rom char* data)
+{
+#if 0
+	if(Uart1.mode == RS485 )
+		Comm1Mode485Tx();
+	else if(Uart1.mode == RS422 )
+		Comm1Mode422Tx();
+
+	putrsUSART2(data);
+
+	if(Uart1.mode == RS485 )
+		Comm1Mode485Rx();	
+	else if(Uart1.mode == RS422 )
+		Comm1Mode422Rx();
+#endif
+}
+
+void UART2writerom(rom char* data)
+{
+#if 0
+	if(Uart2.mode == RS485 )
+		Comm2Mode485Tx();
+
+	while(*(data)!=0)
+	{
+		SendDataToUart(*data, DUAL_UART_B);
+		data++;
+		DelayMS(1);
+	}
+
+	if(Uart2.mode == RS485 )
+		Comm2Mode485Rx();	
+#endif
+}
+
+void UART3writerom(rom char* data)
+{
+#if 0
+	if(Uart3.mode == RS485 )
+		Comm3Mode485Tx();
+
+	while(*(data)!=0)
+	{
+		SendDataToUart(*data, DUAL_UART_A);
+		data++;
+		DelayMS(1);
+	}
+
+
+	if(Uart3.mode == RS485 )
+		Comm3Mode485Rx();	
+#endif
+}
+
+
+#ifdef SUPPORT_2ND_DUALUART
+void UART4writerom(rom char* data)
+{
+#if 0
+	if(Uart3.mode == RS485 )
+		Comm3Mode485Tx();
+
+	while(*(data)!=0)
+	{
+		SendDataToUart(*data, DUAL_UART_A);
+		data++;
+		DelayMS(1);
+	}
+
+
+	if(Uart3.mode == RS485 )
+		Comm3Mode485Rx();	
+#endif
+}
+#endif
+
+*/
+
+
+
+/*********************************************************************
+ * Function:        void UARTBufferTask(BYTE* ,tAgilisCircBuf* )
+ *
+ * PreCondition:    UART Driver called
+ *
+ * Input:           None
+ *
+ * Output:          None
+ *
+ * Side Effects:    None
+ *
+ * Overview:        None
+ *
+ * Note:            This function is supposed to be called in the ISR 
+ *					context.
+ ********************************************************************/
+
+
+
+
+int UARTBufferTask(BYTE* data,tAgilisCircBuf* buf)
+{
+
+	WORD PutLen, GetLen, w,len;
+	BYTE *RXHeadPtrLocal, *RXTailPtrLocal;
+	BYTE *TXHeadPtrLocal, *TXTailPtrLocal;
+
+
+	RXTailPtrLocal = buf->pi8AgilisCircBufRead;
+	RXHeadPtrLocal = buf->pi8AgilisCircBufWrite;
+
+
+	GetLen = RXHeadPtrLocal - RXTailPtrLocal;
+	if(RXHeadPtrLocal < RXTailPtrLocal)
+		GetLen += sizeof(buf->ai8AgilisCircBuf);
+//	if(PutLen > GetLen)		
+	
+		PutLen = GetLen;
+
+	len = PutLen;
+	
+	if(PutLen) 						
+	{
+		
+		w = buf->ai8AgilisCircBuf + sizeof(buf->ai8AgilisCircBuf) - RXTailPtrLocal;
+		if(PutLen >= w)
+		{
+	 		//Copy w lenght data here out
+			strncpy(data,RXTailPtrLocal,w);
+			RXTailPtrLocal = buf->ai8AgilisCircBuf;
+			PutLen -= w;
+			data+= w;
+		}
+ 		//copy (len - w) length data here out
+	   strncpy(data,RXTailPtrLocal,PutLen);
+	   RXTailPtrLocal += PutLen;   
+	   buf->pi8AgilisCircBufRead = RXTailPtrLocal;
+	}
+
+	return len;
+
+}
+
+
+
+
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm0Mode232()
+
+DESCRIPTION: 
+    This functions sets the communication mode to RS 232
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm0Mode232(void)
+{
+    MODE0 = 0;
+    RXEN0 = 1;
+    DXEN0 = 0;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm0Mode485Tx()
+
+DESCRIPTION: 
+    This functions sets the communication mode to RS485Tx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm0Mode485Tx(void)
+{
+    MODE0 = 1;
+    RXEN0 = 0;
+    DXEN0 = 1;
+	UART0_TX_INT_ENABLE = 0;
+	UART0_RX_INT_ENABLE = 0;
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm0Mode485Rx()
+
+DESCRIPTION: 
+    This functions sets the communication mode to RS485Rx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm0Mode485Rx(void)
+{
+    MODE0 = 1;
+    RXEN0 = 1;
+    DXEN0 = 0;    
+	UART0_TX_INT_ENABLE = 0;
+	UART0_RX_INT_ENABLE = 1;
+}
+
+
+void Comm0Mode422(void)
+{
+    MODE0 = 1;
+    RXEN0 = 1;
+    DXEN0 = 1;  
+	UART0_TX_INT_ENABLE = 0;
+	UART0_RX_INT_ENABLE = 1;
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm1Mode422Rx()
+
+DESCRIPTION: 
+    This function sets communication mode RS422
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm1Mode422Rx(void)
+{
+    MODE1 = 1;
+    RXEN1 = 1;
+	SetCPLDGPIO(11, 1); // ON_CTRL
+
+    DXEN1 = 0;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm1Mode422Tx()
+
+DESCRIPTION: 
+    This function sets communication mode RS422
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm1Mode422Tx(void)
+{
+    MODE1 = 1;
+    RXEN1 = 0;
+	SetCPLDGPIO(11, 0); // ON_CTRL
+
+    DXEN1 = 1;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm1Mode232()
+
+DESCRIPTION: 
+    This function sets communication mode RS232
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm1Mode232(void)
+{
+    MODE1 = 0;
+	SetCPLDGPIO(11, 0); // ON_CTRL
+
+    RXEN1 = 1;
+    DXEN1 = 0;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm1Mode485Tx()
+
+DESCRIPTION: 
+    This function sets communication mode RS48Tx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm1Mode485Tx(void)
+{
+    MODE1 = 1;
+	SetCPLDGPIO(11, 1); // ON_CTRL
+
+    RXEN1 = 0;
+    DXEN1 = 1;    
+	UART1_TX_INT_ENABLE = 0;
+	UART1_RX_INT_ENABLE = 0;
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm1Mode485Rx()
+
+DESCRIPTION: 
+    This function sets communication mode RS48Rx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm1Mode485Rx(void)
+{
+    MODE1 = 1;
+	SetCPLDGPIO(11, 1); // ON_CTRL
+
+    RXEN1 = 1;
+    DXEN1 = 0;    
+	UART1_TX_INT_ENABLE = 0;
+	UART1_RX_INT_ENABLE = 1;
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm3Mode232()
+
+DESCRIPTION: 
+    This function sets communication mode RS232
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm3Mode232(void)
+{
+    MODE3 = 0;
+    RXEN3 = 1;
+    DXEN3 = 0;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm3Mode485Tx()
+
+DESCRIPTION: 
+    This function sets communication mode RS48Tx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm3Mode485Tx(void)
+{
+    MODE3 = 1;
+    RXEN3 = 0;
+    DXEN3 = 1;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm3Mode485Rx()
+
+DESCRIPTION: 
+    This function sets communication mode RS48Rx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm3Mode485Rx(void)
+{
+    MODE3 = 1;
+    RXEN3 = 1;
+    DXEN3 = 0;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm2Mode232()
+
+DESCRIPTION: 
+    This function sets communication mode RS232
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm2Mode232(void)
+{
+#if defined(__18F97J60) || defined(_18F97J60)
+	SetCPLDGPIO(12, 0); // MODE2
+	SetCPLDGPIO(10, 1); // RXEN2
+	SetCPLDGPIO(13, 0); // DXEN2
+#else
+	// PIC18F8722
+    MODE2 = 0;
+    RXEN2 = 1;
+    DXEN2 = 0;    
+#endif
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm2Mode485Tx()
+
+DESCRIPTION: 
+    This function sets communication mode RS48Tx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm2Mode485Tx(void)
+{
+#if defined(__18F97J60) || defined(_18F97J60)
+	SetCPLDGPIO(12, 1); // MODE2
+	SetCPLDGPIO(10, 0); // RXEN2
+	SetCPLDGPIO(13, 1); // DXEN2
+#else
+	// PIC18F8722
+    MODE2 = 1;
+    RXEN2 = 0;
+    DXEN2 = 1;    
+#endif
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm2Mode485Rx()
+
+DESCRIPTION: 
+    This function sets communication mode RS48Rx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm2Mode485Rx(void)
+{
+#if defined(__18F97J60) || defined(_18F97J60)
+	SetCPLDGPIO(12, 1); // MODE2
+	SetCPLDGPIO(10, 1); // RXEN2
+	SetCPLDGPIO(13, 0); // DXEN2
+#else
+	// PIC18F8722
+    MODE2 = 1;
+    RXEN2 = 1;
+    DXEN2 = 0;    
+#endif	
+}
+
+
+#ifdef SUPPORT_2ND_DUALUART
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm4Mode232()
+
+DESCRIPTION: 
+    This function sets communication mode RS232
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm4Mode232(void)
+{
+    MODE3 = 0;
+    RXEN3 = 1;
+    DXEN3 = 0;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm4Mode485Tx()
+
+DESCRIPTION: 
+    This function sets communication mode RS48Tx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm4Mode485Tx(void)
+{
+    MODE3 = 1;
+    RXEN3 = 0;
+    DXEN3 = 1;    
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: Comm4Mode485Rx()
+
+DESCRIPTION: 
+    This function sets communication mode RS48Rx
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+void Comm4Mode485Rx(void)
+{
+    MODE3 = 1;
+    RXEN3 = 1;
+    DXEN3 = 0;    
+}
+#endif
+
+
+

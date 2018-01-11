@@ -1,0 +1,46 @@
+~inc:header.inc~
+<title>Device Information</title>
+ <tr>
+  	<td>
+		<div class="pagetab" >
+			
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="center" colspan="2" height="42" width="100%" bgcolor="#aaa8a8"><center>DEVICE INFORMATION</center></td>
+						</tr>
+						<tr>
+							<td align="left" colspan="2" height="42" bgcolor="#e2e2e2" width="100%">
+								<center>
+									<table border="0" width="50%" >
+									<FORM METHOD=GET action=index.htm>									
+										<tr>
+											<td align="left" ><b>&nbsp;</b></td>
+											<td id="test" align="left"  style="width:200px;"><b>Device IP</b></td>
+											<td id="deviceip" align="left"><b>~config_ip~</b></td>
+										</tr>
+										<tr>
+											<td align="left" ><b>&nbsp;</b></td>
+											<td id="test" align="left"  style="width:200px;"><b>Device Subnet Mask</b></td>
+											<td id="subnet" align="left"><b>~config_subnet~</b></td>
+										</tr>
+										<tr>
+											<td align="left" ><b>&nbsp;</b></td>
+											<td id="test" align="left"  style="width:200px;"><b>Device Gateway</b></td>
+											<td id="gateway" align="left"><b>~config_gw~</b></td>
+										</tr>										
+										<tr>
+											<td align="left" ><b>&nbsp;</b></td>
+											<td align="left"><b>Firmware Version</b></td>
+											<td id="rcufw" align="left"><b>~Devicefwver~</b></td>
+										</tr>
+									</FORM>
+									</table>								
+								</center>
+							</td>
+						</tr>
+					</table>					
+				</div>
+~inc:footer.inc~
+	</body>
+</html>

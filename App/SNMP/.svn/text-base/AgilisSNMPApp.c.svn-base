@@ -1,0 +1,1163 @@
+/*********************************************************************
+ *
+ *  Application to Demo SNMP Server
+ *  Support for SNMP module in Microchip TCP/IP Stack
+ *	 - Implements the SNMP application
+ *
+ *********************************************************************
+ * FileName:        CustomSNMPApp.c
+ * Dependencies:    TCP/IP stack
+ * Processor:       PIC18, PIC24F, PIC24H, dsPIC30F, dsPIC33F, PIC32
+ * Compiler:        Microchip C32 v1.05 or higher
+ *					Microchip C30 v3.12 or higher
+ *					Microchip C18 v3.30 or higher
+ *					HI-TECH PICC-18 PRO 9.63PL2 or higher
+ * Company:         Microchip Technology, Inc.
+ *
+ * Software License Agreement
+ *
+ * Copyright (C) 2002-2009 Microchip Technology Inc.  All rights
+ * reserved.
+ *
+ * Microchip licenses to you the right to use, modify, copy, and
+ * distribute:
+ * (i)  the Software when embedded on a Microchip microcontroller or
+ *      digital signal controller product ("Device") which is
+ *      integrated into Licensee's product; or
+ * (ii) ONLY the Software driver source files ENC28J60.c, ENC28J60.h,
+ *		ENCX24J600.c and ENCX24J600.h ported to a non-Microchip device
+ *		used in conjunction with a Microchip ethernet controller for
+ *		the sole purpose of interfacing with the ethernet controller.
+ *
+ * You should refer to the license agreement accompanying this
+ * Software for additional information regarding your rights and
+ * obligations.
+ *
+ * THE SOFTWARE AND DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT
+ * WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+ * LIMITATION, ANY WARRANTY OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT SHALL
+ * MICROCHIP BE LIABLE FOR ANY INCIDENTAL, SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF
+ * PROCUREMENT OF SUBSTITUTE GOODS, TECHNOLOGY OR SERVICES, ANY CLAIMS
+ * BY THIRD PARTIES (INCLUDING BUT NOT LIMITED TO ANY DEFENSE
+ * THEREOF), ANY CLAIMS FOR INDEMNITY OR CONTRIBUTION, OR OTHER
+ * SIMILAR COSTS, WHETHER ASSERTED ON THE BASIS OF CONTRACT, TORT
+ * (INCLUDING NEGLIGENCE), BREACH OF WARRANTY, OR OTHERWISE.
+ *
+ *
+ * Author               Date      Comment
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * E. Wood     			4/26/08	  Moved from MainDemo.c
+ * Amit Shirbhate 		09/24/08  SNMPv2c Support added.
+ * Hrisikesh Sahu 		04/15/10  SNMPv2 trap format support.
+ ********************************************************************/
+#define __CUSTOMSNMPAPP_C
+#define DEFINE_SNMP_GLOBAL_VAR
+
+#include "TCPIPConfig.h"
+#include "TCPIPConfig.h"
+#include "AgilisSNMPLL.h"
+#include "mib.h"
+#include "AgilisSNMPMibRegistry.h"
+
+#if defined(STACK_USE_SNMP_SERVER)
+
+#include "TCPIP Stack/TCPIP.h"
+#include "Main.h"
+#include "Global.h"
+#include "TCPIP Stack/StackTsk.h"
+#include "define.h"
+
+/****************************************************************************
+  Section:
+	Global Variables
+  ***************************************************************************/
+//pavan
+BOOL snmp_get_type = FALSE;
+  
+/*This Macro is used to provide maximum try for a failure Trap server address  */
+#define MAX_TRY_TO_SEND_TRAP (10)
+
+BYTE gSendTrapFlag=FALSE;//global flag to send Trap
+BYTE gOIDCorrespondingSnmpMibID=MICROCHIP;
+BYTE gGenericTrapNotification=ENTERPRISE_SPECIFIC;
+BYTE gSpecificTrapNotification=VENDOR_TRAP_DEFAULT; // Vendor specific trap code
+
+#ifdef STACK_USE_SNMPV3_SERVER
+static BYTE gSnmpv3UserSecurityName[SNMPV3_USER_SECURITY_NAME_LEN_MEM_USE];
+#endif
+
+/*
+*  Default STACK_USE_SMIV2 is enabled . For Stack V5.31,  STACK_USE_SMIV2 should be disabled.
+*/
+#define STACK_USE_SMIV2
+
+/* Update the Non record id OID value 
+   which is part of CustomSnmpDemo.c file
+*/
+#define SNMP_MAX_NON_REC_ID_OID  3
+
+/*
+* gSnmpNonMibRecInfo[] is the list of static variable Parent OIDs which are not part of MIB.h file. 
+* This structure is used to restrict access to static variables of SNMPv3 OIDs from SNMPv2c and SNMPv1 version. 
+* With SNMPv3 all the OIDs accessible but when we are using SNMPv2c version , static variables of the SNMPv3 
+* cannot be accessible with SNMPversion v2c.
+* With V5.31 there was no MODULE-IDENTITY number in the SNMP.mib file. Now onwards we have supported SMIv2 
+* standard and SNMP.mib has been updated with respect to SMIV2 standard and it also includes 
+* MODULE-IDENTITY ( number 1)after ENTERPRISE-ID.
+*/
+
+/*
+* This structure has been moved from snmp.c file to here. 
+*/
+#ifdef STACK_USE_SMIV2
+/*
+* With SMIv2 standard which includes MODULE-IDENTITY number with the existing OID string.
+* For New snmp.mib file with SMIv2 standard
+*/
+/*
+* ENTERPRISEID - 17095(Microchip) as per BER encoding standard 0x81,0x85,0x47
+* Need to be modified with respect to customer enterprise ID 
+*/
+
+SNMPNONMIBRECDINFO gSnmpNonMibRecInfo[SNMP_MAX_NON_REC_ID_OID] =
+{
+#ifdef STACK_USE_SNMPV3_SERVER		
+	/* SNMPv3 Static Variable OID string which is not part of mib.h file */
+#endif			
+	{{43,6,1,2,1,1},SNMP_V2C}, /* Max matching Subids of the iso+org (43),dod(6),internet(1),mgmt(2),MIB2(1),system(1) tree*/	
+	{{43,6,1,4,1,0x81,0x85,0x47,0x1,1},SNMP_V2C}, 
+	/*Max matching Subids of the iso+org (43),dod(6),internet(1),private(4),ENTERPRISE(17095),MODULE-IDENTITY(1),product tree*/			
+	
+};
+/*
+ * if snmp.mib file doesnot have MODULE-IDENTITY number then this is the following structure should be used
+ */
+
+#else 
+/*
+* OLD snmp.mib file with SMIv1 standard 
+*/
+
+SNMPNONMIBRECDINFO gSnmpNonMibRecInfo[SNMP_MAX_NON_REC_ID_OID] =
+{
+#ifdef STACK_USE_SNMPV3_SERVER		
+	{{43,6,1,4,1,0x81,0x85,0x47,6},SNMP_V3},  /* SNMPv3 PVT test MIB OID is not part of mib.h file */
+#endif			
+	{{43,6,1,2,1,1},SNMP_V2C}, /* Max matching Subids of the iso+org (43),dod(6),internet(1),mgmt(2),MIB2(1),system(1) tree*/	
+	{{43,6,1,4,1,0x81,0x85,0x47,0x1},SNMP_V2C}, 
+	/*Max matching Subids of the iso+org (43),dod(6),internet(1),private(4),ENTERPRISE(17095),product tree*/			
+	
+};
+
+#endif /* STACK_USE_SMIV2 */
+
+/*
+#if defined(SNMP_STACK_USE_V2_TRAP) || defined(SNMP_V1_V2_TRAP_WITH_SNMPV3)
+//if gSetTrapSendFlag == FALSE then the last varbind variable for 
+//multiple varbind variable pdu structure or if there is only varbind variable send.
+// if gSetTrapSendFlag == TRUE, then v2 trap pdu is expecting more varbind variable.
+BYTE	gSetTrapSendFlag = FALSE;
+#endif 
+*/
+BYTE	gSetTrapSendFlag = TRUE;
+
+/*Initialize trap table with no entries.*/
+TRAP_INFO trapInfo = { TRAP_TABLE_SIZE };
+
+static DWORD SNMPGetTimeStamp(void);
+static BOOL SendNotification(BYTE receiverIndex, SNMP_ID var, SNMP_VAL val,UINT8 targetIndex);
+
+/****************************************************************************
+  ===========================================================================
+  Section:
+	SNMP Routines
+  ===========================================================================
+  ***************************************************************************/
+
+
+
+#if !defined(SNMP_TRAP_DISABLED) ||  defined(SNMP_STACK_USE_V2_TRAP) || defined(SNMP_V1_V2_TRAP_WITH_SNMPV3)
+
+//Trap_t  snmp_trap;
+Trap_t  snmp_trap[14];
+BYTE trap_en = 0x00;
+
+/****************************************************************************
+  Function:
+ 	 BOOL SendNotification(BYTE receiverIndex, SNMP_ID var, SNMP_VAL val,UINT8 targetIndex)
+ 
+  Summary:			
+	Prepare, validate remote node which will receive trap and send trap pdu.
+ 	  	  
+  Description:		
+    This routine prepares the trap notification pdu, sends ARP and get
+	remote device MAC address to which notification to sent, sends
+	the notification. 
+	Notofication state machine is getting updated if there is any ARP resolution failure for 
+	a perticular trap destination address.
+	
+  PreCondition:
+	SNMPTrapDemo() is called.
+ 	
+  parameters:
+     receiverIndex - The index to array where remote ip address is stored.  
+     var		   - SNMP var ID that is to be used in notification
+	 val           - Value of var. Only value of BYTE, WORD or DWORD can be sent.
+	 targetIndex - snmpv3 target index
+  Return Values:          
+ 	 TRUE	-	If notification send is successful.
+ 	 FALSE	-	If send notification failed.
+ 	 
+  Remarks:
+     None.
+ *************************************************************************/
+static BOOL SendNotification(BYTE receiverIndex, SNMP_ID var, SNMP_VAL val,UINT8 targetIndex)
+{
+    static enum { SM_PREPARE, SM_NOTIFY_WAIT } smState = SM_PREPARE;
+	
+    switch(smState)
+    {
+	    case SM_PREPARE:
+
+	        SNMPNotifyPrepare(&Manager_IP,
+	                          AppConfig.readCommunity[0],
+	                          SNMP_COMMUNITY_MAX_LEN,
+	                          AGILIS,            	   // Agent ID Var
+	                          gSpecificTrapNotification,   // Specifc Trap notification code
+	                          SNMPGetTimeStamp());
+	        smState = SM_NOTIFY_WAIT;
+			
+	        break;
+	
+	    case SM_NOTIFY_WAIT:
+
+	        if ( SNMPIsNotifyReady(&Manager_IP) )
+	        {
+	            smState = SM_PREPARE;
+				SNMPNotify(var, val, 0, 1);
+	            return TRUE;
+	        }			
+    }
+
+    return FALSE;
+}
+
+
+/**************************************************************************
+  Function:
+ 	void SNMPV2TrapDemo(void)
+ 
+  Summary:	
+  	Send SNMP V2 notification with multiple varbinds.
+ 	  	  
+  Description:		
+	This routine sends a trap v2 pdu with multiple varbind variables
+	for the predefined ip addresses with the agent. And as per RFC1905 
+	the first two variable bindings in the varbind pdu list of an
+   	SNMPv2-Trap-PDU are sysUpTime.0 and snmpTrapOID.0 respectively.
+   	To support multiple varbind, user need to call SendNotification()
+    for the first varbind variable and SendNotification() will do the 
+    arp resolve and adds sysUpTime.0 and snmpTrapOID.0 variable to 
+    the pdu. For the second varbind variable onwards user need to 
+   	call only SNMPNotify().
+	In this demo , snmpv2 trap includes ANALOG_POT0,PUSH_BUTTON and LED_D5
+	variable bindings and TrapCommunity variable is being used as part of the fourth varbind of
+	the TRAP PDU which is ASCII string format.
+	and this trap can be generated by using Analog portmeter value.
+	and SNMPv2-Trap-PDU will be generated only when pot meter reading exceeds 12.
+	
+	gSetTrapSendFlag Should be set to TRUE when user is trying to send first 
+	variable binding and gSetTrapSendFlag should be set to FALSE before 
+    sending the last variable binding.
+
+	* if user is sending only one variable binding then 
+	* gSetTrapSendFlag should be set to False.	
+    * user can add more variable bindings.
+    * For ASCII STR trap , argument VAL contains the pointer address of the string variable.
+  PreCondition:
+ 	Application defined event occurs to send the trap.
+ 	
+  parameters:
+     None.
+ 
+  Returns:          
+ 	 None.
+ 
+  Remarks:
+    This routine guides how to build a event generated trap notification.
+ *************************************************************************/
+BOOL SNMPV2TrapDemo(SNMP_VAL alarm_value, SNMP_VAL device_id)
+{
+	BOOL fReturn = FALSE;
+	static DWORD tempTimerRead = 0;
+	static BYTE timeLock = FALSE;
+	static BYTE maxTryToSendTrap=0;
+	UINT8		targetIndex = 0;
+	UINT8		retVal = 0;
+	
+	if(timeLock==(BYTE)FALSE)
+	{
+		tempTimerRead=TickGet();
+		timeLock=TRUE;
+	}
+/*
+	Specify SNMPV2 specific trap ID Here. Which will help Ireasoning and other SNMP manager tools to 
+	recognise the trap information and it will help the SNMP manager tool to decrypt the 
+	trap information. 
+
+	This ID is only related to trap ID. and this implementaion is only for TRAPv2 specific.
+*/
+			/*
+			 * prepare  and send multivarbind pdu using pot meter value. 
+			 * for SNMP v2 trap sysUpTime.0 and SNMPv2TrapOID.0 are mandatory
+			 * apart from these varbinds.
+			*/
+			//gSpecificTrapNotification = 1; //expecting 1 should be the specific trap.
+			//gGenericTrapNotification = ENTERPRISE_SPECIFIC;
+			//gSetTrapSendFlag = TRUE;
+
+				gSpecificTrapNotification = 1; //expecting 1 should be the specific trap.
+				gGenericTrapNotification = ENTERPRISE_SPECIFIC;
+				gSetTrapSendFlag = TRUE;
+/*				if(device_id.byte == 0)
+				{
+					device_id.byte = 1;
+					fReturn = SendNotification(0,RCUDEVICEID, device_id, targetIndex);
+				}
+				else
+*/
+					fReturn = SendNotification(0,BUC_DEVICEID, device_id, targetIndex);
+
+				if(fReturn == FALSE)
+				{
+				
+					if(maxTryToSendTrap >= MAX_TRY_TO_SEND_TRAP)
+					{
+						maxTryToSendTrap = 0;
+						return fReturn;
+					}
+					maxTryToSendTrap++;
+					return fReturn;
+				}
+				
+				// if this is the last trap variable need to be the part of SNMP v2 Trap,
+				// then we should disable gSetTrapSendFlag to FALSE
+				
+				gSetTrapSendFlag = FALSE;
+				SNMPNotify(BUC_ALARMSTATUS, alarm_value ,0,0);
+
+	//Try for max 5 seconds to send TRAP, do not get block in while()
+	if((TickGet()-tempTimerRead)>(5*TICK_SECOND))
+	{
+		UDPDiscard();
+		timeLock = FALSE;
+		return fReturn;
+	}
+ return fReturn;
+}
+
+
+
+void snmp_trap_task(void)
+{
+	BOOL temp = FALSE;
+	char i, j, k;
+	char index_buc=0, index_rcu=0;
+	SNMP_VAL alarm_value = 0, device_id = 0;
+	BYTE templvl, rflow, rfon;
+
+	
+	if((TickGet() - 0 >= TICK_SECOND*10))
+        {
+          if(trap_en == 0x00)
+             trap_en = 0x01;
+        }
+
+if(trap_en == 0x01)
+{
+
+k = BUC_LOLOCK_TRAP;
+
+for(i=0; i<2;i++)
+{
+	if(BUCinfo[i].info.BUC_model == KUBAND)
+	{
+		templvl = BUCinfo[i].alarm.templvl_sspa;
+		rflow   = BUCinfo[i].alarm.rflow_sspa;
+		rfon    = BUCinfo[i].alarm.rfon_sspa;
+	}
+	else
+	{
+		templvl = BUCinfo[i].alarm.templvl;
+		rflow   = BUCinfo[i].alarm.rflow;
+		rfon    = BUCinfo[i].alarm.rfon;
+	}
+	
+	for(j=BUC_LOLOCK_TRAP; j<= BUC2COMTRAP; j++)
+	{
+		index_buc = ((j - k) * 2) + i;
+		
+		if(((BUCinfo[i].alarm.Lo == 1)&&(snmp_trap[index_buc].alarm_temp == 0x00) && (j == BUC_LOLOCK_TRAP)) ||
+		   ((BUCinfo[i].alarm.Lo == 0)&&(snmp_trap[index_buc].alarm_temp == 0x01) && (j == BUC_LOLOCK_TRAP)))
+		{
+			SNMPNotifyInfo.trapIDVar = BUC_LOLOCK_TRAP;
+			alarm_value.byte = BUCinfo[i].alarm.Lo;
+			device_id.byte   = i+1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_buc].alarm_temp = BUCinfo[i].alarm.Lo;
+		}
+		if(((templvl == 1)&&(snmp_trap[index_buc].alarm_temp == 0x00) && (j == BUC_TEMPLVL_TRAP)) ||
+		   ((templvl == 0)&&(snmp_trap[index_buc].alarm_temp == 0x01) && (j == BUC_TEMPLVL_TRAP)))
+		{
+			SNMPNotifyInfo.trapIDVar = BUC_TEMPLVL_TRAP;
+			alarm_value.byte = templvl;
+			device_id.byte   = i+1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_buc].alarm_temp = templvl;
+		}
+		if(((rfon == 1)&&(snmp_trap[index_buc].alarm_temp == 0x00) && (j == BUC_PWRAMP_TRAP)) ||
+		   ((rfon == 0)&&(snmp_trap[index_buc].alarm_temp == 0x01) && (j == BUC_PWRAMP_TRAP)))
+		{
+			SNMPNotifyInfo.trapIDVar = BUC_PWRAMP_TRAP;
+			alarm_value.byte = rfon;
+			device_id.byte   = i+1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_buc].alarm_temp = rfon;
+		}
+		if(((rflow == 1)&&(snmp_trap[index_buc].alarm_temp == 0x00) && (j == BUC_RFPWMLOW_TRAP)) ||
+		   ((rflow == 0)&&(snmp_trap[index_buc].alarm_temp == 0x01) && (j == BUC_RFPWMLOW_TRAP)))
+		{
+			SNMPNotifyInfo.trapIDVar = BUC_RFPWMLOW_TRAP;
+			alarm_value.byte = rflow;
+			device_id.byte   = i+1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_buc].alarm_temp = rflow;
+		}	
+	}
+} //end of outer for loop
+	
+	k = BUC_LOLOCK_TRAP;
+	
+	for(j=PS1TRAP; j<= BUC2COMTRAP; j++)
+	{
+		index_rcu = ((j - k) * 2);
+		
+		
+		if(((RCUinfo.ps1_alarm == 1)&&(snmp_trap[index_rcu].alarm_temp == 0x00) && (j == PS1TRAP)) ||
+		   ((RCUinfo.ps1_alarm == 0)&&(snmp_trap[index_rcu].alarm_temp == 0x01) && (j == PS1TRAP)))
+		{
+			SNMPNotifyInfo.trapIDVar = PS1TRAP;
+			alarm_value.byte = RCUinfo.ps1_alarm;
+			device_id.byte   = 1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_rcu].alarm_temp = RCUinfo.ps1_alarm;
+		}
+		if(((RCUinfo.ps2_alarm == 1)&&(snmp_trap[index_rcu-1].alarm_temp == 0x00) && (j == PS2TRAP)) ||
+		   ((RCUinfo.ps2_alarm == 0)&&(snmp_trap[index_rcu-1].alarm_temp == 0x01) && (j == PS2TRAP)))
+		{
+			SNMPNotifyInfo.trapIDVar = PS2TRAP;
+			alarm_value.byte = RCUinfo.ps2_alarm;
+			device_id.byte   = 1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_rcu-1].alarm_temp = RCUinfo.ps2_alarm;
+		}
+		
+		if(((RCUinfo.ocxo1_alarm == 1)&&(snmp_trap[index_rcu-2].alarm_temp == 0x00) && (j == OCXO1TRAP)) ||
+		   ((RCUinfo.ocxo1_alarm == 0)&&(snmp_trap[index_rcu-2].alarm_temp == 0x01) && (j == OCXO1TRAP)))
+		{
+			SNMPNotifyInfo.trapIDVar = OCXO1TRAP;
+			alarm_value.byte = RCUinfo.ocxo1_alarm;
+			device_id.byte   = 1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_rcu-2].alarm_temp = RCUinfo.ocxo1_alarm;
+		}
+		
+		if(((RCUinfo.ocxo2_alarm == 1)&&(snmp_trap[index_rcu-3].alarm_temp == 0x00) && (j == OCXO2TRAP)) ||
+		   ((RCUinfo.ocxo2_alarm == 0)&&(snmp_trap[index_rcu-3].alarm_temp == 0x01) && (j == OCXO2TRAP)))
+		{
+			SNMPNotifyInfo.trapIDVar = OCXO2TRAP;
+			alarm_value.byte = RCUinfo.ocxo2_alarm;
+			device_id.byte   = 1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_rcu-3].alarm_temp = RCUinfo.ocxo2_alarm;
+		}
+		
+		if(j == BUC1COMTRAP)
+		{
+			i = 0;
+			index_rcu = index_rcu -4;
+		}
+		else
+		if(j == BUC2COMTRAP)
+		{
+			i = 1;
+			index_rcu = index_rcu - 5;
+		}
+		
+		if(((BUCinfo[i].info.firmwareVersion[1] != '?')&&(snmp_trap[index_rcu].alarm_temp == 0x00) && (j == BUC1COMTRAP+i)) ||
+		   ((BUCinfo[i].info.firmwareVersion[1] == '?')&&(snmp_trap[index_rcu].alarm_temp == 0x01) && (j == BUC1COMTRAP+i)))
+		{
+			SNMPNotifyInfo.trapIDVar = BUC1COMTRAP + i;
+			if(BUCinfo[i].info.firmwareVersion[1] == '?')
+				alarm_value.byte = 0;
+			else
+				alarm_value.byte = 1;
+			device_id.byte   = 1;
+			temp = SNMPV2TrapDemo(alarm_value, device_id);
+			if(temp == TRUE)
+				snmp_trap[index_rcu].alarm_temp = alarm_value.byte;
+		}
+	}
+
+
+		
+		
+}//if trap_en ==1
+
+}
+
+
+#endif //defined(SNMP_STACK_USE_V2_TRAP) || defined(SNMP_V1_V2_TRAP_WITH_SNMPV3)
+
+/*********************************************************************
+  Function:
+ 	 BYTE SNMPValidateCommunity(BYTE* community)
+ 
+  Summary:			
+ 	 Validates community name for access control. 
+ 
+  Description:		
+     This function validates the community name for the mib access to NMS.
+ 	 The snmp community name received in the request pdu is validated for
+ 	 read and write community names. The agent gives an access to the mib
+ 	 variables only if the community matches with the predefined values.
+  	 This routine also sets a gloabal flag to send trap if authentication
+ 	 failure occurs.
+  
+  PreCondition:
+ 	 SNMPInit is already called.
+ 
+  parameters:
+     community - Pointer to community string as sent by NMS.
+ 
+  Returns:          
+ 	 This routine returns the community validation result as 
+  	 READ_COMMUNITY or WRITE_COMMUNITY or INVALID_COMMUNITY	
+ 
+  Remarks:
+     This is a callback function called by module. User application must 
+  	 implement this function and verify that community matches with 
+ 	 predefined value. This validation occurs for each NMS request.
+ ********************************************************************/
+BYTE SNMPValidateCommunity(BYTE * community)
+{
+	BYTE i;
+	BYTE *ptr;
+	
+	/*
+	If the community name is encrypted in the request from the Manager,
+	agent required to decrypt it to match with the community it is
+	configured for. The response from the agent should contain encrypted community 
+	name using the same encryption algorithm which Manager used while
+	making the request.
+	*/ 		
+
+	// Validate that community string is a legal size
+	if(strlen((char*)community) <= SNMP_COMMUNITY_MAX_LEN)
+	{
+		// Search to see if this is a write community.  This is done before 
+		// searching read communities so that full read/write access is 
+		// granted if a read and write community name happen to be the same.
+		for(i = 0; i < SNMP_MAX_COMMUNITY_SUPPORT; i++)
+		{
+			ptr = AppConfig.writeCommunity[i];
+			if(ptr == NULL)
+				continue;
+			if(*ptr == 0x00u)
+				continue;
+			if(strncmp((char*)community, (char*)ptr, SNMP_COMMUNITY_MAX_LEN) == 0)
+				return WRITE_COMMUNITY;
+		}
+		
+		// Did not find in write communities, search read communities
+		for(i = 0; i < SNMP_MAX_COMMUNITY_SUPPORT; i++)
+		{
+			ptr = AppConfig.readCommunity[i];
+			if(ptr == NULL)
+				continue;
+			if(*ptr == 0x00u)
+				continue;
+			if(strncmp((char*)community, (char*)ptr, SNMP_COMMUNITY_MAX_LEN) == 0)
+				return READ_COMMUNITY;
+		}
+	}
+	
+	// Could not find any matching community, set up to send a trap
+	gSpecificTrapNotification=VENDOR_TRAP_DEFAULT;
+	gGenericTrapNotification=AUTH_FAILURE;
+	gSendTrapFlag=TRUE;
+	return INVALID_COMMUNITY;
+	
+}
+
+/*********************************************************************
+  Function:
+  	BOOL SNMPIsValidSetLen(SNMP_ID var, BYTE len,BYTE index)
+
+  Summary: 	
+	Validates the set variable data length to data type.
+	
+  Description:
+  	This routine is used to validate the dyanmic variable data length
+  	to the variable data type. It is used when SET request is processed.
+  	This is a callback function called by module. User application
+  	must implement this function.
+  	
+  PreCondition:
+  	ProcessSetVar() is called.
+ 
+  Parameters:  
+  	var	-	Variable id whose value is to be set
+  	len	-	Length value that is to be validated.
+ 	index -   instance of a OID
+  Return Values:  
+  	TRUE  - if given var can be set to given len
+    FALSE - if otherwise.
+ 
+  Remarks:
+  	This function will be called for only dynamic variables that are
+  	defined as ASCII_STRING and OCTET_STRING (i.e. data length greater
+  	than 4 bytes)
+ ********************************************************************/
+BOOL SNMPIsValidSetLen(SNMP_ID var, BYTE len,BYTE index)
+{
+    switch(var)
+    {
+		case TRAP_COMMUNITY:
+			if ( len < (BYTE)TRAP_COMMUNITY_MAX_LEN)
+				return TRUE;
+			break;
+		case SYS_DESCR1:
+		case SYS_CONTACT1:
+		case SYS_NAME1:
+		case SYS_LOCATION1:
+		case MANAGERIP:
+		case RCUDEVICEIP:
+		case RCUDEVICEID:
+		case BUC_DEVICEID:
+		case BUC_RFOPERATION:
+		case BUC_ATTENUATION:
+		case RCUMODE:
+		case RCUACTIVEPATH:
+				return TRUE;
+        break;
+	}
+		
+    return FALSE;
+}
+
+/*********************************************************************
+  Function:  
+ 	BOOL SNMPSetVar(SNMP_ID var, SNMP_INDEX index,
+                                   BYTE ref, SNMP_VAL val)
+ 
+  Summary:
+  	This routine Set the mib variable with the requested value.
+ 
+  Description:
+  	This is a callback function called by module for the snmp
+  	SET request.User application must modify this function 
+ 	for the new variables address.
+
+  Precondition:
+ 	ProcessVariables() is called.
+ 	
+  Parameters:        
+    var	-	Variable id whose value is to be set
+
+    ref -   Variable reference used to transfer multi-byte data
+            0 if first byte is set otherwise nonzero value to indicate
+            corresponding byte being set.
+            
+    val -   Up to 4 byte data value.
+            If var data type is BYTE, variable
+               value is in val->byte
+            If var data type is WORD, variable
+               value is in val->word
+            If var data type is DWORD, variable
+               value is in val->dword.
+            If var data type is IP_ADDRESS, COUNTER32,
+               or GAUGE32, value is in val->dword
+            If var data type is OCTET_STRING, ASCII_STRING
+               value is in val->byte; multi-byte transfer
+               will be performed to transfer remaining
+               bytes of data.
+ 
+  Return Values:  
+  	TRUE	-	if it is OK to set more byte(s).
+    FALSE	-	if otherwise.
+ 
+  Remarks: 
+  	This function may get called more than once depending on number 
+	of bytes in a specific set request for given variable.
+	only dynamic read-write variables needs to be handled.
+********************************************************************/
+BOOL SNMPSetVar(SNMP_ID var, SNMP_INDEX index, BYTE ref, SNMP_VAL val)
+{
+
+   BOOL fReturn = FALSE;
+   char i=0;
+ switch(var)
+  {
+
+	case SYS_DESCR1:
+	case SYS_CONTACT1:
+	case SYS_NAME1:
+	case SYS_LOCATION1:
+    {	
+		fReturn = Agilissnmp_setSYS_Params(var, ref, val.byte);
+		return fReturn;
+    }
+
+  } /* End of Switch case */
+
+  SEARCH_INDEX(var,i);
+ 
+  if ((SNMP_cmd_tbl[i].param_id == var) && (SNMP_cmd_tbl[i].fptr_set != NULL)&&(index <= BUC_MAX_SIZE)&& (index > 0))
+  {
+     index--;				
+    fReturn = (*SNMP_cmd_tbl[i].fptr_set) (index, &ref, &val);
+  }
+  else if(index == 0)
+  {
+    fReturn = (*SNMP_cmd_tbl[i].fptr_set) (index, &ref, &val);
+  }
+ 	return fReturn;
+}
+
+
+/*********************************************************************
+  Function:        
+  	BOOL SNMPGetExactIndex(SNMP_ID var,SNMP_INDEX index)
+
+  Summary:
+  	To search for exact index node in case of a Sequence variable.
+	
+  Description:    
+  	This is a callback function called by SNMP module.
+    SNMP user must implement this function in user application and 
+    provide appropriate data when called.  This function will only
+    be called for OID variable of type sequence.
+    
+  PreCondition: 
+  	None
+ 
+  Parameters:
+  	var		-	Variable id as per mib.h (input)
+  	index      -	 Index of variable (input)
+ 
+  Return Values:
+  	TRUE	-	 If the exact index value exists for given variable at given
+                 index.
+    FALSE	-	 Otherwise.
+ 
+  Remarks:
+	  Only sequence index needs to be handled in this function.
+ ********************************************************************/
+BOOL SNMPGetExactIndex(SNMP_ID var, SNMP_INDEX index)
+{
+    
+    switch(var)
+    {
+	    case TRAP_RECEIVER_ID:
+	    case TRAP_RECEIVER_ENABLED:
+		case TRAP_RECEIVER_IP:
+		case TRAP_COMMUNITY:
+							return TRUE;
+	    break;
+    }
+    return FALSE;
+}
+
+
+/*********************************************************************
+  Function:        
+  	BOOL SNMPGetNextIndex(SNMP_ID var,SNMP_INDEX* index)
+
+  Summary:
+  	To search for next index node in case of a Sequence variable.
+	
+  Description:    
+  	This is a callback function called by SNMP module.
+    SNMP user must implement this function in user application and 
+    provide appropriate data when called.  This function will only
+    be called for OID variable of type sequence.
+    
+  PreCondition: 
+  	None
+ 
+  Parameters:
+  	var		-	Variable id whose value is to be returned
+  	index   -	Next Index of variable that should be transferred
+ 
+  Return Values:
+  	TRUE	-	 If a next index value exists for given variable at given
+                 index and index parameter contains next valid index.
+    FALSE	-	 Otherwise.
+ 
+  Remarks:
+	  Only sequence index needs to be handled in this function.
+ ********************************************************************/
+BOOL SNMPGetNextIndex(SNMP_ID var, SNMP_INDEX* index)
+{
+
+    SNMP_INDEX tempIndex;
+    tempIndex = *index;
+
+        // INDEX_INVALID means start with first index.
+        if (tempIndex == (BYTE)SNMP_INDEX_INVALID)
+        {
+			  if(BUCinfo[0].info.deviceID[0] != '?')
+				*index = 1;
+		          else if(BUCinfo[1].info.deviceID[0] != '?')
+				*index = 2;
+			  else
+				*index = 1;
+		          return TRUE;
+        }
+        else if (tempIndex < 2 )
+		{
+		  if((tempIndex >= 0) && (BUCinfo[0].info.deviceID[0] == '?'))
+	      {
+			 	if(tempIndex==1)
+				{
+				  *index = *index+1;   //for walk
+				   return FALSE;
+				}
+				else
+				{
+				  *index = 2;
+		                  return TRUE;
+				}
+	       }
+			else if((tempIndex >= 1) && (BUCinfo[1].info.deviceID[0] == '?'))
+	        {
+				*index = *index+1;
+	           	return FALSE;
+		    }
+		  	else
+		    {
+	        	*index = tempIndex+1;
+				return TRUE;
+		    }
+        }
+        
+    return FALSE;
+}
+
+/*********************************************************************
+  Function:
+  	BOOL SNMPIdRecrdValidation(PDU_INFO * pduPtr,OID_INFO *var,BYTE * oidValuePtr,BYTE oidLen)
+                                   
+  Summary:
+  	Used to Restrict the access dynamic and non dynamic OID string for A perticular SNMP Version.
+
+  Description:
+ 	This is a callback function called by SNMP module. SNMP user must 
+ 	implement this function as per SNMP version. One need to add the new SNMP
+ 	MIB IDs hereas per SNMP version.
+ 	e.g - SYS_UP_TIME (250) is common for V1/V2/V3
+ 	ENGINE_ID - is the part of V3, So put the all the SNMPv3 var ids within 
+ 	Macro STACK_USE_SNMPV3_SERVER.   
+ 	
+  PreCondition:
+  	None
+ 
+  parameters:
+  	var		-	Variable rec whose record id need to be validated
+  	oidValuePtr - OID Value
+  	oidLen - oidValuePtr length
+    
+  Return Values:
+  	TRUE	-	If a Var ID exists .
+    	FALSE 	-	Otherwise.
+ 
+  Remarks:
+ 	None.
+ ********************************************************************/
+BOOL SNMPIdRecrdValidation(PDU_INFO * pduPtr,OID_INFO *var,BYTE * oidValuePtr,BYTE oidLen)
+{
+	int i=0,j=0;
+	int len=0;
+	BOOL flag=FALSE;
+	BYTE size=0;
+
+	if(var == NULL)
+		return FALSE;
+	
+	if(!var->nodeInfo.Flags.bIsIDPresent)
+	{
+		if(oidValuePtr == NULL)
+			return FALSE;
+		
+		for(i=0; i< SNMP_MAX_NON_REC_ID_OID; i++)
+		{
+			if((pduPtr->snmpVersion != SNMP_V3) && 
+				(gSnmpNonMibRecInfo[i].version == SNMP_V3))
+				continue;
+			
+			size = strlen((char*)gSnmpNonMibRecInfo[i].oidstr);
+			if(size == 0)
+				continue;
+			if( size <= oidLen)
+				len = size;
+			else
+				continue;
+
+			// find the first unmatching byte
+			while(len--)
+			{
+				if(gSnmpNonMibRecInfo[i].oidstr[j] != oidValuePtr[j])
+				{
+					flag = FALSE;
+					j=0;
+					break;
+				}
+				else
+				{
+					flag = TRUE;
+					j++;
+				}
+			}
+			if(flag == TRUE)
+			{
+				return TRUE;
+			}
+		}			
+		return FALSE;
+	}
+	switch(var->id)
+	{
+		case AGILIS:
+		case MICROCHIP:
+		case SYS_DESCR1:
+		case SYS_UP_TIME:
+		case SYS_CONTACT1:
+		case SYS_NAME1:
+		case SYS_LOCATION1:
+
+	    case TRAP_RECEIVER_ID:
+	    case TRAP_RECEIVER_ENABLED:
+	    case TRAP_RECEIVER_IP:
+	    case TRAP_COMMUNITY:
+
+		case BUC_ALARMSTATUS:
+		return TRUE;
+	}
+	
+  i = var->id;
+  j = 0;
+
+  SEARCH_INDEX(i,j);
+ 
+  if ((SNMP_cmd_tbl[j].param_id == var->id))
+  {
+	return TRUE;
+  }
+   else
+   {
+       return FALSE;
+   }	
+
+    return FALSE;
+}
+
+/*********************************************************************
+  Function:
+  	BOOL SNMPGetVar(SNMP_ID var, SNMP_INDEX index,BYTE* ref, SNMP_VAL* val)
+                                   
+  Summary:
+  	Used to Get/collect OID variable information.
+
+  Description:
+ 	This is a callback function called by SNMP module. SNMP user must 
+ 	implement this function in user application and provide appropriate
+ 	data when called.
+   	
+  PreCondition:
+  	None
+ 
+  parameters:
+  	var		-	Variable id whose value is to be returned
+    index   -	Index of variable that should be transferred
+    ref     -   Variable reference used to transfer
+              	multi-byte data
+                It is always SNMP_START_OF_VAR when very
+                first byte is requested.
+                Otherwise, use this as a reference to
+                keep track of multi-byte transfers.
+    val     -	Pointer to up to 4 byte buffer.
+                If var data type is BYTE, transfer data
+                  in val->byte
+                If var data type is WORD, transfer data in
+                  val->word
+                If var data type is DWORD, transfer data in
+                  val->dword
+                If var data type is IP_ADDRESS, transfer data
+                  in val->v[] or val->dword
+                If var data type is COUNTER32, TIME_TICKS or
+                  GAUGE32, transfer data in val->dword
+                If var data type is ASCII_STRING or OCTET_STRING
+                  transfer data in val->byte using multi-byte
+                  transfer mechanism.
+ 
+  Return Values:
+  	TRUE	-	If a value exists for given variable at given index.
+    FALSE 	-	Otherwise.
+ 
+  Remarks:
+ 	None.
+ ********************************************************************/
+BOOL SNMPGetVar(SNMP_ID var, SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)
+{
+	BOOL fReturn = FALSE;
+	char i = 0;
+	char j = 0;
+
+  switch(var)
+  {
+	case SYS_UP_TIME:
+	case SYS_DESCR1:
+	case SYS_CONTACT1:
+	case SYS_NAME1:	
+	case SYS_LOCATION1:
+	{    	
+		fReturn = Agilissnmp_getSYS_Params(var, ref, val);
+		return fReturn;
+	}
+  }
+
+  if(var == BUC_ALARMSTATUS)
+  {	
+	if(RCUinfo.txPathA_alarm == 0)
+		val->byte = 0;
+	else if (RCUinfo.txPathB_alarm == 0)
+		val->byte = 0;
+	else
+		val->byte = 1;
+	return TRUE;
+  }
+
+
+  SEARCH_INDEX(var,i);
+ 
+  if ((SNMP_cmd_tbl[i].param_id == var) && (SNMP_cmd_tbl[i].fptr_get != NULL))
+  {
+    if(index == 1 || index == 2)//for BUC params walk
+	 {
+       index--;
+		if(snmp_get_type == TRUE)
+       		snmp_get_type = FALSE;
+       fReturn = (*SNMP_cmd_tbl[i].fptr_get) (index, ref, val);
+     }
+    else if(var >= MANAGERIP && var <= RCUACTIVEPATH) // for RCU walk or get
+     {
+       fReturn = (*SNMP_cmd_tbl[i].fptr_get) (var, ref, val);
+     }
+	else
+	if(var == TRAP_RECEIVER_ID || var == TRAP_COMMUNITY)
+	{
+  	   SEARCH_INDEX(var,i);
+       fReturn = (*SNMP_cmd_tbl[i].fptr_get) (var, ref, val);
+       return fReturn;
+	}
+    else
+      return FALSE;
+  }
+ 
+ return fReturn;
+}
+
+
+/*********************************************************************
+  Function:
+  	static DWORD SNMPGetTimeStamp(void)
+
+  Summary:
+	Obtains the current Tick value for the SNMP time stamp.
+
+  Description:
+	This function retrieves the absolute time measurements for 
+	SNMP time stamp.Use TickGet and TickGetDiv64K to collect all 48bits
+	of the internal Tick Timer.
+
+  PreCondition:
+  	None
+ 
+  parameters:
+  	None
+ 
+  Return Values:
+  	timeStamp - DWORD timevalue
+ 
+  Remarks:
+ 	None.
+ ********************************************************************/
+static DWORD SNMPGetTimeStamp(void)
+{
+
+	DWORD_VAL dwvHigh, dwvLow;
+    DWORD dw;
+    DWORD timeStamp;
+	
+	//TimeStamp
+	// Get all 48 bits of the internal Tick timer
+    do
+   	{
+	   	dwvHigh.Val = TickGetDiv64K();
+	   	dwvLow.Val = TickGet();
+	} while(dwvHigh.w[0] != dwvLow.w[1]);
+    dwvHigh.Val = dwvHigh.w[1];
+    
+	// Find total contribution from lower DWORD
+    dw = dwvLow.Val/(DWORD)TICK_SECOND;
+    timeStamp = dw*100ul;
+    dw = (dwvLow.Val - dw*(DWORD)TICK_SECOND)*100ul;		// Find fractional seconds and convert to 10ms ticks
+    timeStamp += (dw+((DWORD)TICK_SECOND/2ul))/(DWORD)TICK_SECOND;
+
+	// Itteratively add in the contribution from upper WORD
+	while(dwvHigh.Val >= 0x1000ul)
+	{
+		timeStamp += (0x100000000000ull*100ull+(TICK_SECOND/2ull))/TICK_SECOND;
+		dwvHigh.Val -= 0x1000;
+	}	
+	while(dwvHigh.Val >= 0x100ul)
+	{
+		timeStamp += (0x010000000000ull*100ull+(TICK_SECOND/2ull))/TICK_SECOND;
+		dwvHigh.Val -= 0x100;
+	}	
+	while(dwvHigh.Val >= 0x10ul)
+	{
+		timeStamp += (0x001000000000ull*100ull+(TICK_SECOND/2ull))/TICK_SECOND;
+		dwvHigh.Val -= 0x10;
+	}	
+	while(dwvHigh.Val)
+	{
+		timeStamp += (0x000100000000ull*100ull+(TICK_SECOND/2ull))/TICK_SECOND;
+		dwvHigh.Val--;
+	}
+    
+    return timeStamp;
+}
+
+#endif	//#if defined(STACK_USE_SNMP_SERVER)

@@ -1,0 +1,210 @@
+/*********************************************************************
+
+ *********************************************************************
+ * FileName:        MainDemo.c
+ * Dependencies:    TCPIP.h
+ * Processor:       PIC18, PIC24F, PIC24H, dsPIC30F, dsPIC33F, PIC32
+ * Compiler:        Microchip C32 v1.05 or higher
+ *					Microchip C30 v3.12 or higher
+ *					Microchip C18 v3.30 or higher
+ *					HI-TECH PICC-18 PRO 9.63PL2 or higher
+ * Company:         Microchip Technology, Inc.
+ *
+ ********************************************************************/
+
+#define THIS_IS_STACK_APPLICATION
+
+
+#if defined(__18F97J60) || defined(_18F97J60)
+// Include all headers for any enabled TCPIP Stack functions
+#include "TCPIP Stack/TCPIP.h"
+#endif
+
+// Include functions specific to this stack application
+#include "Main.h"
+#include "define.h"
+#include "Global.h"
+#include "timers.h"
+#include "task.h"
+#include "list.h"
+#include "AgilisDualUART.h"
+#include <usart.h>
+#include "AgilisDriverManager.h"
+#include "AgilisDeviceManager.h"
+#include "AgilisProtocol.h"
+#include "AgilisUart.h"
+#include "RCUServer.h"
+#include "BUCClient.h"
+#include "AgilisTaskManager.h"
+#include "RCUTask.h"
+
+// Declare AppConfig structure and some other supporting stack variables
+
+unsigned char HardwareWDT = 1;
+
+//#define UART_TEST // uart testing
+
+IP_ADDR		MyStaticIPAddr;
+unsigned char ostart,oend,ctemp;
+
+#pragma udata grp5
+APP_CONFIG AppConfig;
+
+#pragma udata
+unsigned char Read2[2][4];
+
+#pragma udata gpr8
+systeminfo_t systeminfo1;
+#pragma udata grp10
+systeminfo_t2 systeminfo2;
+
+//#pragma code // Return to default code section
+
+//#define ClearWatchDog()  { _asm CLRWDT _endasm }
+
+
+void HitWatchDog(void)  
+{ 
+	// clear MCU watchdog 
+	//ClearWatchDog();
+_asm 
+	CLRWDT 
+_endasm
+
+	// clear hardware watch dog, toggle RA3
+	if (HardwareWDT == 1)
+	{
+		WDI_FLAG = 0;
+		HardwareWDT = 0;
+	}
+	else
+	{
+		WDI_FLAG = 1;
+		HardwareWDT = 1;
+	}
+}
+
+void main(void)
+{
+#if defined(__18F97J60) || defined(_18F97J60)
+	static TICK t = 0;
+#endif
+	unsigned char i,j=0,k;
+
+	// Initialize application specific hardware
+	InitializeBoard();
+
+	// Initialize stack-related hardware components that may be 
+	// required by the UART configuration routines
+    TickInit();
+#if defined(STACK_USE_MPFS) || defined(STACK_USE_MPFS2)
+	MPFSInit();
+#endif
+
+	// Initialize Stack and application related NV variables into AppConfig.
+	InitAppConfig();
+
+	InitData();
+    //InitStatus();
+
+    StackInit();
+
+	// Initialze task queue
+    InitTask();  
+
+    TaskDelay(TASK_STATUS_UPDATE, PERIOD_UPDATE_INTERVAL, SEMA_NULL);
+    TaskDelay(TASK_POLLING, PERIOD_POLLING, SEMA_NULL);
+//    TaskDelay(TASK_TCP_Stacks, PERIOD_TCP_Stacks, SEMA_NULL);
+//    TaskDelay(TASK_SNMP_Trap, PERIOD_SNMP_Trap, SEMA_NULL);
+
+	// initialize Agilis Driver Manager
+	AgilisDriverManagerInit();
+
+	// initialize all uart ports
+
+	// PC use RS232/RS485 based on com mode configured
+	AgilisUart0Init(RCUinfo.comMode);
+	// LCD client
+	AgilisUart1Init(RS232);
+	// WiFi client
+	AgilisUart2Init(RS232);
+	// BUC 1 server
+	AgilisUart3Init(RS485);
+	// BUC 2 server
+	AgilisUart4Init(RS485);
+
+	AgilisDeviceManagerInit();
+
+	// initialize iBUC server which responds to PC/ASRC/WiFi request
+	// and proxy/forward request to BUC driver
+
+	RCUServerInit(  (rom char*)"uart0", // PC client
+					(rom char*)"uart1",	// LCD client
+					(rom char*)"uart2",	// WiFi client
+					(rom char*)"uart3",	// BUC1 server
+					(rom char*)"uart4");// BUC2 server 
+
+	BUCClientInit((rom char*)"uart3", (rom char*)"uart4");
+
+	AgilisTaskManagerInit();
+	RCUTaskInit();
+
+	//RCUinfo.comMode = RS485;
+
+	// initialize RCU server which responds to PC/WiFI request
+	// and proxy/forward request to BUC servers connected
+
+#if 0
+	debugPrintf2("\rUnit Start\r");
+#endif
+
+	while(1)
+    {
+		// This task performs normal stack task including checking
+		// for incoming packet, type of packet and calling
+		// appropriate stack entity to process it.
+#if defined(UART_TEST)
+ 		AgilisUartTestRead("uart0");
+ 		AgilisUartTestRead("uart1");
+ 		AgilisUartTestRead("uart2");
+ 		AgilisUartTestRead("uart3");
+ 		AgilisUartTestRead("uart4");
+#endif
+
+
+#if defined(__18F97J60) || defined(_18F97J60)
+	// run ethernet stack task only if ethernet is connected
+	if(MACIsLinked()){
+		StackTask();  
+		
+		// This tasks invokes each of the core stack application tasks
+		StackApplications(); 
+
+		//schedule task to clear set password result
+		if (TickGet() - t >= TICK_SECOND/3ul)
+		{
+			t = TickGet();
+			webpassinfo.count++;  
+			if (webpassinfo.count == 14) //Reserved for check powers and FSK send
+			{ 	   
+				webpassinfo.setpass = others; //reset the set password phrase to empty
+				webpassinfo.count = 0;
+			}
+		}
+	}
+#endif // #if defined(__18F97J60) || defined(_18F97J60)
+
+
+#if !defined SNMP_TRAP_DISABLED
+		snmp_trap_task();
+#endif
+
+
+#if !defined(UART_TEST)
+		AgilisDeviceManagerHandler();
+#endif
+
+		AgilisTaskManagerHandler();
+	}
+}
+

@@ -1,0 +1,3 @@
+Warning[2054] D:\Work\Singcom\70M\70M_1213\work\Drivers\MCU-Internal\i2c_c1.c 317 : suspicious pointer conversion
+Warning[2054] D:\Work\Singcom\70M\70M_1213\work\Drivers\MCU-Internal\i2c_c1.c 327 : suspicious pointer conversion
+Warning[2054] D:\Work\Singcom\70M\70M_1213\work\Drivers\MCU-Internal\i2c_c1.c 337 : suspicious pointer conversion

@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>ST Satcom TCP/IP Monitor&Control</title>
+<link rel="stylesheet" href="/stylesheet.css" type="text/css">
+<script src="/mchp.js" type="text/javascript"></script>
+<script src="/ts_picker.js" type="text/javascript"></script>
+<script src="/ops.js" type="text/javascript"></script>
+</head>
+<body onload="onloadConfig();">
+<table width="100%" border="0" cellpadding="0">
+ <tr height="80px">
+		<td bgcolor="#174b7d">
+			<ul id="my_menu">
+				<li>
+					<div id="div2" class="menuitems">
+						<a class="linkmenuitems" href="/index.htm">Device Information</a>
+					</div>
+				</li>
+				<li>
+					<div id="div3" class="menuitems">
+						<a class="linkmenuitems" href="/status.htm">Device Status</a>
+					</div>
+				</li>	
+				<li>
+					<div id="div4" class="menuitems">
+						<a class="linkmenuitems" href="/alarm.htm">Device Alarm</a>
+					</div>
+				</li>
+				<li>
+					<div id="div3" class="menuitems">
+						<a class="linkmenuitems" href="/protect/config.htm">Device Configuration</a>
+					</div>
+				</li>	
+				<li>
+					<div id="div3" class="menuitems">
+						<a class="linkmenuitems" href="/snmp/snmpconfig.htm">SNMP Configuration</a>
+					</div>
+				</li>
+			</ul>
+			<img style="position:absolute; right:10px; margin-top: -25px;" src="../images/st-logo.PNG" alt="ST Satcom" />
+			
+	</td>
+  </tr>

@@ -1,0 +1,84 @@
+#include "Global.h"
+#include "BUCClient.h"
+#include "RCUHLAccess.h"
+#include "RCULLAccess.h"
+#include "AgilisAppUtil.h"
+
+#if defined STACK_USE_SNMP_SERVER
+
+typedef BOOL (*Agilis_CMD_Tbl_fptr_t) (SNMP_INDEX, BYTE*, SNMP_VAL *);
+extern const Agilis_CMD_Tbl_fptr_t cmd_tbl_fptr_array[];
+
+BOOL Agilissnmpll_getBUCdeviceID(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getBUCPartNo(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getBUCserialNo(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getBUCfirmwareVersion(SNMP_INDEX, BYTE*, SNMP_VAL*);
+
+
+BOOL Agilissnmpll_getBUCinpower(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getBUCoutpower(SNMP_INDEX, BYTE*, SNMP_VAL*);  				
+BOOL Agilissnmpll_getBUCtemp(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getBUCreflectpower(SNMP_INDEX, BYTE*, SNMP_VAL*);
+					
+
+		
+BOOL Agilissnmpll_getBUCAttn(SNMP_INDEX, BYTE*,SNMP_VAL*);
+
+BOOL Agilissnmpll_setBUCAttn(SNMP_INDEX, BYTE* ,SNMP_VAL*);		
+
+
+//BUC Modified by adding a void variable 
+BOOL Agilissnmpll_getBUCrfOperation(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_SetBUCrfOperation(SNMP_INDEX, BYTE*, SNMP_VAL*);		
+
+BOOL Agilissnmpll_alarmBUC_lolock(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_alarmBUC_powerAmp(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_alarmBUC_TempLevel(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_alarmBUC_fetBias(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_alarmBUC_rfLow(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_alarmBUC_rflPwr(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_alarmBUC_reserved(SNMP_INDEX, BYTE*, SNMP_VAL*);
+
+BOOL Agilissnmpll_get_BUC_ALARM_status(SNMP_INDEX, BYTE*, SNMP_VAL*);
+
+//BYTE Agilissnmpll_get_BUC_alarmstatus(BYTE , BYTE );
+
+
+/*RCU Parameters*/
+/* Get Parameters*/
+BOOL Agilissnmpll_getRCUManagerip(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUDeviceip(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUDeviceipMask(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUDeviceipGateway(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUDeviceID(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUPartNumber(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUSerialNumber(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUFwVer(SNMP_INDEX, BYTE*, SNMP_VAL*);
+
+
+//RCU Modified by adding a void variable 
+BOOL Agilissnmpll_getRCUTxState(SNMP_INDEX, BYTE*,SNMP_VAL*);
+BOOL Agilissnmpll_getRCUopMode(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUTxMode(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_getRCUTxSwitch(SNMP_INDEX, BYTE*, SNMP_VAL*);
+
+/* Set Parameters*/
+BOOL Agilissnmpll_setRCUTxMode(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_setRCUTxSwitch(SNMP_INDEX, BYTE*, SNMP_VAL*);
+
+BOOL Agilissnmp_setSYS_Params(SNMP_ID, BYTE, BYTE);
+BOOL Agilissnmp_getSYS_Params(SNMP_ID ,BYTE* ,SNMP_VAL*);
+
+BOOL Agilissnmp_get_trap_resp(SNMP_INDEX, BYTE*, SNMP_VAL*);
+
+extern BYTE myRef;
+extern TRAP_INFO trapInfo;
+extern IP_ADDR Manager_IP;
+
+BOOL Agilissnmpll_getRCU_ALARM_status(SNMP_INDEX, BYTE*, SNMP_VAL*);
+BOOL Agilissnmpll_get_RCU_ALARM_status(SNMP_INDEX, BYTE*, SNMP_VAL*);
+
+
+BOOL Agilissnmpll_check_BUC_COM_status(BYTE buc_id);
+
+#endif

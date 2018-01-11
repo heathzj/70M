@@ -1,0 +1,190 @@
+/*
+ * Copyright (C) 2012  ST Electronics (Satcom & Sensor Systems) Pte Ltd 
+ *
+ * RCU High Level Access 
+ * 
+ */
+
+#include "define.h"
+#include "Global.h"
+#include "AgilisDualUART.h"
+#if defined(__18F97J60) || defined(_18F97J60)
+#include "tcpipconfig.h"
+#endif
+#include "AgilisProtocol.h"
+#include "RCUServer.h"
+#include "RCUHLAccess.h"
+#include "RCULLAccess.h"
+#include "BUCClient.h"
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// RCU Protocol  new implementation
+////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+extern RCULLDCB_t RCU0;
+RCUinfo_s RCUinfo;
+
+void RCUHLInit(void)
+{
+    RCULLInit();
+
+	memset(&RCUinfo.firmwareVersion, 0, sizeof(RCUinfo.firmwareVersion));
+	memcpypgm2ram(RCUinfo.firmwareVersion, (rom char*)RCU_FIRMWARE_VERSION, 3);
+	//RCUinfo.FwVer[0]='1';
+	//RCUinfo.FwVer[1]='1';
+	//RCUinfo.FwVer[2]='0';
+	//RCUinfo.FwVer[3]=0;
+
+	// if RCU device ID is invalid, set to default 1R
+	if(RCUinfo.DeviceID[0]<'0' || RCUinfo.DeviceID[0] > '9' || RCUinfo.DeviceID[1] != 'R')
+		RCUHLSetDeviceID(1);
+
+	// update RCU alarm status for first time
+	RCULLGetRCUAlarmStatus();
+}
+
+
+
+AgilisCmdStatus_t RCUHLSetMode (UINT8 RCUMode)
+{
+
+	RCUinfo.opmode = RCUMode;
+	RCULLSetMode(RCUMode);
+}
+
+AgilisCmdStatus_t RCUHLSetPath (UINT8 path, UINT8 online)
+{
+	//RCUinfo.txPath_selection = RCUPath;
+	
+	if(online & 1){
+		// set unit to go online
+		RCULLSetPath(path);
+	}else{
+		// set unit to go offline
+		if(path == 1)
+			RCULLSetPath(2); // if '1' to go offline, set '2' to online
+		else
+		if(path == 2)
+			RCULLSetPath(1); // if '2' to go offline, set '1' to online
+	}
+
+	return AgilisCmdStatus_Ok;
+}
+
+
+AgilisCmdStatus_t RCUHLSetComMode(UINT8 comMode)
+{
+    RCUinfo.comMode = comMode;
+	RCULLSetComMode(comMode);
+
+	return AgilisCmdStatus_Ok;
+}
+
+AgilisCmdStatus_t RCUHLSetModelNumber(UINT8 *p)
+{
+	UINT8 i,temp,temp2[2];
+
+	for(i=0;i<15;i++)
+	{
+		temp = *(p+i);
+		if(temp < '!' || temp > 'z')
+			RCUinfo.modelNo[i]=0;
+		else
+			RCUinfo.modelNo[i]=temp;
+		
+		HEXto2ASC(RCUinfo.modelNo[i], temp2);
+		XEEBeginWrite(EEADR_PartNo +(i * 2));
+		XEEWriteArray((BYTE*)temp2, 2);	
+	}
+	return AgilisCmdStatus_Ok;
+}
+
+
+AgilisCmdStatus_t RCUHLSetSerialNumber(UINT8 *p)
+{
+	UINT8 i,temp,temp2[2];
+
+	for(i=0;i<15;i++)
+	{
+		temp = *(p+i);
+		if(temp < '!' || temp > 'z')
+			RCUinfo.serialNo[i]=0;
+		else
+			RCUinfo.serialNo[i]=temp;
+		
+		HEXto2ASC(RCUinfo.serialNo[i], temp2);
+		XEEBeginWrite(EEADR_SerialNo +(i * 2));
+		XEEWriteArray((BYTE*)temp2, 2);	
+	}
+	return AgilisCmdStatus_Ok;
+}
+
+
+AgilisCmdStatus_t RCUHLSetDeviceID(UINT8 ID)
+{
+	RCUinfo.DeviceID[0]=ASCII_VALUE(ID);
+	RCUinfo.DeviceID[1]='R';
+
+	RCULLSetDeviceID(RCUinfo.DeviceID);
+	
+	return AgilisCmdStatus_Ok;
+}
+
+
+AgilisCmdStatus_t RCUHLSetBUCOnOff(UINT8 numBUC, UINT8 onOff)
+{
+	if(numBUC >= BUC_MAX_SIZE)
+		return AgilisCmdStatus_Fail;
+
+	BUCClientSetBUCRFOnOff(numBUC, onOff);
+
+	return AgilisCmdStatus_Ok;
+}
+
+AgilisCmdStatus_t RCUHLSetBUCAttn(UINT8 numBUC, float fAttn)
+{
+	if(numBUC >= BUC_MAX_SIZE)
+		return AgilisCmdStatus_Fail;
+
+	BUCClientSetBUCAttn(numBUC, fAttn);
+
+	return AgilisCmdStatus_Ok;
+}
+
+
+RCUinfo_s* RCUHLGetAlarmStatus (BOOL update)
+{
+	if(update){
+		RCULLGetRCUAlarmStatus();
+
+		RCUinfo.ocxo1_alarm = ((RCU0.AlarmState&0x01)==0x01)?1:0;//inverted in hardware
+		RCUinfo.ocxo2_alarm = ((RCU0.AlarmState&0x02)==0x02)?1:0;//inverted in hardware
+		RCUinfo.ps1_alarm   = ((RCU0.AlarmState&0x04)==0x04)?1:0;
+		RCUinfo.ps2_alarm   = ((RCU0.AlarmState&0x08)==0x08)?1:0;
+
+		RCUinfo.opmode = RCU0.current_mode[0];
+	}
+
+	return &RCUinfo;
+}
+
+/*
+UINT8 RCUHLGetBUCOnOff(UINT8 numBUC)
+{
+	if(numBUC >= BUC_MAX_SIZE)
+		return OFF;
+
+	if(BUCinfo[numBUC].info.BUC_model==KUBAND)
+		return BUCinfo[numBUC].alarm.rfon_sspa;
+	 else
+		return BUCinfo[numBUC].alarm.rfon;
+}
+*/
+
+
+
+

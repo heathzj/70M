@@ -1,0 +1,56 @@
+#include "HardwareProfile.h"
+#include "Global.h"
+#include "define.h"
+#include "AgilisDriverManager.h"
+#include "AgilisUart.h"
+#include "AgilisUartTest.h"
+
+#define TEST_CMD (rom char*)"G666000ASC6\r"
+
+extern UINT8 gAgilisReadBuf[];
+extern UINT8 gAgilisWriteBuf[];
+
+void UartPrintPgm(rom char* str)
+{
+	AgilisDriverDescriptor_t *pUartPort=NULL;
+	pUartPort = AgilisDriverManagerOpen("uart0");
+	if(pUartPort){
+		strcpypgm2ram(gAgilisWriteBuf, str);
+		pUartPort->Write(gAgilisWriteBuf, strlenpgm(str));
+	}
+} 
+
+
+void AgilisUartTestWrite(rom char* pUartName, rom char *pData)
+{
+	UINT16 u16ByteSent, u16ByteRead, u16CmdLen;
+	AgilisDriverDescriptor_t *pUartPort=NULL;
+	pUartPort = AgilisDriverManagerOpen(pUartName);
+	
+	if(pUartPort){
+		strcpypgm2ram(gAgilisWriteBuf, pData);
+		u16CmdLen = strlenpgm(pData);
+		u16ByteSent = pUartPort->Write(gAgilisWriteBuf,u16CmdLen );
+	}
+	
+}
+
+UINT16 AgilisUartTestRead(rom char* pUartName)
+{
+	UINT16 u16ByteSent, u16ByteRead=0, i;
+	AgilisDriverDescriptor_t *pUartPort=NULL;
+	pUartPort = AgilisDriverManagerOpen(pUartName);
+	
+	if(pUartPort){
+		memset(gAgilisReadBuf, 0, sizeof(gAgilisReadBuf));
+		u16ByteRead = pUartPort->Read(gAgilisReadBuf, 50);
+		if(u16ByteRead){
+			UartPrintPgm("received something\r");
+		}else{
+			//UartPrintPgm("received nothing\r");
+		}
+	}
+	return u16ByteRead;	
+}
+
+

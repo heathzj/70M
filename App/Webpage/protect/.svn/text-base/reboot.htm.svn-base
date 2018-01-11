@@ -1,0 +1,7 @@
+<body>
+<center>
+<h2><font color="blue">You have set DHCP to be ~dhcp_status~. </font><h2>
+<h2><font color="blue">Restart Unit to take effect.</font><h2>
+<center>
+</body>
+<meta http-equiv="Refresh" content="3;url=config.htm">

@@ -1,0 +1,95 @@
+/***********************************************************/
+/*									                       */
+/* For getting & Setting Device Operation on both BUCs     */
+/*											               */
+/***********************************************************/
+#include "AgilisSNMPLL.h"
+
+#if defined STACK_USE_SNMP_SERVER
+
+extern BYTE myRef;
+
+/*      This for getting rfOperation on BUC -1  		   */
+BOOL Agilissnmpll_getBUCrfOperation(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+
+ val->byte = BUCinfo[index].operation.rfOperation;
+return TRUE;
+}
+
+
+/*      This for Setting rfOperation on BUC -1  		   */
+BOOL Agilissnmpll_SetBUCrfOperation(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  BUCinfo[index].operation.rfOperation=val->byte ;
+
+ BUCClientSetBUCRFOnOff(index, BUCinfo[index].operation.rfOperation);
+
+return TRUE;
+}
+
+
+
+/*      This for Getting Attenuation on BUC -1  		   */
+BOOL Agilissnmpll_getBUCAttn(SNMP_INDEX index, BYTE *ref,SNMP_VAL *val)
+{
+	DWORD attn;
+	myRef=*ref;
+	
+	if(myRef == 0)
+		memset(global_char_temp, 0, sizeof(global_char_temp));
+
+
+if(!Agilissnmpll_check_BUC_COM_status(index))
+{
+	attn = (DWORD) (BUCinfo[index].operation.usrSetAttn*10ul);
+    Agilis_util_convert_ascii(attn);
+}
+else
+{
+	strcpypgm2ram(global_char_temp, "???");
+}
+        if ( global_char_temp[0] == 0u )
+            myRef = SNMP_END_OF_VAR;
+        else
+        {
+            val->byte = global_char_temp[myRef++];
+            if ( global_char_temp[myRef] == 0u )
+                myRef = SNMP_END_OF_VAR;
+        }
+
+        *ref = myRef;
+        return TRUE;
+
+}
+
+
+
+
+/*      This for Setting Attenuation on BUC -1  		   */
+
+BOOL Agilissnmpll_setBUCAttn(SNMP_INDEX index, BYTE *ref ,SNMP_VAL *val)
+{
+	float temp;
+    myRef = *ref;
+
+   	if(!myRef)
+		memset(global_char_temp, 0, sizeof(global_char_temp));
+
+	if ( *ref !=SNMP_END_OF_VAR)
+	{	
+		global_char_temp[myRef++] =  val->byte;
+	}
+	else
+	{
+		temp = atof5(global_char_temp);
+       	AgilisAppUtil_validate_attenuation(&BUCinfo[index]);
+		//BUCClientSetBUCAttenuation(index+1,BUCinfo[index].operation.usrSetAttn);
+		RCUHLSetBUCAttn(index, temp);
+	}
+    *ref = myRef;
+return TRUE;
+}
+
+
+#endif

@@ -1,0 +1,86 @@
+~inc:header.inc~
+  <tr>
+  	<td>
+		<div class="pagetab" style="height: 280px">
+			
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="center" colspan="3" height="42" bgcolor="#cac8c8"><center>FACTORY SETTINGS</center></td>
+						</tr>
+						<tr>
+							<td align="center" bgcolor="#e2e2e2" width="50%" >
+									<table border="0" width="100%" cellpadding="2">									
+									<tr>
+										<td class="tableHeader" align="center" colspan="5" height="32" bgcolor="#cac8c8"><center>Device</center></td>
+									</tr>
+									<FORM METHOD=GET action=lut.htm>
+									<tr>
+										<td align="center"><b>&nbsp;</b></td>
+										<td align="left"><b>Model Number </b></td>
+										<td align="left"><input type=text size=20 name="model" value="~DeviceModel~"></td>
+										<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+										<td align="center"><b>&nbsp;</b></td>
+									</tr>
+									</FORM>								
+									<FORM METHOD=GET action=lut.htm>
+									<tr>
+										<td align="center"><b>&nbsp;</b></td>
+										<td align="left"><b>Serial Number </b></td>
+										<td align="left"><input type=text size=20 name="serial" value="~DeviceSerial~"></td>
+										<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+										<td align="center"><b>&nbsp;</b></td>
+									</tr>
+									</FORM>
+									<FORM METHOD=GET action=lut.htm>
+									<tr height="47px">
+										<td align="center"><b>&nbsp;</b></td>
+										<td align="left"><b>Write I2C Command</b></td>
+										<td align="left"><input type=text size=40  id="wri2cdata" name=wri2cdata value=~wri2cdata~></td>
+										<td align="left"><input class="stylishButton" type="submit" value="Write "></td>
+									</tr>
+									</FORM>
+									
+									<FORM METHOD=GET action=lut.htm>
+									<tr height="47px">
+										<td align="center"><b>&nbsp;</b></td>
+										<td align="left"><b>Read I2C Command</b></td>
+										<td align="left"><input type=text size=40  id="rdi2cdata" name=rdi2cdata value=~rdi2cdata~></td>
+										<td align="left"><input class="stylishButton" type="submit" value="read "></td>
+									</tr>
+									</FORM>									
+									
+									</table>					
+							</td>
+							<td align="center" bgcolor="#e2e2e2" width="50%" >									
+									<table border="0" width="100%" cellpadding="2">									
+									<tr>
+										<td class="tableHeader" align="center" colspan="5" height="32" bgcolor="#cac8c8"><center>MAC</center></td>
+									</tr>
+									<FORM METHOD=GET action=lut.htm>
+									<tr>
+										<td align="center"><b>&nbsp;</b></td>
+										<td align="left"><b>MAC Address </b></td>
+										<td align="left" colspan="3" ><b>~config_mac~</b></td>										
+									</tr>
+									</FORM>								
+									<FORM METHOD=GET action=lut.htm>
+									<tr height="47px">
+										<td align="center"><b>&nbsp;</b></td>
+										<td align="left"><b>Set MAC Address Last 2 Bytes</b></td>
+										<td align="left"><input type=text size=4  id="mac5" name=mac5 value=~maf~></td>
+										<td align="left" ><input type=text size=4  id="mac6" name=mac6 value=~mas~></td>
+										<td align="left"><input class="stylishButton" type="submit" value="Set "></td>
+									</tr>
+									</FORM>
+									</table>					
+							</td>							
+						</tr>						
+						<tr>
+							<td align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><a href="lut.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>					
+				</div>
+~inc:footer.inc~
+	</body>
+</html>

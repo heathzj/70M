@@ -1,0 +1,344 @@
+/***********************************************************/
+/*									                       */
+/*        For getting Device Information on RCU  		   */
+/*											               */
+/***********************************************************/
+
+
+#include "AgilisSNMPLL.h"
+
+#if defined STACK_USE_SNMP_SERVER
+
+
+extern BYTE myRef;
+  
+/*      This for getting RCU Manager IP              	   */
+BOOL Agilissnmpll_getRCUManagerip(SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)
+{
+	myRef = *ref;
+	if ( Manager_IP.Val == 0u )
+    {
+		myRef = SNMP_END_OF_VAR;
+    }
+	else
+    {
+       	val->dword = AgilisAppUtil_dword_swap(Manager_IP.Val);
+        myRef = SNMP_END_OF_VAR;
+    }  
+    *ref = myRef;
+    return TRUE;	
+}	
+
+
+
+/*      This for getting RCU Device IP              	   */
+BOOL Agilissnmpll_getRCUDeviceip(SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)	
+{	
+      myRef = *ref;
+	if ( AppConfig.MyIPAddr.Val == 0u )
+	{	
+		myRef = SNMP_END_OF_VAR;
+	}
+    else
+    {
+       	val->dword = AgilisAppUtil_dword_swap(AppConfig.MyIPAddr.Val);
+        myRef = SNMP_END_OF_VAR;
+    }  
+	 *ref = myRef;
+	 return TRUE;
+}
+
+
+/*      This for getting RCU Device IP Mask                */
+BOOL Agilissnmpll_getRCUDeviceipMask(SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)
+{
+      myRef = *ref;
+	 if ( AppConfig.MyMask.Val == 0u )
+            myRef = SNMP_END_OF_VAR;
+       else
+      {
+       val->dword = AgilisAppUtil_dword_swap(AppConfig.MyMask.Val);
+       myRef = SNMP_END_OF_VAR;
+      }      
+	*ref = myRef;
+    return TRUE;
+} 
+	 
+
+/*      This for getting RCU Device IP Gateway            */	 
+BOOL Agilissnmpll_getRCUDeviceipGateway(SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)
+{  
+      myRef = *ref;   
+	if ( AppConfig.MyGateway.Val == 0u )
+    {  
+		myRef = SNMP_END_OF_VAR;
+	}
+    else
+    {
+        val->dword = AgilisAppUtil_dword_swap(AppConfig.MyGateway.Val);
+        myRef = SNMP_END_OF_VAR;
+    }  
+  *ref = myRef;
+  return TRUE;	 
+}	 
+	 
+	 
+
+/*      This for getting RCU Serial Number          	   */
+BOOL Agilissnmpll_getRCUSerialNumber(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  myRef = *ref;
+  
+  if(RCUinfo.serialNo[0] == 0u)
+     myRef = SNMP_END_OF_VAR;
+	 
+  else
+  {
+    val->byte = RCUinfo.serialNo[myRef++];
+	if(RCUinfo.serialNo[myRef]== 0u)
+	   myRef = SNMP_END_OF_VAR;
+  }
+
+  *ref = myRef;
+  return TRUE;
+}
+
+
+/*      This for getting RCU Device ID           	        */
+BOOL Agilissnmpll_getRCUDeviceID(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  myRef = *ref;
+  
+  if(RCUinfo.DeviceID[0] == 0u)
+     myRef = SNMP_END_OF_VAR;
+	 
+  else
+  {
+    val->byte = RCUinfo.DeviceID[myRef++];
+	if(RCUinfo.DeviceID[myRef]== 0u)
+	   myRef = SNMP_END_OF_VAR;
+  }
+  *ref = myRef;
+  return TRUE;
+}
+
+
+
+/*      This for getting RCU Part Number           	        */
+BOOL Agilissnmpll_getRCUPartNumber(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  myRef = *ref;
+  
+  if(RCUinfo.modelNo[0] == 0u)
+     myRef = SNMP_END_OF_VAR;
+	 
+  else
+  {
+    val->byte = RCUinfo.modelNo[myRef++];
+	if(RCUinfo.modelNo[myRef]== 0u)
+	   myRef  = SNMP_END_OF_VAR;
+  }
+  *ref = myRef;
+  return TRUE;
+}
+
+
+
+/*      This for getting RCU Firmware Version                */
+BOOL Agilissnmpll_getRCUFwVer(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  myRef = *ref;
+  
+  if(RCUinfo.firmwareVersion[0] == 0u)
+     myRef  = SNMP_END_OF_VAR;
+	 
+  else
+  {
+    val->byte = RCUinfo.firmwareVersion[myRef++];
+	if(RCUinfo.firmwareVersion[myRef]== 0u)
+	   myRef  = SNMP_END_OF_VAR;
+  }
+  *ref = myRef;
+  return TRUE;
+}
+
+
+/*      This for getting RCU Operation Mode            */
+BOOL Agilissnmpll_getRCUopMode(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+
+ 
+ val->byte =RCUinfo.comMode;
+ return TRUE;
+}
+
+
+
+/*      This for getting RCU Tx Mode                   */
+BOOL Agilissnmpll_getRCUTxMode(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+  val->byte = RCUinfo.opmode;
+  return TRUE;
+}
+
+
+
+/*      This for getting RCU Tx Switch                 */
+BOOL Agilissnmpll_getRCUTxSwitch(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+  val->byte = RCUinfo.txPath_selection;
+  return TRUE;
+}
+
+
+
+/*      This for getting RCU Tx State                 */
+BOOL Agilissnmpll_getRCUTxState(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+	val->byte = RCUinfo.txPath_selection;
+	return TRUE;
+}
+
+
+/*      This for Setting RCU Tx Switch                 */
+BOOL Agilissnmpll_setRCUTxSwitch(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+    RCULLSetPath(val->byte);
+  return TRUE;
+}
+
+
+
+/*      This for Setting RCU Tx Mode                   */
+
+BOOL Agilissnmpll_setRCUTxMode(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+    RCULLSetMode(val->byte);
+  return TRUE;
+}
+
+
+BOOL Agilissnmpll_getRCU_ALARM_status(SNMP_INDEX mib_index, BYTE* ref, SNMP_VAL* val)
+{
+  BYTE num = 2;          /* Indicating No Alarm initially */
+ 	switch(mib_index)
+ 	{
+		case TXPATHASTATUS:
+					num = (RCUinfo.txPathA_alarm==0)?0:1;
+			break;
+		case TXPATHBSTATUS:
+					num = (RCUinfo.txPathB_alarm==0)?0:1;
+			break;
+
+		case PS1ALARM:
+					num = (RCUinfo.ps1_alarm==0)?0:1;
+			break;
+
+		case PS2ALARM:
+					num = (RCUinfo.ps2_alarm==0)?0:1;
+			break;
+
+		case OCXO1ALARM:
+					num = (RCUinfo.ocxo1_alarm==0)?0:1;
+			break;
+
+		case OCXO2ALARM:
+					num = (RCUinfo.ocxo2_alarm==0)?0:1;
+			break;
+
+		case BUC1COMMALARM:
+					num = (BUCinfo[0].info.firmwareVersion[1] == '?')?0:1;
+			break;
+
+		case BUC2COMMALARM:
+					num = (BUCinfo[1].info.firmwareVersion[1] == '?')?0:1;
+			break;
+ 	}
+	
+     val->byte = num;
+	 return TRUE;
+}
+
+BOOL Agilissnmpll_get_RCU_ALARM_status(SNMP_INDEX mib_index, BYTE* ref, SNMP_VAL* val)
+{
+  BYTE num = 3;          /* Indicating No Alarm initially */
+
+		if( (RCUinfo.txPathA_alarm			== 0) 	||
+		    (RCUinfo.txPathB_alarm 			== 0) 	||
+			(RCUinfo.ps1_alarm 				== 0)	||
+			(RCUinfo.ps2_alarm 				== 0)	||
+			(RCUinfo.ocxo1_alarm 			== 0)	||
+			(RCUinfo.ocxo2_alarm 			== 0)   ||
+			(BUCinfo[0].info.firmwareVersion[1] == '?') ||
+			(BUCinfo[1].info.firmwareVersion[1] == '?'))
+			{
+				num = 2; //Major Alarm
+			}
+		else
+				num = 3; //No Alarm
+
+     val->byte = num;
+	 return TRUE;
+
+}
+
+
+BOOL Agilissnmpll_get_BUC_ALARM_status(SNMP_INDEX mib_index, BYTE* ref, SNMP_VAL* val)
+{
+  BYTE num = 3;          /* Indicating No Alarm initially */
+//Summary Alarm Definition in MIB
+// 4 = OFFLINE
+// 3 = OK
+// 2 = Major Alarm
+// 1 = Minor Alarm (BUC No Comm is Minor Alarm for RCU)
+
+	if(Agilissnmpll_check_BUC_COM_status(mib_index))
+	{
+		val->byte = 4; //return offline when no-comm with BUC
+		return TRUE;
+	}
+
+	if(BUCinfo[mib_index].info.BUC_model == KUBAND)
+	{
+		if( (BUCinfo[mib_index].alarm.templvl_sspa	== 0) 	||
+			(BUCinfo[mib_index].alarm.Lo			== 0)   ||
+			(BUCinfo[mib_index].alarm.rfon_sspa		== 0))
+			{
+				num = 2;
+			}
+		else
+		if(BUCinfo[mib_index].alarm.rflow_sspa	== 0)
+				num = 1;
+		else
+				num = 3;
+	}
+	else
+	{
+		if( (BUCinfo[mib_index].alarm.templvl	== 0) 	||
+			(BUCinfo[mib_index].alarm.Lo		== 0)   ||
+			(BUCinfo[mib_index].alarm.rfon		== 0))
+			{
+				num = 2;
+			}
+		else
+		if(BUCinfo[mib_index].alarm.rflow == 0)
+				num = 1;
+		else
+				num = 3;
+	}
+
+     val->byte = num;
+	 return TRUE;
+
+}
+
+BOOL Agilissnmpll_check_BUC_COM_status(BYTE buc_id)
+{
+	if(BUCinfo[buc_id].info.firmwareVersion[1] == '?')
+		return TRUE;
+	else
+		return FALSE;
+}
+
+
+#endif

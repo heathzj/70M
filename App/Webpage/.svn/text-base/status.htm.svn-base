@@ -1,0 +1,126 @@
+~inc:header.inc~
+<title>Device Status</title>
+  <tr>
+  	<td>
+		<div class="pagetab" style="height:350px">			
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="left" colspan="3" height="42" bgcolor="#cac8c8"><center>DEVICE STATUS</center></td>
+						</tr>						
+						<tr>
+							<td align="left" bgcolor="#e2e2e2" width="34%" >
+								<table border="0" width="100%" cellpadding="2">
+									<FORM METHOD=GET action=status.htm>	
+										<tr>
+											<td class="tableHeader" align="left" colspan="3" height="32" bgcolor="#cac8c8"><center>RCU</center></td>
+										</tr>
+										<tr>
+											<td align="left" width="5%"><b>&nbsp;</b></td>
+											<td align="left"><b>Online Path</b></td>
+											<td id="path"><b>~pathselect~</b></td></tr>										
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>
+											<td align="left"><b>Switch Mode</b></td>
+											<td id="Mode"><b>~swmode~</b></td>
+										</tr>
+										<tr>
+											<td align="left" colspan="3"><b>&nbsp;</b></td>
+										</tr>
+										<tr>
+											<td align="left" colspan="3"><b>&nbsp;</b></td>
+										</tr>
+										<tr>
+											<td align="left" colspan="3"><b>&nbsp;</b></td>
+										</tr>
+										<tr>
+											<td align="left" colspan="3"><b>&nbsp;</b></td>
+										</tr>
+									</FORM>
+								</table>						
+							</td>
+							<td align="left" bgcolor="#e2e2e2" width="33%" >
+								<table border="0" width="100%" cellpadding="2">
+									<FORM METHOD=GET action=status.htm>
+										<tr>
+											<td class="tableHeader" align="left" colspan="3" height="32" bgcolor="#cac8c8"><center>BUC A</center></td>
+										</tr>
+										<tr>
+											<td align="left" width="5%"><b>&nbsp;</b></td>
+											<td align="left"><b>Output Power Level [dBm]</b></td>
+											<td id="Out"><b>~buc1Outpower~</b></td>
+										</tr>
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>
+											<td align="left"><b>Attenuation [dB]</b></td>
+											<td id="Attn"><b>~buc1Atten~</b></td>
+										</tr>
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>
+											<td align="left"><b>RF Output</b></td>
+											<td id="buc1rfop"><b>~buc1rfop~</b></td>
+										</tr>
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>
+											<td align="left"><b>Temperature [°C]</b></td>
+											<td id="Temp"><b>~buc1temp~</b></td>
+										</tr>
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>											
+											<td align="left"><b>Input Power Level [dBm]</b></td>
+											<td id="In1"><b>NA</b></td>
+										</tr>
+										<tr>
+											<td align="left" colspan="3"><b>&nbsp;</b></td>
+										</tr>
+									</FORM>
+								</table>						
+							</td>
+							<td align="left" bgcolor="#e2e2e2" width="33%" >
+								<table border="0" width="100%" cellpadding="2">
+									<FORM METHOD=GET action=status.htm>
+										<tr>
+											<td class="tableHeader" align="left" colspan="3" height="32" bgcolor="#cac8c8"><center>BUC B</center></td>
+										</tr>
+										<tr>
+											<td align="left" width="5%"><b>&nbsp;</b></td>
+											<td align="left"><b>Output Power Level [dBm]</b></td>
+											<td id="Out2"><b>~buc2Outpower~ </b></td>
+										</tr>
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>
+											<td align="left"><b>Attenuation [dB]</b></td>
+											<td id="Attn2"><b>~buc2Atten~ </b></td>
+										</tr>
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>
+											<td align="left"><b>RF Output</b></td>
+											<td id="buc2rfop"><b>~buc2rfop~ </b></td>
+										</tr>
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>
+											<td align="left"><b>Temperature [°C]</b></td>
+											<td id="Temp2"><b>~buc2temp~ </b></td>
+										</tr>
+										<tr>
+											<td align="left"><b>&nbsp;</b></td>
+											<td align="left"><b>Input Power Level [dBm]</b></td>
+											<td id="In2"><b>NA </b></td>
+										</tr>
+										<tr>
+											<td align="left" colspan="3"><b>&nbsp;</b></td>
+										</tr>
+									</FORM>
+								</table>					
+							</td>
+						</tr>
+						<tr>
+							<td class="tableHeader" align="left" colspan="3" height="32" bgcolor="#cac8c8"><center><a href="status.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>
+				</div>
+~inc:footer.inc~
+</tr>
+</td>
+</body>
+</html>

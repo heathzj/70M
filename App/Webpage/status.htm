@@ -1,0 +1,183 @@
+~inc:header.inc~
+<title>Device Status</title>
+  <tr>
+  	<td>
+		<div class="pagetab" style="height:350px">			
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="left" colspan="3" height="42" bgcolor="#aaa8a8"><center>DEVICE STATUS</center></td>
+						</tr>						
+					</table>
+					<table border="0" width="100%">
+						<tr valign="top">
+						<!--module 1-->
+							<td align="center" bgcolor="#e2e2e2" width="33%" >
+							<table border="0" width="100%" cellpadding="2">									
+									<tr>
+										<td class="tableHeader" align="center" colspan="5" height="32" bgcolor="#cac8c8"><center>Down Converter </center></td>
+									</tr>
+							<FORM METHOD=GET action=status.htm>	
+								<tr>
+									<td align="center"><b>Output Frequency</b></td>
+									<td align="left" width="35%" id="converterarffreq"><b>~converterarffreq~</b><b> MHz</b></td>
+								</tr>
+
+								<tr>
+									<td align="center"><b>Attenuation</b></td>
+									<td align="left" width="35%" id="converteraatten"><b>~converteraatten~</b><b> dB</b></td>
+								</tr>
+								<tr>
+									<td align="center"><b>LO Status</b></td>
+									<td align="left" width="35%" id="converteralo"><b>~converteralo~</b></td>
+								</tr>								
+								
+								<tr>
+									<td align="center"><b>Output power</b></td>
+									<td align="left" width="35%" id="outputpowera"><b>~outputpowera~</b><b> dBm</b></td>
+								</tr>	
+						<!--		
+								<tr>
+									<td align="center"><b>Set power</b></td>
+									<td align="left" width="35%" id="setpowera"><b>~setpowera~</b><b> dBm</b></td>
+								</tr>									
+						-->			
+								<tr>
+									<td align="center"><b>ALC</b></td>
+									<td align="left" width="35%" id="ALCa"><b>~ALCa~</b></td>
+								</tr>
+							
+								<tr>
+									<td align="center"><b>RF</b></td>
+									<td align="left" width="35%" id="Mutea"><b>~Mutea~</b></td>
+								</tr>								
+								
+								</tr>
+							</FORM>
+							</table>					
+							</td>
+							
+							
+						<!--module 2-->	
+                        <!--
+							<td align="center" bgcolor="#e2e2e2" width="33%" >									
+							<table border="0" width="100%" cellpadding="2">									
+									<tr>
+										<td class="tableHeader" align="center" colspan="5" height="32" bgcolor="#cac8c8"><center>Down Converter </center></td>
+									</tr>
+							<FORM METHOD=GET action=status.htm>	
+
+								<tr>
+									<td align="center"><b>Input Frequency</b></td>
+									<td align="left" width="35%" id="converterbrffreq"><b>~converterbrffreq~</b><b> MHz</b></td>
+								</tr>
+								<tr>
+									<td align="center"><b>Attenuation</b></td>
+									<td align="left" width="35%" id="converterbatten"><b>~converterbatten~</b><b> dB</b></td>
+								</tr>
+								
+								<tr>
+									<td align="center"><b>LO Status</b></td>
+									<td align="left" width="35%" id="converterblo"><b>~converterblo~</b></td>
+								</tr>								
+																
+								
+								<tr>
+								
+									<td align="center"><b>Output power</b></td>
+									<td align="left" width="35%" id="outputpowerb"><b>~outputpowerb~</b><b> dBm</b></td>
+								</tr>	
+								<tr>
+									<td align="center"><b>Set power</b></td>
+									<td align="left" width="35%" id="setpowerb"><b>~setpowerb~</b><b> dBm</b></td>
+								</tr>									
+								
+								<tr>
+									<td align="center"><b>ALC</b></td>
+									<td align="left" width="35%" id="ALCb"><b>~ALCb~</b></td>
+								</tr>
+								
+								<tr>
+									<td align="center"><b>RF</b></td>
+									<td align="left" width="35%" id="Muteb"><b>~Muteb~</b></td>
+								</tr>								
+																
+							</FORM>
+							</table>					
+							</td>	
+							-->
+					<!--module 3-->	
+							<td align="center" bgcolor="#e2e2e2" width="33%" >									
+							<table border="0" width="100%" cellpadding="2">									
+									<tr>
+										<td class="tableHeader" align="center" colspan="5" height="32" bgcolor="#cac8c8"><center>DC Controller </center></td>
+									</tr>
+							<FORM METHOD=GET action=status.htm>	
+                            <!-- zj
+								<tr>
+									<td align="center"><b>LNB DC</b></td>
+									<td align="left" width="35%" id="18Vctrl"><b>~18Vctrl~</b></td>
+								</tr>
+								
+								<tr>
+									<td align="center"><b>BUC DC</b></td>
+									<td align="left" width="35%" id="24Vctrl"><b>~24Vctrl~</b></td>
+								</tr>
+								<tr>
+									<td align="center"><b>LNB REF</b></td>
+									<td align="left" width="35%" id="LNBREF"><b>~LNBREF~</b></td>
+								</tr>
+	
+								
+								<tr>
+									<td align="center"><b>BUC REF</b></td>
+									<td align="left" width="35%" id="BUCREF"><b>~BUCREF~</b></td>
+								</tr>
+
+								<tr>
+									<td align="center"><b>BUC Current</b></td>
+									<td align="left" width="35%" id="BUCCurrent"><b>~BUCCurrent~ mA</b></td>
+								</tr>
+								<tr>
+									<td align="center"><b>LNB Current</b></td>
+									<td align="left" width="35%" id="LNBCurrent"><b>~LNBCurrent~ mA</b></td>
+								</tr>	
+							-->	
+								<tr>
+									<td align="center"><b>REF Detect</b></td>
+									<td align="left" width="35%" id="EXTREF"><b>~EXTREF~</b></td>
+								</tr>									
+
+								<tr>
+
+								</tr>
+								<tr>
+								
+								</tr>
+								<tr>
+
+								</tr>								
+								
+							</FORM>
+							</table>					
+							</td>						
+					
+		
+							
+						</tr>						
+					<tr>
+					</tr>
+					</table>
+					
+					
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="left" colspan="3" height="32" width="100%" bgcolor="#cac8c8"><center><a href="status.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>
+				</div>
+~inc:footer.inc~
+</tr>
+</td>
+</body>
+</html>

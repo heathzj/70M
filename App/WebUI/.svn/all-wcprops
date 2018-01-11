@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/projects/ped-software/!svn/ver/8813/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/App/WebUI
+END
+AgilisHTTPApp.h
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/App/WebUI/AgilisHTTPApp.h
+END
+AgilisHTTPGetDevInfo.c
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/projects/ped-software/!svn/ver/8718/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/App/WebUI/AgilisHTTPGetDevInfo.c
+END
+AgilisHTTPPrint.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/projects/ped-software/!svn/ver/8813/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/App/WebUI/AgilisHTTPPrint.c
+END
+AgilisHTTPApp.c
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/App/WebUI/AgilisHTTPApp.c
+END

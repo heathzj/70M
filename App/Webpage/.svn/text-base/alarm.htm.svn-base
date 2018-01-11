@@ -1,0 +1,279 @@
+~inc:header.inc~
+<title>Device Alarms</title>
+  <tr>
+  	<td>
+		<div class="pagetab" style="height:590px">			
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="center" colspan="3" height="42" bgcolor="#cac8c8"><center>ALARMS</center></td>
+						</tr>
+						<tr>
+							<td align="center" bgcolor="#e2e2e2" width="33%" >
+									<table border="0" width="100%" cellpadding="2">
+									<FORM METHOD=GET action=alarm.htm>
+										<tr>
+											<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center>RCU</center></td>
+										</tr>
+										<tr>
+											<td align="center" width="10%"><b>&nbsp;</b></td>
+											<td align="left" width="65%"><b>Tx PathA Status</b></td>
+											<td align="center"><a id="pathAAlarm"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Tx PathB Status</b></td>
+											<td align="center"><a id="pathBAlarm"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>	
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Power Supply 1 Status</b></td>
+											<td align="center"><a id="PS1alarm"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Power Supply 2 Status</b></td>
+											<td align="center"><a id="PS2alarm"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>OCXO 1 Status</b></td>
+											<td align="center"><a id="OCXO1alarm"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>OCXO 2 Status</b></td>
+											<td align="center"><a id="OCXO2alarm"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>BUC A Communication Status</b></td>
+											<td align="center"><a id="buc1comstat"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>BUC B Communication Status</b></td>
+											<td align="center"><a id="buc2comstat"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+									</FORM>
+								</table>						
+							</td>
+							<td align="center" bgcolor="#e2e2e2" width="33%" >
+									<table border="0" width="100%" cellpadding="2">
+										<FORM METHOD=GET action=alarm.htm>
+										<tr>
+											<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center>BUC A</center></td>
+										</tr>
+										<tr>
+											<td align="center" width="10%"><b>&nbsp;</b></td>
+											<td align="left" width="65%"><b>LO Lock Status</b></td>
+											<td align="center"><a id="led7"><font size=6><b>&bull;</b></font></a></td>
+										</tr>									
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>FET Bias Status</b></td>
+											<td align="center"><a id="led6"><font size=6><b>&bull;</b></font></a></td>
+										</tr>									
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>RF Output Low Status</b></td>
+											<td align="center"><a id="led4"><font size=6><b>&bull;</b></font></a></td>
+										</tr>									
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>RF Output Status</b></td>
+											<td align="center"><a id="led3"><font size=6><b>&bull;</b></font></a></td>
+										</tr>									
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Temperature Status</b></td>
+											<td align="center"><a id="led2"><font size=6><b>&bull;</b></font></a></td>
+										</tr>									
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Reflected Power Status</b></td>
+											<td align="center"><a id="led0"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Fan Status</b></td>
+											<td align="center"><a id="led1"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="center" height="40px"><b>&nbsp;</b></td>
+										</tr>
+									</FORM>
+								</table>						
+							</td>
+							<td align="center" bgcolor="#e2e2e2" width="33%" >
+									<table border="0" width="100%" cellpadding="2">
+										<FORM METHOD=GET action=alarm.htm>		
+											<tr>
+												<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center>BUC B</center></td>
+											</tr>								
+											<tr>
+												<td align="center" width="10%"><b>&nbsp;</b></td>
+												<td align="left" width="65%"><b>LO Lock Status</b></td>
+												<td align="center"><a id="ned7"><font size=6><b>&bull;</b></font></a></td>
+											</tr>											
+											<tr>
+												<td align="center"><b>&nbsp;</b></td>
+												<td align="left"><b>FET Bias Status</b></td>
+												<td align="center"><a id="ned6"><font size=6><b>&bull;</b></font></a></td>
+											</tr>
+											<tr>	
+												<td align="center"><b>&nbsp;</b></td>
+												<td align="left"><b>RF Output Power Low Status</b></td>
+												<td align="center"><a id="ned4"><font size=6><b>&bull;</b></font></a></td>
+											</tr>
+											<tr>
+												<td align="center"><b>&nbsp;</b></td>
+												<td align="left"><b>RF Output Status</b></td>
+												<td align="center"><a id="ned3"><font size=6><b>&bull;</b></font></a></td>
+											</tr>
+											<tr>
+												<td align="center"><b>&nbsp;</b></td>
+												<td align="left"><b>Temperature Status</b></td>
+												<td align="center"><a id="ned2"><font size=6><b>&bull;</b></font></a></td>
+											</tr>
+											<tr>
+												<td align="center"><b>&nbsp;</b></td>
+												<td align="left"><b>Reflected Power Status</b></td>
+												<td align="center"><a id="ned0"><font size=6><b>&bull;</b></font></a></td>
+											</tr>			
+											<tr>
+												<td align="center"><b>&nbsp;</b></td>
+												<td align="left"><b>Fan Status</b></td>
+												<td align="center"><a id="ned1"><font size=6><b>&bull;</b></font></a></td>
+											</tr>
+											<tr>
+												<td align="center"><b>&nbsp;</b></td>
+												<td align="center"><b>&nbsp;</b></td>
+												<td align="center" height="40px"><b>&nbsp;</b></td>
+											</tr>
+										</FORM>
+									</table>					
+							</td>
+						</tr>
+						<tr>
+							<td align="center" colspan="3" height="32" bgcolor="#efefef">
+								<center>
+									<table width="68%" height="80%" border="0" bgcolor="#b4dd56" bordercolor="#d2f28a" >
+										<tr>
+											<td width="15%" align="center" ><b>&nbsp;&nbsp;Legend:&nbsp;&nbsp;</b></td>
+											<td width="7%" align="center" ><font size=6 color='#00FF00'><b>&bull;</b></font></td>
+											<td width="7%" align="left" ><b>- OK &nbsp;&nbsp;</b></td>
+											<td width="9%" align="center" ><font size=6 color='#FF0000'><b>&bull;</b></font></td>
+											<td width="16%" align="left" ><b>- Major Alarm &nbsp;&nbsp;</b></td>
+											<td width="8%" align="center" ><font size=6 color='#FFA500'><b>&bull;</b></font></td>
+											<td width="17%" align="left" ><b>- Minor Alarm &nbsp;&nbsp;</b></td>
+											<td width="8%" align="center" ><font size=6 color='#A8A8A8'><b>&bull;</b></font></td>
+											<td width="13%" align="left" ><b>- N / A &nbsp;&nbsp;</b></td>
+										</tr>
+								  </table>
+								</center>
+							</td>
+						</tr>
+						<tr>
+							<td align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><a href="alarm.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>					
+				</div>			
+~inc:footer.inc~
+<script type="text/javascript">
+
+function updateStatus(xmlData) {
+
+	if(!xmlData)
+	{
+		return;
+	}
+
+	for(i = 0; i <= 7; i++) 
+    {
+		if( i != 5)
+		{
+			switch(getXMLValue(xmlData,'BUC1', 'led'+i))
+			{
+				case '0': document.getElementById('led' + i).style.color = '#FF0000'; break;
+				case '1': document.getElementById('led' + i).style.color = '#00FF00'; break;
+				case '2': document.getElementById('led' + i).style.color = '#FFA500'; break;
+				case '3': document.getElementById('led' + i).style.color = '#A8A8A8'; break;
+				default: document.getElementById('led' + i).style.color = '#ffb4f5'; break;
+			}
+			
+			switch(getXMLValue(xmlData,'BUC2', 'led'+i))
+			{
+				case '0': document.getElementById('ned' + i).style.color = '#FF0000'; break;
+				case '1': document.getElementById('ned' + i).style.color = '#00FF00'; break;
+				case '2': document.getElementById('ned' + i).style.color = '#FFA500'; break;
+				case '3': document.getElementById('ned' + i).style.color = '#A8A8A8'; break;
+				default: document.getElementById('ned' + i).style.color = '#ffb4f5'; break;
+			}
+		}
+	}
+	switch(getXMLValue(xmlData,'rcu', 'pathAAlarm'))
+	{
+		case '0': document.getElementById('pathAAlarm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('pathAAlarm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('pathAAlarm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('pathAAlarm').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData, 'rcu', 'pathBAlarm'))
+	{
+		case '0': document.getElementById('pathBAlarm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('pathBAlarm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('pathBAlarm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('pathBAlarm').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData, 'rcu', 'PS1alarm'))
+	{
+		case '0': document.getElementById('PS1alarm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('PS1alarm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('PS1alarm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('PS1alarm').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData, 'rcu', 'PS2alarm'))
+	{
+		case '0': document.getElementById('PS2alarm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('PS2alarm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('PS2alarm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('PS2alarm').style.color = '#A8A8A8'; break;
+	}	
+	switch(getXMLValue(xmlData, 'rcu', 'OCXO1alarm'))
+	{
+		case '0': document.getElementById('OCXO1alarm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('OCXO1alarm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('OCXO1alarm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('OCXO1alarm').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData, 'rcu', 'OCXO2alarm'))
+	{
+		case '0': document.getElementById('OCXO2alarm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('OCXO2alarm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('OCXO2alarm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('OCXO2alarm').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData, 'rcu', 'buc1comstat'))
+	{
+		case '0': document.getElementById('buc1comstat').style.color = '#FF0000'; break;
+		case '1': document.getElementById('buc1comstat').style.color = '#00FF00'; break;
+		case '2': document.getElementById('buc1comstat').style.color = '#FFA500'; break;
+		case '3': document.getElementById('buc1comstat').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData, 'rcu', 'buc2comstat'))
+	{
+		case '0': document.getElementById('buc2comstat').style.color = '#FF0000'; break;
+		case '1': document.getElementById('buc2comstat').style.color = '#00FF00'; break;
+		case '2': document.getElementById('buc2comstat').style.color = '#FFA500'; break;
+		case '3': document.getElementById('buc2comstat').style.color = '#A8A8A8'; break;
+	}
+}
+
+newAJAXCommand('status.xml', updateStatus, true);
+
+</script>
+	</body>
+</html>

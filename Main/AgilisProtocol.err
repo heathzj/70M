@@ -1,0 +1,11 @@
+Warning[2054] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 121 : suspicious pointer conversion
+Warning[2054] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 121 : suspicious pointer conversion
+Warning[2054] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 262 : suspicious pointer conversion
+Warning[2063] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 317 : '.' operator expected, not '->'
+Warning[2063] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 320 : '.' operator expected, not '->'
+Warning[2054] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 320 : suspicious pointer conversion
+Warning[2054] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 320 : suspicious pointer conversion
+Warning[2063] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 329 : '.' operator expected, not '->'
+Warning[2054] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 329 : suspicious pointer conversion
+Warning[2054] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 329 : suspicious pointer conversion
+Warning[2063] C:\wzx\ZX\Converter\App\SerialIntf\AgilisProtocol\AgilisProtocol.c 345 : '.' operator expected, not '->'

@@ -1,0 +1,223 @@
+/*
+ * Copyright (C) 2012  ST Electronics (Satcom & Sensor Systems) Pte Ltd 
+ *
+ * Agilis Device Manager
+ * 
+ * Manage Agilis Protocol Devices
+ *
+ */
+
+ 
+#include "Global.h"
+#include "define.h"
+#include "AgilisUart.h"
+#include "AgilisProtocol.h"
+#include "AgilisDeviceManager.h"
+#include "RCUServer.h"
+#include "BUCClient.h"
+
+ AgilisDeviceServer_t *pgAgilisServer[NUM_AGILIS_SERVER_INSTANCE];
+ AgilisDeviceClient_t *pgAgilisClient[NUM_AGILIS_CLIENT_INSTANCE];
+
+ BYTE gAgilisClientNum,gAgilisServerNum;
+ UINT8 gAgilisReadBuf[AGILIS_PROTOCOL_UARTBUF_SIZE];
+ UINT8 gAgilisWriteBuf[AGILIS_PROTOCOL_UARTBUF_SIZE];
+ 
+ 
+ AgilisCmdStatus_t AgilisDeviceManagerInit(void)
+ {
+	 memset(pgAgilisClient, 0, sizeof(pgAgilisClient));
+	 gAgilisClientNum = 0;
+
+	 memset(pgAgilisServer, 0, sizeof(pgAgilisServer));
+	 gAgilisServerNum = 0;
+ }
+ 
+ 
+ AgilisCmdStatus_t AgilisDeviceManagerRegisterClient(AgilisDeviceClient_t *pClient)
+ {
+	if(!pClient)
+		return AgilisCmdStatus_Fail;
+ 
+	if(gAgilisClientNum > NUM_AGILIS_CLIENT_INSTANCE)
+		return AgilisCmdStatus_Fail;
+
+	pgAgilisClient[gAgilisClientNum++]=pClient;
+
+    return AgilisCmdStatus_Ok;
+ }
+
+AgilisCmdStatus_t AgilisDeviceManagerRegisterServer(AgilisDeviceServer_t *pServer)
+{
+	if(!pServer)
+		return AgilisCmdStatus_Fail;
+ 
+	if(gAgilisServerNum > NUM_AGILIS_SERVER_INSTANCE)
+		return AgilisCmdStatus_Fail;
+
+	 pgAgilisServer[gAgilisServerNum++]=pServer;
+ 
+	 return AgilisCmdStatus_Ok;
+}
+
+
+AgilisDeviceClient_t *AgilisDeviceManagerGetBUCClient(UINT8 numClient)
+{
+ 	if(numClient < gAgilisClientNum)
+		return pgAgilisClient[numClient];
+	else
+		return NULL;
+}
+
+
+// handle BUC response
+void AgilisDeviceManagerStdClientRespond(void *p, UINT8 numServer)
+{
+	AgilisDeviceClient_t *pClient = (AgilisDeviceClient_t *)p;
+	AgilisCmdStatus_t status; 
+	UINT8 u8NumInBytes,u8NumOutBytes,numFunc,u8BufPos,numPacket;
+
+ 	// check UART port connected to server
+ 	if(!pClient->pUARTServer)
+		return;
+
+
+	// clear read buffer
+	memset(gAgilisReadBuf, 0, sizeof(gAgilisReadBuf));
+	u8NumInBytes = sizeof(gAgilisReadBuf);
+
+	// read from client port i
+	if((u8NumInBytes = pClient->pUARTServer->Read(gAgilisReadBuf, u8NumInBytes)) == 0){
+
+		if(pClient->serverCommStatus == AgilisDeviceStatusOnline)
+			pClient->serverNoCommCount++;
+
+		if(pClient->serverNoCommCount > SERVER_NOCOMM_COUNT){
+			pClient->pResetServerInfoFunc(numServer);
+			pClient->serverStatus = 0;
+			pClient->serverNoCommCount = 0;
+		  	pClient->serverCommStatus = AgilisDeviceStatusNoComm;
+		}
+		return;
+	}
+
+	// if the BUC was offline, check if the BUC ID is set according to the port connected
+	//if(!(pClient->serverStatus & BUC_STATUS_VE_READY)){
+		//Agilis_G_Cmd_t *pGCmdIn=(Agilis_G_Cmd_t *)gAgilisReadBuf;
+		// set BUC ID if its last digit not the same as SSPA ID (801/802)
+		//if(	pGCmdIn->bits.SourceID[2] != SSPAinfo.info.deviceID[2]){
+			// set BUC ID to the same as SSPA ID
+			//UINT8 id = NUMERIC_VALUE(SSPAinfo.info.deviceID[2]);
+			//BUCClientSetBUCID(id);
+			//return;
+		//}
+	//}
+
+#if 0
+	AgilisUartTestDumpReadBuf((rom char*)"uart0");
+#endif	
+
+	// reset the no comm count 
+	pClient->serverNoCommCount = 0;
+
+	HitWatchDog();
+
+	// multiple packet handling
+	u8BufPos = 0;
+	numPacket= 0;
+	AgilisProtocolGetCmdPacketStartPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf));
+
+	while(u8NumInBytes){
+		// look up for the command request function
+		if(AgilisProtocolCmdLookUp(&gAgilisReadBuf[u8BufPos], &numFunc, pClient->pCmdTable, pClient->totalCmdNum) != AgilisCmdStatus_Ok){
+#ifdef SUPPORT_MULTIPLE_PACKET
+			AgilisProtocolGetNextCmdPacketPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf));
+			if(	!u8BufPos || u8BufPos >= sizeof(gAgilisReadBuf))
+#endif
+			break;
+		}			 
+ 		// reset command response buffer
+ 		memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+		u8NumOutBytes = sizeof(gAgilisWriteBuf);
+
+ 		// execute the command request function or forward the request
+ 		status = pClient->pCmdTable[numFunc].pCmdFunc(pClient, &gAgilisReadBuf[u8BufPos], &u8NumInBytes, gAgilisWriteBuf, &u8NumOutBytes, numServer);
+
+#ifdef SUPPORT_MULTIPLE_PACKET
+		AgilisProtocolGetNextCmdPacketPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf));
+		if(	!u8BufPos || u8BufPos >= sizeof(gAgilisReadBuf))
+#endif
+			break;
+		
+		// delay 100ms before sending out next response
+		DelayMS(5);
+
+		// break out of while loop if handled more than 3 packets
+		if(numPacket++ >= 3)
+			break;
+	}
+
+	// if the BUC has all info available, report it as online and proxy should respond
+	if(	pClient->serverStatus && 
+        pClient->serverCommStatus != AgilisDeviceStatusOnline)
+		pClient->serverCommStatus = AgilisDeviceStatusOnline;
+
+} 
+
+void AgilisDeviceManagerServerRespond(void)
+{
+	BYTE i;
+	// handle response from client (PC/LCD panel/WiFi)
+ 	for(i = 0;i < gAgilisServerNum; i++)
+		pgAgilisServer[i]->pRespondFunc(pgAgilisServer[i]);
+		//SPTServerRespond(pgAgilisServer[i]);//SPTServerRespond(&gAgilisServer[i]);
+}
+
+void AgilisDeviceManagerClientPoll(void)
+{
+	BYTE i;
+ 	for(i = 0;i < gAgilisClientNum; i++)
+		pgAgilisClient[i]->pPollFunc(pgAgilisClient[i], i);
+}	 
+
+void AgilisDeviceManagerClientRespond(void)
+{
+	BYTE i;
+ 	for(i = 0;i < gAgilisClientNum; i++)
+		pgAgilisClient[i]->pRespondFunc(pgAgilisClient[i], i);//gAgilisClient[i].pRespondFunc(&gAgilisClient[i]);
+}	 
+
+void AgilisDeviceManagerHandler(void)
+{
+	static UINT16 pollingcount=0,respondcount=0;
+	UINT16 pollingtimer,responsetimer;
+	UINT8 i;
+
+	// when ethernet is connected it will slow down the system
+	// so poll and response faster
+	if(MACIsLinked()){
+		pollingtimer  = POLLING_TIMER/20;
+		responsetimer = RESPONSE_TIMER/20;
+	}else{
+		pollingtimer  = POLLING_TIMER;
+		responsetimer = RESPONSE_TIMER;
+	}
+	
+	if(respondcount++ > responsetimer){
+		// handle response from client (PC/LCD panel/WiFi)
+	 	AgilisDeviceManagerServerRespond();
+
+		// handle response from server (BUC/SSPA)
+		AgilisDeviceManagerClientRespond();
+		respondcount = 0;
+	}
+
+	// poll server (BUC/SSPA)
+	if(pollingcount++ > pollingtimer){
+		AgilisDeviceManagerClientPoll();
+		pollingcount = 0;
+	}
+}
+ 
+
+

@@ -1,0 +1,90 @@
+~inc:header.inc~
+<title>SNMP Configuration</title>
+  <tr>
+  	<td>
+		<div class="pagetab" style="height:600px" >
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="center" colspan="3" height="42" bgcolor="#cac8c8"><center>SNMP AGENT CONFIGURATION</center></td>
+						</tr>
+						<tr>
+							<td align="left" colspan="3" height="42" bgcolor="#e2e2e2">
+								<center>
+									<p>Read/Write Community String configuration for SNMPv2c Agent.</p>
+									<p>Configure multiple community names if you want the SNMP agent 
+									to respond to the NMS/SNMP manager with different read and write 
+									community names. If less than three communities are needed, leave 
+									extra fields blank to disable them.</p>							
+								</center>
+							</td>
+						</tr>
+						<tr>
+							<td align="center" bgcolor="#e2e2e2" width="20%" ></td>
+							<td align="center" bgcolor="#e2e2e2" width="60%" >
+									<table border="0" width="100%" cellpadding="2">
+										<tr>
+											<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center>Manager IP Configuration</center></td>
+										</tr>
+										<FORM method=GET action=snmpconfig.htm>
+										<tr>
+											<td align="center"><b>SNMP Manager IP </b></td>
+											<td><input align="center" type=text size=20 name="MIP" value="~MIP~"></td>
+											<td><input align="center" class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+									</table>
+								<FORM method="post" action="/snmp/snmpconfig.htm" name="config">
+									<table border="0" width="100%" cellpadding="2">
+										<tr>
+											<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center>Community String Configuration</center></td>
+										</tr>
+										<tr>
+											<td align="center" width="20%"><b>&nbsp;</b></td>
+											<td align="left" width="35%"><b>Read Comm1 :</b></td>
+											<td align="left"><input type="text" name="rcm0" value="~read_comm(0)~" /></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Read Comm2 :</b></td>
+											<td align="left"><input type="text" name="rcm1" value="~read_comm(1)~" /></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Read Comm3 :</b></td>
+											<td align="left"><input type="text" name="rcm2" value="~read_comm(2)~" /></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Write Comm1:</b></td>
+											<td align="left"><input type="text" name="wcm0" value="~write_comm(0)~" /></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Write Comm2:</b></td>
+											<td align="left"><input type="text" name="wcm1" value="~write_comm(1)~" /></td>
+										</tr>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left"><b>Write Comm3:</b></td>
+											<td align="left"><input type="text" name="wcm2" value="~write_comm(2)~" /></td>
+										</tr>
+									</table>
+										<center><input class="stylishButton" type="submit" value="Save Config"></center>																
+									</FORM>
+									
+							</td>
+							<td align="center" bgcolor="#e2e2e2" width="20%" ></td>
+						</tr>
+						<tr>
+							<td align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><a href="snmpconfig.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>			
+					
+				</div>
+~inc:footer.inc~
+	</body>
+</html>
+</div>
+</td>
+</tr>

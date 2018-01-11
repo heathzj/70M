@@ -1,0 +1,8 @@
+Warning[2060] C:\sxy\2+1-RCU-R\AgilisDevices\BUCClient.c 454 : shift expression has no effect
+Warning[2054] C:\sxy\2+1-RCU-R\AgilisDevices\BUCClient.c 547 : suspicious pointer conversion
+Warning[2054] C:\sxy\2+1-RCU-R\AgilisDevices\BUCClient.c 597 : suspicious pointer conversion
+Warning[2054] C:\sxy\2+1-RCU-R\AgilisDevices\BUCClient.c 710 : suspicious pointer conversion
+Warning[2066] C:\sxy\2+1-RCU-R\AgilisDevices\BUCClient.c 719 : type qualifier mismatch in assignment
+Warning[2066] C:\sxy\2+1-RCU-R\AgilisDevices\BUCClient.c 723 : type qualifier mismatch in assignment
+Warning[2066] C:\sxy\2+1-RCU-R\AgilisDevices\BUCClient.c 727 : type qualifier mismatch in assignment
+Warning[2053] C:\sxy\2+1-RCU-R\AgilisDevices\BUCClient.c 750 : return value expected

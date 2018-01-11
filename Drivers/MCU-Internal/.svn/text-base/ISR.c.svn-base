@@ -1,0 +1,109 @@
+#include "Global.h"
+#include "define.h"
+#if defined(__18F97J60) || defined(_18F97J60)
+#include "p18f97j60.h"
+#include "TCPIP Stack/TCPIP.h"
+#endif
+#include "task.h"
+#include "list.h"
+//#include "old/protocolprocess.h"
+#include "AgilisDualUART.h"
+#include "UARTISR.h"
+
+//
+// PIC18 Interrupt Service Routines
+// 
+// NOTE: Several PICs, including the PIC18F4620 revision A3 have a RETFIE FAST/MOVFF bug
+// The interruptlow keyword is used to work around the bug when using C18
+extern unsigned int timer_counter;
+extern TaskItem task_list[MAX_TASK_NUM];  
+
+#pragma interruptlow LowISR
+void LowISR(void)
+{
+	unsigned char byte_tmp, i;
+
+#if defined(__18F8722) || defined(_18F8722)
+	UART2ISR();         
+#endif
+	
+	UARTISR0();
+	//Uart0.uartisr();
+	
+	UARTISR1();
+	//Uart1.uartisr();
+
+#if defined(__18F97J60) || defined(_18F97J60)
+	TickUpdate();
+#else
+
+    if(INTCON3bits.INT2IF)         // check for unused INT2 flag
+    {                     
+        INTCON3bits.INT2IF = 0;  // clear INT2 flag
+	}
+    if(INTCON3bits.INT3IF)         // check for unused INT3 flag
+    {                     
+        INTCON3bits.INT3IF = 0;  // clear INT3 flag                    
+	}
+#endif
+
+#if defined(__18F8722) || defined(_18F8722)
+    if(INTCONbits.TMR0IF)         // check for TMR0 overflow
+    {                     
+        INTCONbits.TMR0IF = 0;  // clear interrupt flag                    
+        TMR0L = TMROL_VALUE;      // reset TMR0    
+#endif
+		timer_counter++;
+
+		for (i = 1; i < MAX_TASK_NUM; i++)  //start from 1, no need to check the idle task	 
+		{	
+			if ((task_list[i].state_bit & STAT_BIT_DLY)
+			   && (task_list[i].delay_time <= timer_counter))
+			{
+				task_list[i].delay_task_run = TRUE;
+			}
+		}		   
+#if defined(__18F8722) || defined(_18F8722)
+	}
+#endif
+}
+	
+
+#pragma interrupt HighISR
+void HighISR(void)
+{
+	unsigned char val_isr = 0;
+	unsigned char byte_tmp;
+
+#if defined(__18F97J60) || defined(_18F97J60)
+	UART2ISR();         
+#endif
+
+	UARTISR2();	
+
+	UARTISR3();
+
+#ifdef SUPPORT_2ND_DUALUART
+	UARTISR4();
+#endif
+	//Uart2.uartisr();
+	//Uart3.uartisr();
+
+}
+
+
+#ifdef USE_SERIAL_BOOTLOADER
+#pragma code lowVector=0x218
+#else
+#pragma code lowVector=0x18
+#endif
+
+void LowVector(void){_asm goto LowISR _endasm}
+
+#ifdef USE_SERIAL_BOOTLOADER
+#pragma code highVector=0x208
+#else
+#pragma code highVector=0x8
+#endif
+void HighVector(void){_asm goto HighISR _endasm}
+

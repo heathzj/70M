@@ -1,0 +1,394 @@
+/****************************************************************/
+/*												                */
+/* This is for getting Device Status & Alarm  for both BUCs		*/
+/*												                */	
+/****************************************************************/
+
+#include "AgilisSNMPLL.h"
+
+#if defined STACK_USE_SNMP_SERVER
+
+extern BYTE myRef;
+
+/****************************************************************/
+/*												                */
+/* This is for getting Device Status for both BUCs		        */
+/*												                */	
+/****************************************************************/
+
+
+/*      This for getting inpower status on BUC -1  		   */
+/*  Get inpower - Read only - Ascii String  - BUC 1 	   */	
+BOOL Agilissnmpll_getBUCinpower(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+
+//        unsigned char Inpower[5]={'0','0','0','0',0};  
+	myRef=*ref;
+/*	
+   if((BUCinfo[index].status.inpower>=45)||(BUCinfo[index].status.inpower==0))
+    {
+      Inpower[0]='N';
+      Inpower[1]='/';
+      Inpower[2]='A';
+      Inpower[3]=0;
+    
+    }
+
+    else
+    {
+      uitoa(BUCinfo[index].status.inpower, (BYTE*)(Inpower+1));
+
+      *Inpower = '-';
+
+    }
+
+        if ( Inpower[0] == 0u )
+            myRef = SNMP_END_OF_VAR;
+        else
+        {
+            val->byte = Inpower[myRef++];
+            if ( Inpower[myRef] == 0u )
+                myRef = SNMP_END_OF_VAR;
+        }
+
+        *ref = myRef;
+
+        return TRUE;
+*/
+
+		strcpypgm2ram(global_char_temp, "N/A");
+  		if(global_char_temp[0] == 0u)
+ 		    myRef  = SNMP_END_OF_VAR;
+		else
+	    {
+	      val->byte = global_char_temp[myRef++];
+	    	if(global_char_temp[myRef]== 0u)
+		     myRef  = SNMP_END_OF_VAR;
+	    }
+		*ref = myRef;
+		return TRUE;
+}
+
+
+
+
+/*      This for getting outpower status on BUC -1  		   */
+/*  Get outpower  - Read only - Ascii String  - BUC 1    	   */
+
+BOOL Agilissnmpll_getBUCoutpower(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+	myRef=*ref;
+
+	if(!myRef)
+		memset(global_char_temp, 0, sizeof(global_char_temp));
+
+if(!(Agilissnmpll_check_BUC_COM_status(index)))
+{
+	if(BUCinfo[1].info.BUC_model == KUBAND)
+	{
+       if( BUCinfo[index].status.outpower_sign_sspa == '<')
+        {
+           global_char_temp[0] = '<';
+           uitoa(BUCinfo[index].status.outpower, (BYTE*)(global_char_temp+1));
+        }
+        else if(BUCinfo[index].status.outpower_sign_sspa == '>')
+        {
+           global_char_temp[0] = '>';
+           uitoa(BUCinfo[index].status.outpower, (BYTE*)(global_char_temp+1));
+        }
+        else
+          uitoa(BUCinfo[index].status.outpower, (BYTE*)global_char_temp);
+	}
+	else
+	{
+		if(BUCinfo[index].status.outpower_sign == '<')
+        {
+           global_char_temp[0] = '<';
+           uitoa(BUCinfo[index].status.outpower, (BYTE*)(global_char_temp+1));
+        }
+        else
+          uitoa(BUCinfo[index].status.outpower, (BYTE*)global_char_temp);
+	}
+}
+else
+{
+	strcpypgm2ram(global_char_temp, "???");
+}
+
+       if ( global_char_temp[0] == 0u )
+           myRef = SNMP_END_OF_VAR;
+       else
+       {
+           val->byte = global_char_temp[myRef++];
+           if ( global_char_temp[myRef] == 0u )
+               myRef = SNMP_END_OF_VAR;
+       }
+
+        *ref = myRef;
+        return TRUE;
+}
+
+
+
+/*      This for getting Reflected Power status on BUC -1    */
+/* Get Reflected Power - Read Only  - Ascii String - BUC-1   */
+
+BOOL Agilissnmpll_getBUCreflectpower(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+	myRef=*ref;
+		strcpypgm2ram(global_char_temp, "N/A");
+  		if(global_char_temp[0] == 0u)
+ 		    myRef  = SNMP_END_OF_VAR;
+		else
+	    {
+	      val->byte = global_char_temp[myRef++];
+	    	if(global_char_temp[myRef]== 0u)
+		     myRef  = SNMP_END_OF_VAR;
+	    }
+		*ref = myRef;
+		return TRUE;
+}
+
+
+
+
+
+/*      This for getting Temperature status on BUC -1     */
+/* Read Temperature - Read Only  - Ascii String - BUC-1   */
+
+BOOL Agilissnmpll_getBUCtemp(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+		char temp[4];
+		myRef=*ref;
+		
+if(!(Agilissnmpll_check_BUC_COM_status)(index))
+{
+         if(BUCinfo[index].status.temp>=0)
+           uitoa(BUCinfo[index].status.temp, (BYTE*)temp);
+         else
+         {
+           temp[0]='-';
+           uitoa(BUCinfo[index].status.temp*(-1), (BYTE*)(temp+1));
+         }
+}
+else
+{
+		strcpypgm2ram(temp, "???");
+} 
+        if ( temp[0] == 0u )
+            myRef = SNMP_END_OF_VAR;
+        else
+        {
+            val->byte = temp[myRef++];
+            if ( temp[myRef] == 0u )
+                myRef = SNMP_END_OF_VAR;
+        }
+
+        *ref = myRef;
+        return TRUE;
+}
+
+
+
+
+
+/****************************************************************/
+/*												                */
+/* This is for getting Device Alarm  for both BUCs	    	    */
+/*												                */	
+/****************************************************************/
+
+/*
+BYTE Agilissnmpll_get_BUC_alarmstatus(BYTE device_id, BYTE mib_index)
+{
+  BOOL status = 2;          //* Indicating No Alarm initially
+ 
+ 	switch(mib_index)
+ 	{
+ 	  case BUC_LOLOCK_TRAP:
+ 	          if(BUCinfo[device_id].alarm.Lo == 0)
+ 	          	status = 1;	
+ 	       break;
+ 	  case BUC_TEMPLVL_TRAP:
+ 	          if(BUCinfo[device_id].alarm.templvl == 0)
+ 	          	status = 1;
+ 	       break;
+ 	  case BUC_PWRAMP_TRAP:
+ 	          if(BUCinfo[device_id].alarm.rfon == 0)
+ 	          	status = 1;
+ 	       break;
+ 	  case BUC_RFPWMLOW_TRAP:
+ 	          if(BUCinfo[device_id].alarm.rflow == 0)
+ 	          	status = 1;
+ 	       break;
+ 	}
+ 
+ /*
+  if(BUCinfo[0].alarm.rfon    == 0 ||
+     BUCinfo[0].alarm.templvl == 0 || 
+	 BUCinfo[0].alarm.Lo      == 0 ||
+	 BUCinfo[1].alarm.rfon    == 0 ||
+   	 BUCinfo[1].alarm.templvl == 0 ||
+	 BUCinfo[1].alarm.Lo      == 0)
+	{
+		status = 1; // Major Alarm 
+	}
+   else if(BUCinfo[0].alarm.fan   == 0 ||
+		   BUCinfo[0].alarm.rflow == 0 ||
+		   BUCinfo[1].alarm.fan   == 0 ||
+		   BUCinfo[1].alarm.rflow == 0)
+	{
+		status = 0;  // Minor Alarm
+	}
+	
+	val->byte = status;
+
+
+    return status;
+}
+*/	
+
+
+/*      This for getting lolock Alarm on BUC -1  		   */
+BOOL Agilissnmpll_alarmBUC_lolock(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+	if(Agilissnmpll_check_BUC_COM_status(index))
+	{
+		val->byte = 2;
+		return TRUE;
+	}
+
+      if((BUCinfo[index].info.BUC_model==KUBAND)||(BUCinfo[index].info.BUC_model==CBAND)) 
+        val->byte =  BUCinfo[index].alarm.Lo;
+     else
+        val->byte =  2; 
+
+      return TRUE;
+}
+
+
+
+
+
+/*      This for getting powerAmp Alarm on BUC -1  		   */
+
+BOOL Agilissnmpll_alarmBUC_powerAmp(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+	if(Agilissnmpll_check_BUC_COM_status(index))
+	{
+		val->byte = 2;
+		return TRUE;
+	}
+
+     if(BUCinfo[index].info.BUC_model==KUBAND)
+        val->byte = BUCinfo[index].alarm.rfon_sspa;
+     else
+        val->byte = BUCinfo[index].alarm.rfon;
+	return TRUE;
+}
+
+
+
+
+
+/*      This for getting TempLevel Alarm on BUC -1  		   */
+
+BOOL Agilissnmpll_alarmBUC_TempLevel(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+	if(Agilissnmpll_check_BUC_COM_status(index))
+	{
+		val->byte = 2;
+		return TRUE;
+	}
+
+     if(BUCinfo[index].info.BUC_model==KUBAND)
+        val->byte = BUCinfo[index].alarm.templvl_sspa;
+      else
+        val->byte = BUCinfo[index].alarm.templvl;
+
+return TRUE;
+}
+
+
+
+
+/*      This for getting fetBias Alarm on BUC -1    		   */
+
+BOOL Agilissnmpll_alarmBUC_fetBias(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+       /*  val->byte = BUCinfo[index].alarm.fetbias; */
+       val->byte = 2;
+
+        return TRUE;
+}
+
+
+
+
+/*      This for getting rfLow Alarm on BUC -1    		        */
+
+BOOL Agilissnmpll_alarmBUC_rfLow(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+	if(Agilissnmpll_check_BUC_COM_status(index))
+	{
+		val->byte = 2;
+		return TRUE;
+	}
+
+     if(BUCinfo[index].info.BUC_model==KUBAND)
+       val->byte = BUCinfo[index].alarm.rflow_sspa;
+     else
+       val->byte = BUCinfo[index].alarm.rflow;
+	return TRUE;
+}
+
+
+/*      This reserved for future use of Alarm on BUC -1        */
+
+BOOL Agilissnmpll_alarmBUC_reserved(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+ val->byte = 2;   /*N.A */
+return TRUE;
+}
+
+
+/*      This for getting Manager IP              	   */
+BOOL Agilissnmp_get_trap_resp(SNMP_INDEX var, BYTE* ref, SNMP_VAL* val)
+{
+  BYTE index = 0;
+  BYTE myRef = *ref;
+  
+ switch(var)
+  {
+ 	case TRAP_RECEIVER_ID:
+		if ( index < trapInfo.Size )
+        	{
+           	 	val->byte = index;
+           		return TRUE;
+        	}
+		break;
+	case TRAP_COMMUNITY:
+		 if ( index < trapInfo.Size )
+         {
+            if ( trapInfo.table[index].communityLen == 0u )
+                *ref = SNMP_END_OF_VAR;
+            else
+            {
+                val->byte = trapInfo.table[index].community[myRef];
+
+                myRef++;
+
+                if ( myRef == trapInfo.table[index].communityLen )
+                    *ref = SNMP_END_OF_VAR;
+                else
+                    *ref = myRef;
+            }
+            return TRUE;
+         }
+		break;
+  } 
+
+}
+
+
+#endif

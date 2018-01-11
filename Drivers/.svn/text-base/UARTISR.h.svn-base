@@ -1,0 +1,164 @@
+#ifndef _UARTISR_H_
+#define _UARTISR_H_
+
+
+#include "HardwareProfile.h"
+
+
+#define 	AGILIS_FIFO_SIZE 64
+
+#define    AGILIS_UART0_FIFO_RD_PTR       agilisUART0RxCircBuf.pi8AgilisCircBufRead
+#define    AGILIS_UART0_FIFO_WR_PTR       agilisUART0RxCircBuf.pi8AgilisCircBufWrite
+#define    AGILIS_UART0_FIFO_START_PTR    agilisUART0RxCircBuf.pi8AgilisCircBufStart
+#define    AGILIS_UART0_FIFO_END_PTR      agilisUART0RxCircBuf.pi8AgilisCircBufEnd 
+
+#define    AGILIS_UART0_FIFO_RD_PTR_NEXT  ((AGILIS_UART0_FIFO_RD_PTR == AGILIS_UART0_FIFO_END_PTR)? \
+	                               AGILIS_UART0_FIFO_START_PTR: (AGILIS_UART0_FIFO_RD_PTR + 1))
+	                               
+#define    AGILIS_UART0_FIFO_WR_PTR_NEXT  ((AGILIS_UART0_FIFO_WR_PTR == AGILIS_UART0_FIFO_END_PTR)? \
+	                               AGILIS_UART0_FIFO_START_PTR: (AGILIS_UART0_FIFO_WR_PTR + 1))
+
+
+
+#define    AGILIS_UART1_FIFO_RD_PTR       agilisUART1RxCircBuf.pi8AgilisCircBufRead
+#define    AGILIS_UART1_FIFO_WR_PTR       agilisUART1RxCircBuf.pi8AgilisCircBufWrite
+#define    AGILIS_UART1_FIFO_START_PTR    agilisUART1RxCircBuf.pi8AgilisCircBufStart
+#define    AGILIS_UART1_FIFO_END_PTR      agilisUART1RxCircBuf.pi8AgilisCircBufEnd 
+
+#define    AGILIS_UART1_FIFO_RD_PTR_NEXT  ((AGILIS_UART1_FIFO_RD_PTR == AGILIS_UART1_FIFO_END_PTR)? \
+	                               AGILIS_UART1_FIFO_START_PTR: (AGILIS_UART1_FIFO_RD_PTR + 1))
+	                               
+#define    AGILIS_UART1_FIFO_WR_PTR_NEXT  ((AGILIS_UART1_FIFO_WR_PTR == AGILIS_UART1_FIFO_END_PTR)? \
+	                               AGILIS_UART1_FIFO_START_PTR: (AGILIS_UART1_FIFO_WR_PTR + 1))
+
+
+#define    AGILIS_UART2_FIFO_RD_PTR       agilisUART2RxCircBuf.pi8AgilisCircBufRead
+#define    AGILIS_UART2_FIFO_WR_PTR       agilisUART2RxCircBuf.pi8AgilisCircBufWrite
+#define    AGILIS_UART2_FIFO_START_PTR    agilisUART2RxCircBuf.pi8AgilisCircBufStart
+#define    AGILIS_UART2_FIFO_END_PTR      agilisUART2RxCircBuf.pi8AgilisCircBufEnd 
+
+#define    AGILIS_UART2_FIFO_RD_PTR_NEXT  ((AGILIS_UART2_FIFO_RD_PTR == AGILIS_UART2_FIFO_END_PTR)? \
+	                               AGILIS_UART2_FIFO_START_PTR: (AGILIS_UART2_FIFO_RD_PTR + 1))
+	                               
+#define    AGILIS_UART2_FIFO_WR_PTR_NEXT  ((AGILIS_UART2_FIFO_WR_PTR == AGILIS_UART2_FIFO_END_PTR)? \
+	                               AGILIS_UART2_FIFO_START_PTR: (AGILIS_UART2_FIFO_WR_PTR + 1))
+
+
+
+#define    AGILIS_UART3_FIFO_RD_PTR       agilisUART3RxCircBuf.pi8AgilisCircBufRead
+#define    AGILIS_UART3_FIFO_WR_PTR       agilisUART3RxCircBuf.pi8AgilisCircBufWrite
+#define    AGILIS_UART3_FIFO_START_PTR    agilisUART3RxCircBuf.pi8AgilisCircBufStart
+#define    AGILIS_UART3_FIFO_END_PTR      agilisUART3RxCircBuf.pi8AgilisCircBufEnd 
+
+#define    AGILIS_UART3_FIFO_RD_PTR_NEXT  ((AGILIS_UART3_FIFO_RD_PTR == AGILIS_UART3_FIFO_END_PTR)? \
+	                               AGILIS_UART3_FIFO_START_PTR: (AGILIS_UART3_FIFO_RD_PTR + 1))
+	                               
+#define    AGILIS_UART3_FIFO_WR_PTR_NEXT  ((AGILIS_UART3_FIFO_WR_PTR == AGILIS_UART3_FIFO_END_PTR)? \
+	                               AGILIS_UART3_FIFO_START_PTR: (AGILIS_UART3_FIFO_WR_PTR + 1))
+
+
+
+#define    AGILIS_UART4_FIFO_RD_PTR       agilisUART4RxCircBuf.pi8AgilisCircBufRead
+#define    AGILIS_UART4_FIFO_WR_PTR       agilisUART4RxCircBuf.pi8AgilisCircBufWrite
+#define    AGILIS_UART4_FIFO_START_PTR    agilisUART4RxCircBuf.pi8AgilisCircBufStart
+#define    AGILIS_UART4_FIFO_END_PTR      agilisUART4RxCircBuf.pi8AgilisCircBufEnd 
+
+#define    AGILIS_UART4_FIFO_RD_PTR_NEXT  ((AGILIS_UART4_FIFO_RD_PTR == AGILIS_UART4_FIFO_END_PTR)? \
+	                               AGILIS_UART4_FIFO_START_PTR: (AGILIS_UART4_FIFO_RD_PTR + 1))
+	                               
+#define    AGILIS_UART4_FIFO_WR_PTR_NEXT  ((AGILIS_UART4_FIFO_WR_PTR == AGILIS_UART4_FIFO_END_PTR)? \
+	                               AGILIS_UART4_FIFO_START_PTR: (AGILIS_UART4_FIFO_WR_PTR + 1))
+
+
+
+
+
+/* Agilis Circular buffer definition */
+typedef struct _tCircBuf
+{
+  char	  ai8AgilisCircBuf[64];
+  char	  *pi8AgilisCircBufRead;  
+  char	  *pi8AgilisCircBufWrite;
+  char	  *pi8AgilisCircBufStart;
+  char	  *pi8AgilisCircBufEnd;
+  
+} tAgilisCircBuf; 
+
+
+typedef struct uartDCB_s
+{
+	//BYTE dummy[8];
+	//BYTE UARTFIFODataErrorCount;
+	//BYTE UARTFramingErrorCount;
+	//BYTE UARTParityErrorCount;
+	//BYTE UARTOverrunErrorCount;
+	//BYTE devname;
+	BYTE* RXBuff;
+
+	BYTE mode;
+	volatile BYTE receiveflag;
+
+	void (*uartinit)();
+	void (*uartisr)();
+	int (*uartread)();
+	void (*uartwrite)(char*);
+	//void (*uartwriterom)(rom char*);
+	void (*uartfifoinit)();
+
+
+} uartDBC_t;
+
+
+extern uartDBC_t Uart0; 
+extern uartDBC_t Uart1; 
+extern uartDBC_t Uart2; 
+extern uartDBC_t Uart3; 
+extern uartDBC_t Uart4; 
+
+extern tAgilisCircBuf agilisUART0RxCircBuf;
+extern tAgilisCircBuf agilisUART1RxCircBuf;
+extern tAgilisCircBuf agilisUART2RxCircBuf;
+extern tAgilisCircBuf agilisUART3RxCircBuf;
+extern tAgilisCircBuf agilisUART4RxCircBuf;
+
+void uart0init(uartDBC_t*,BYTE);
+void uart1init(uartDBC_t*,BYTE );
+void uart2init(uartDBC_t*,BYTE );
+void uart3init(uartDBC_t*,BYTE );
+void uart4init(uartDBC_t*,BYTE );
+
+
+void UART0write(BYTE*);
+void UART1write(BYTE* );
+void UART2write(BYTE*);
+void UART3write(BYTE* );
+void UART4write(BYTE* );
+
+
+void UART0writerom(rom char*);
+void UART1writerom(rom char* );
+void UART2writerom(rom char*);
+void UART3writerom(rom char* );
+void UART4writerom(rom char* );
+
+
+
+void UARTISR0(void);
+void UARTISR1(void);
+void UARTISR2(void);
+void UARTISR3(void);
+void UARTISR4(void);
+void UART2ISR(void);
+
+void InitFifo0(void);
+void InitFifo1(void);
+void InitFifo2(void);
+void InitFifo3(void);
+void InitFifo4(void);
+
+int UARTBufferTask(unsigned char* data,tAgilisCircBuf* buf);
+
+
+
+#endif // _UARTISR_H_
+

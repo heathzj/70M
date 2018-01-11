@@ -1,0 +1,350 @@
+/*****************************************************************************
+  Function:
+	BOOL HTTPExe_get_deviceinfo(void)
+	
+  Internal:
+  	See documentation in the TCP/IP Stack API or HTTP2.h for details.
+  ***************************************************************************/
+#include "define.h" 
+#include "AgilisHTTPApp.h"
+#include "BUCClient.h"
+#include "RCUHLAccess.h"
+ 
+BYTE WIFI_EN; 
+char oldp[10];
+char newp[10];
+char rep[10];
+
+BOOL HTTPExe_get_deviceinfo(void)
+ {
+    BYTE byte_temp,byte_temp2[2];
+	BYTE temp_ID[4];
+	BYTE *ptr;
+	BYTE filename[20];
+	DWORD temp = 0;
+	char invalid_char=0,end;
+    char toolong = 0;
+	unsigned char i,k = 0;
+	float float_temp;
+	unsigned char count = 0;
+
+	MPFSGetFilename(curHTTP.file, filename, 20);
+	
+	 if(!memcmppgm2ram(filename, "protect/config.htm", 18))
+	{
+
+	    ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"ID");
+		if(ptr)
+		{
+			if( ptr[0] >= '1' && ptr[0] <= '9')
+				RCUHLSetDeviceID(ptr[0]-'0');
+		}
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"serial");
+		if(ptr)
+		{
+		  if(*(ptr+2)=='2')
+		  {
+			RCUHLSetComMode(RS232);
+		  }
+		  else if (*(ptr+2)=='4')
+		  {
+			RCUHLSetComMode(RS485);
+		  }
+		}
+						
+        ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"DIP");
+           if(ptr)
+           {
+                  if(StringToIPAddress(ptr, &AppConfig.MyIPAddr))
+                  {
+                     SaveSetting();
+                     SaveAppConfig();
+                  }
+            }
+
+        ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"gateway");
+           if(ptr)
+           {
+                  if(StringToIPAddress(ptr, &AppConfig.MyGateway))
+                  {
+                     SaveSetting();
+                     SaveAppConfig();
+                  }
+            }
+
+        ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"subnet");
+           if(ptr)
+           {
+                  if(StringToIPAddress(ptr, &AppConfig.MyMask))
+                  {
+                     SaveSetting();
+                     SaveAppConfig();
+                  }
+           }
+
+
+    	ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"mode");
+            if(ptr)
+            {
+      			if(*(ptr)=='A')
+                {
+                  RCUHLSetMode(0);
+                }
+                else if(*(ptr)=='M')
+                {
+                  RCUHLSetMode(1);
+                }
+            }
+
+   		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"path");
+            if(ptr && (RCUinfo.opmode == 1))          // allow only when switching mode is Manual
+            {
+              if(*(ptr)=='A')
+              {
+				RCUHLSetPath(1, 1);
+              }
+              else if(*(ptr)=='B')
+              {
+				RCUHLSetPath(2, 1);
+              }
+            }
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"Attn1");
+			if(ptr)
+			{
+			memset(global_char_temp,0 ,sizeof(global_char_temp));
+             if((*ptr<0x30)||(*ptr>0x39))
+             {
+                 return FALSE;
+             }
+			float_temp = Agilis_util_parse_attn(ptr);
+			if(float_temp == 0xFF)
+				return FALSE;
+			else
+           		RCUHLSetBUCAttn(0, float_temp);
+			}
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"Attn2");
+			if(ptr)
+			{
+			memset(global_char_temp,0 ,sizeof(global_char_temp));
+             if((*ptr<0x30)||(*ptr>0x39))
+             {
+                 return FALSE;
+             }
+			float_temp = Agilis_util_parse_attn(ptr);
+			if(float_temp == 0xFF)
+				return FALSE;
+			else
+           		RCUHLSetBUCAttn(1, float_temp);
+			}
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"rfop1");
+			if(ptr)
+			{
+			  if(*(ptr+1)=='F')
+			  	byte_temp = 0;
+			  else if ((*(ptr+1)) == 'N')
+				byte_temp = 1;
+			 RCUHLSetBUCOnOff(0, byte_temp);
+			}
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"rfop2");
+			if(ptr)
+			{
+			  if(*(ptr+1)=='F')
+			  	byte_temp = 0;
+			  else if ((*(ptr+1)) == 'N')
+				byte_temp = 1;
+			 RCUHLSetBUCOnOff(1, byte_temp);
+			}
+
+
+ 	  } //END OF config.htm
+
+	else if(!memcmppgm2ram(filename, "snmp/snmpconfig.htm", 19))
+	{
+        ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"MIP");
+           if(ptr)
+           {
+                  if(StringToIPAddress(ptr, &Manager_IP))
+                  {
+                     Read2[0][0] = Manager_IP.v[0];
+                     Read2[0][1] = Manager_IP.v[1];
+                     Read2[0][2] = Manager_IP.v[2];
+                     Read2[0][3] = Manager_IP.v[3];
+                     SaveSetting();  
+                  }
+            }
+
+	} //end of snmpconfig.htm
+
+     else if(!memcmppgm2ram(filename, "protect/lut.htm", 15))
+	 {
+       ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"mac5");
+           if(ptr)
+           {
+              AppConfig.MyMACAddr.v[4] = Hex2Int(*ptr)*16+Hex2Int(*(ptr+1));
+              SaveAppConfig();
+           }
+
+       ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"mac6");
+           if(ptr)
+           {
+              AppConfig.MyMACAddr.v[5] = Hex2Int(*ptr)*16+Hex2Int(*(ptr+1));
+              SaveAppConfig();
+           }
+
+   		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"model");
+        if(ptr)
+        { 
+			RCUHLSetModelNumber(ptr);
+        }
+
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"serial");
+        if(ptr)
+        {
+			RCUHLSetSerialNumber(ptr);
+        }
+/*
+       ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"start");
+       if(ptr)
+       {
+          if((*(ptr+1)<=0x39)&&(*(ptr+1)>=0x30))
+            ostart = (*ptr-0x30)*10 + *(ptr+1)-0x30;
+          else
+            ostart = *ptr-0x30;
+          Read2[1][1]=ostart;
+          SaveSetting();
+		  SSPALL_XEEWriteByte(EEADR_rfout_offset, ostart);
+		  rfout_offset = ostart;
+       }
+
+        ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"end");
+       if(ptr)
+       {
+          if((*(ptr+1)<=0x39)&&(*(ptr+1)>=0x30))
+            oend = (*ptr-0x30)*10 + *(ptr+1)-0x30;
+          else
+            oend = *ptr-0x30;
+          Read2[1][2]=oend;
+          SaveSetting();
+		  SSPALL_XEEWriteByte(EEADR_rfout_num, oend-ostart);
+		  rfout_num = oend-ostart;
+       }
+
+        ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"ctemp");
+       if(ptr)
+       {
+          if(((*(ptr)<=0x39)&&(*(ptr)>=0x30)) && ((*(ptr+1)<=0x39)&&(*(ptr+1)>=0x30)) )
+		  {
+			ctemp = (BYTE)atoi((char*)ptr);
+			SSPALL_XEEWriteArray(EEADR_shutdown_temperature_degree,(BYTE*)&ctemp, 1);
+			sspa_temp_shutdown_thd_degree = ctemp;
+		  }
+			
+       }
+*/
+
+	}  // end of "protect/lut.htm"
+
+	else if(!memcmppgm2ram(filename, "password.htm", 12))
+	{
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"oldp");
+   			if(ptr)
+			{ 
+				i=0;
+				while(*(ptr+i)!=0)
+				{
+					oldp[i]=*(ptr+i);
+				
+					if(
+						(oldp[i]<0x30)
+					  ||((oldp[i]>0x39)&&(oldp[i]<0x41))
+					  ||((oldp[i]>0x5A)&&(oldp[i]<0x61))
+					  ||(oldp[i]>0x7A)
+                      )
+						invalid_char = TRUE;
+					if(i>7)
+						toolong = TRUE;
+					i++;
+
+				}
+				oldp[i]=0;
+   			}         
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"newp");
+			if(ptr)
+			{
+				i=0;
+				while(*(ptr+i)!=0)
+				{
+					newp[i]=*(ptr+i);
+					if(
+						(newp[i]<0x30)
+					  ||((newp[i]>0x39)&&(newp[i]<0x41))
+					  ||((newp[i]>0x5A)&&(newp[i]<0x61))
+					  ||(newp[i]>0x7A)
+                      )
+						invalid_char = TRUE;
+					if(i>7)
+						toolong = TRUE;
+                    i++;
+				}
+				newp[i]=0;
+   			}  
+		ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"rep");
+			if(ptr)
+			{
+				i=0;
+				while(*(ptr+i)!=0)
+				{
+					rep[i]=*(ptr+i);
+					if(
+						(rep[i]<0x30)
+					  ||((rep[i]>0x39)&&(rep[i]<0x41))
+					  ||((rep[i]>0x5A)&&(rep[i]<0x61))
+					  ||(rep[i]>0x7A)
+                      )
+						invalid_char = TRUE;
+
+					if(i>7)
+						toolong = TRUE;
+
+					i++;
+				}
+				rep[i]=0;
+   			}  
+
+		
+ 		if(invalid_char == TRUE)
+		{
+			webpassinfo.setpass = invalid_charactor;
+			webpassinfo.setpasscolor = passred;
+		}
+
+		else if(toolong == TRUE)
+		{
+			webpassinfo.setpass = too_long;
+			webpassinfo.setpasscolor = passred;
+		}
+
+		else if(strcmp(oldp,webpassinfo.webpassword))  //0 means equal
+		{
+			webpassinfo.setpass = old_password_wrong;
+			webpassinfo.setpasscolor = passred;
+		}
+
+		else if(strcmp(newp,rep))
+		{
+			webpassinfo.setpass = repeat_password_different;
+			webpassinfo.setpasscolor = passred;
+		}
+    
+        else
+		{
+			webpassinfo.setpass = successful;
+			webpassinfo.setpasscolor = passgreen;
+			strcpy(webpassinfo.webpassword,newp);
+			SaveSetting();
+		}
+
+	} // end of "password.htm"
+
+ return HTTP_IO_DONE;
+ }

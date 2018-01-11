@@ -1,0 +1,2 @@
+Warning[2064] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPPrint.c 899 : static function 'HTTPPostConfig' not defined
+Warning[2064] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPPrint.c 899 : static function 'HTTPPostlut' not defined

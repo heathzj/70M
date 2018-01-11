@@ -1,0 +1,34 @@
+/*
+ * Copyright (C) 2012  ST Electronics (Satcom & Sensor Systems) Pte Ltd 
+ *
+ * RCU High Level Access Header
+ *
+ */
+
+#ifndef _RCUHLACCESS_H_
+#define _RCUHLACCESS_H_
+
+#include "Global.h"
+#include "AgilisProtocol.h"
+
+void RCUHLInit(void);
+AgilisCmdStatus_t RCUHLSetPath (UINT8 path, UINT8 online);
+AgilisCmdStatus_t RCUHLSetMode (UINT8 mode);
+AgilisCmdStatus_t RCUHLSetDeviceID(UINT8 ID);
+AgilisCmdStatus_t RCUHLSetBUCOnOff(UINT8 numBUC, UINT8 onOff);
+AgilisCmdStatus_t RCUHLSetBUCAttn(UINT8 numBUC, float fAttn);
+AgilisCmdStatus_t RCUHLSetComMode(UINT8 comMode);
+AgilisCmdStatus_t RCUHLSetModelNumber(UINT8 *p);
+AgilisCmdStatus_t RCUHLSetSerialNumber(UINT8 *p);
+//AgilisCmdStatus_t 	RCUHLGetPartNumber(UINT8 *pu8Buf, UINT8 *pu8BufSize);
+//AgilisCmdStatus_t 	RCUHLSetPartNumber(UINT8 *pu8Buf, UINT8 u8BufSize);
+//AgilisCmdStatus_t 	RCUHLGetSerialNumber(UINT8 * pu8Buf,UINT8 *pu8BufSize);
+//AgilisCmdStatus_t 	RCUHLSetSerialNumber(UINT8 * pu8Buf,UINT8 u8BufSize);
+RCUinfo_s* 			RCUHLGetAlarmStatus (BOOL update);
+
+
+
+
+
+
+#endif

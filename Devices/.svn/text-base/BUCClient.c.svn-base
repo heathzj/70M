@@ -1,0 +1,993 @@
+/*
+ * Copyright (C) 2012  ST Electronics (Satcom & Sensor Systems) Pte Ltd 
+ *
+ * BUC Client
+ *
+ * Encode BUC command request for BUC server
+ * Decode BUC command response from BUC server
+ *
+ */
+
+
+#include "define.h"
+#include "Global.h"
+#include "AgilisProtocol.h"
+#include "AgilisDeviceManager.h"
+#include "BUCClient.h"
+
+
+AgilisDeviceClient_t gBUCClient[BUC_MAX_SIZE];
+BUCinfo_t BUCinfo[BUC_MAX_SIZE];
+
+#if 1
+UINT8 bAttnChanged[BUC_MAX_SIZE]={FALSE},attnRetryCount[BUC_MAX_SIZE]={0};
+UINT8 bSSPAOnOffChanged[BUC_MAX_SIZE]={FALSE},SSPAOnOffRetryCount[BUC_MAX_SIZE]={0};
+UINT8 bFMBUCOnOffChanged[BUC_MAX_SIZE]={FALSE},FMBUCOnOffRetryCount[BUC_MAX_SIZE]={0};
+#endif
+
+// Poll BUC server
+void BUCClientPoll(void *p, UINT8 numServer)
+{
+	AgilisDeviceClient_t *pClient = (AgilisDeviceClient_t *)p;
+	UINT8 u8NumInBytes,u8NumOutBytes,u8RDData[6];
+	
+	if(!pClient) return;
+
+	// reset command request buffer
+	memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+	u8NumOutBytes = sizeof(gAgilisWriteBuf);
+
+	if(!(pClient->serverStatus & BUC_STATUS_VE_READY)){
+		// pack the request for VE command
+		AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+											(rom char*)"000",
+											(rom char*)"VE",
+											NULL,
+											gAgilisWriteBuf, 
+											&u8NumOutBytes);
+	}else
+	if(!(pClient->serverStatus & BUC_STATUS_PN_READY)){
+		// pack the request for RD command to get BUC part number
+		u8RDData[0]='1';
+		u8RDData[1]='B';
+		u8RDData[2]='1';
+		u8RDData[3]='0';
+		u8RDData[4]=0;
+		AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+											(rom char*)"000",
+											(rom char*)"RD",
+											u8RDData,
+											gAgilisWriteBuf, 
+											&u8NumOutBytes);
+	}else
+	if(!(pClient->serverStatus & BUC_STATUS_SN_READY)){
+		u8RDData[0]='1';
+		u8RDData[1]='B';
+		u8RDData[2]='2';
+		u8RDData[3]='0';
+		u8RDData[4]=0;
+		// pack the request for RD command to get BUC serial number
+		AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+											(rom char*)"000",
+											(rom char*)"RD",
+											u8RDData,
+											gAgilisWriteBuf, 
+											&u8NumOutBytes);
+	}else
+	if((BUCinfo[numServer].info.BUC_model == KUBAND) &&
+		!(pClient->serverStatus & SSPA_STATUS_BV_READY)){
+		// pack the request for BV command
+		AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+											(rom char*)"000",
+											(rom char*)"BV",
+											NULL,
+											gAgilisWriteBuf, 
+											&u8NumOutBytes);
+	}else{
+		// pack the request for AS and DA commands
+		switch(pClient->pollCounter){
+			case 0:
+				// pack the request for AS command
+				AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+													(rom char*)"000",
+													(rom char*)"AS",
+													NULL,
+													gAgilisWriteBuf, 
+													&u8NumOutBytes);
+				pClient->pollCounter++;
+				break;
+
+			case 1:
+				// pack the request for DA command
+				AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+													(rom char*)"000",
+													(rom char*)"DA",
+													NULL,
+													gAgilisWriteBuf, 
+													&u8NumOutBytes);
+				pClient->pollCounter++;
+				// for C Band BUC, do not continue to poll BS and RF, 
+				// set poll flag to 0 to poll AS and DA again
+				if(BUCinfo[numServer].info.BUC_model == CBAND)
+					pClient->pollCounter = 0;
+				break;
+
+			case 2:
+				// pack the request for BS command
+				AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+													(rom char*)"000",
+													(rom char*)"BS",
+													NULL,
+													gAgilisWriteBuf, 
+													&u8NumOutBytes);
+				pClient->pollCounter++;
+				break;
+
+			case 3:
+				// pack the request for RF command
+				AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+													(rom char*)"000",
+													(rom char*)"RF",
+													NULL,
+													gAgilisWriteBuf, 
+													&u8NumOutBytes);
+				pClient->pollCounter=0;
+				break;
+
+			default:
+				pClient->pollCounter=0;
+				break;
+		}
+	}
+
+	if(u8NumOutBytes && pClient->pUARTServer)
+		pClient->pUARTServer->Write(gAgilisWriteBuf, u8NumOutBytes);
+} 
+
+
+/*
+// handle BUC response
+void BUCClientRespond(void *p, UINT8 numServer)
+{
+	AgilisDeviceClient_t *pClient = (AgilisDeviceClient_t *)p;
+	AgilisCmdStatus_t status; 
+	UINT8 u8NumInBytes,u8NumOutBytes,numFunc,u8BufPos,u8OnlineBits,numPacket;
+
+	u8OnlineBits = 	BUC_STATUS_AS_READY | 
+					BUC_STATUS_DA_READY | 
+					BUC_STATUS_PN_READY | 
+					BUC_STATUS_SN_READY | 
+					BUC_STATUS_VE_READY;
+
+ // check UART port connected to BUC server
+ 	if(!pClient->pUARTServer)
+		return;
+
+	// clear read buffer
+	memset(gAgilisReadBuf, 0, sizeof(gAgilisReadBuf));
+	u8NumInBytes = sizeof(gAgilisReadBuf);
+
+	// read from client port i
+	if((u8NumInBytes = pClient->pUARTServer->Read(gAgilisReadBuf, u8NumInBytes)) == 0){
+
+		if(pClient->serverCommStatus == AgilisDeviceStatusOnline)
+			pClient->serverNoCommCount++;
+
+		if(pClient->serverNoCommCount > SERVER_NOCOMM_COUNT){
+			pClient->pResetServerInfoFunc(0);
+			pClient->serverStatus = 0;
+			pClient->serverNoCommCount = 0;
+		  	pClient->serverCommStatus = AgilisDeviceStatusNoComm;
+		}
+		return;
+	}
+
+	// if the BUC was offline, check if the BUC ID is set according to the port connected
+	if(!(pClient->serverStatus & BUC_STATUS_VE_READY)){
+		Agilis_G_Cmd_t *pGCmdIn=(Agilis_G_Cmd_t *)gAgilisReadBuf;
+		// set BUC ID if its last digit not the same as SSPA ID (801/802)
+		//if(	pGCmdIn->bits.SourceID[2] != SSPAinfo.info.deviceID[2]){
+			// set BUC ID to the same as SSPA ID
+			//UINT8 id = NUMERIC_VALUE(SSPAinfo.info.deviceID[2]);
+			//BUCClientSetBUCID(id);
+			//return;
+		//}
+	}
+
+#if 0
+	AgilisUartTestDumpReadBuf((rom char*)"uart0");
+#endif	
+
+	// reset the no comm count 
+	pClient->serverNoCommCount = 0;
+
+	HitWatchDog();
+
+	// multiple packet handling
+	u8BufPos = 0;
+	numPacket= 0;
+	AgilisProtocolGetCmdPacketStartPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf));
+
+	while(u8NumInBytes){
+		// look up for the command request function
+		if(AgilisProtocolCmdLookUp(&gAgilisReadBuf[u8BufPos], &numFunc, pClient->pCmdTable, pClient->totalCmdNum) != AgilisCmdStatus_Ok){
+#ifdef SUPPORT_MULTIPLE_PACKET
+			AgilisProtocolGetNextCmdPacketPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf));
+			if(	!u8BufPos || u8BufPos >= sizeof(gAgilisReadBuf))
+#endif
+			break;
+		}			 
+ 		// reset command response buffer
+ 		memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+		u8NumOutBytes = sizeof(gAgilisWriteBuf);
+
+ 		// execute the command request function or forward the request
+ 		status = pClient->pCmdTable[numFunc].pCmdFunc(pClient, &gAgilisReadBuf[u8BufPos], &u8NumInBytes, gAgilisWriteBuf, &u8NumOutBytes, 0);
+
+#ifdef SUPPORT_MULTIPLE_PACKET
+		AgilisProtocolGetNextCmdPacketPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf));
+		if(	!u8BufPos || u8BufPos >= sizeof(gAgilisReadBuf))
+#endif
+			break;
+		
+		// delay 100ms before sending out next response
+		DelayMS(5);
+
+		// break out of while loop if handled more than 3 packets
+		if(numPacket++ >= 3)
+			break;
+	}
+
+	// if the BUC has all info available, report it as online and proxy should respond
+	if(	pClient->serverStatus == u8OnlineBits && 
+        pClient->serverCommStatus != AgilisDeviceStatusOnline)
+		pClient->serverCommStatus = AgilisDeviceStatusOnline;
+} 
+*/
+
+AgilisCmdStatus_t BUCClientDecodeResp(void *pClient, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 serverNum)
+{
+	AgilisCmdStatus_t status; 
+	Agilis_G_Cmd_t *pGCmdIn=(Agilis_G_Cmd_t *)pu8InBuf;
+	AgilisDeviceClient_t *pC = (AgilisDeviceClient_t *)pClient;
+	UINT8 u8Temp1,u8Temp2,i,u8Status,u8Atten,u8OutputPower,u8InputPower,u8DataLen,RDdata[16];
+	INT8 i8Temp;
+	UINT16 u16Cmd;
+
+	if(!pu8InBuf || !pu8InBufSize)
+		return AgilisCmdStatus_Fail;
+
+	// check command request 
+	if((status = AgilisProtocolGCmdRespCheck(pGCmdIn, NULL/*BUCinfo[serverNum].info.deviceID*/)) != AgilisCmdStatus_Ok)
+		return status;
+
+	// data length should be greater than '0'
+	//if(pGCmdIn->bits.DataLength < ASCII_VALUE(0) ) return AgilisCmdStatus_Fail;
+	
+	if(serverNum >= BUC_MAX_SIZE) 
+		return AgilisCmdStatus_Fail;
+
+	// update BUC ID
+	BUCinfo[serverNum].info.deviceID[0]='0';
+	BUCinfo[serverNum].info.deviceID[1]='0';
+	BUCinfo[serverNum].info.deviceID[2]=ASCII_VALUE(serverNum+1);
+
+	u16Cmd = (UINT16)pGCmdIn->bits.Command[0]<<8 | pGCmdIn->bits.Command[1];
+	u8DataLen = NUMERIC_VALUE(pGCmdIn->bits.DataLength);
+
+	switch(u16Cmd){
+		case AGILIS_PROTOCOL_CMD_BS:
+			// 1st byte 
+			u8Temp1= ASC2toHEX(&pGCmdIn->bits.Data[0]);
+
+			// update major alarm of SSPA
+			if(u8Temp1 & 0x01)
+				BUCinfo[serverNum].alarm.major_sspa=1; // ok
+			else
+				BUCinfo[serverNum].alarm.major_sspa=0; // alarm
+			// update temperature alarm of SSPA
+			if(u8Temp1 & 0x08)
+				BUCinfo[serverNum].alarm.templvl_sspa=1; // ok
+			else
+				BUCinfo[serverNum].alarm.templvl_sspa=0; // alarm
+			// update RF low alarm of SSPA
+			if(u8Temp1 & 0x20)
+				BUCinfo[serverNum].alarm.rflow_sspa=1; // ok
+			else
+				BUCinfo[serverNum].alarm.rflow_sspa=0; // alarm
+
+			// 2nd byte 
+			u8Temp1= ASC2toHEX(&pGCmdIn->bits.Data[2]);
+
+			// update temperature auto shutdown status of SSPA
+			BUCinfo[serverNum].alarm.tempoff_sspa=(u8Temp1 & 0x01); // ok
+
+			// update BUC driver alarm of SSPA
+			BUCinfo[serverNum].alarm.buc_sspa=(u8Temp1>>1)&0x01; // ok
+
+			// update reflected alarm of SSPA
+			BUCinfo[serverNum].alarm.reflect_sspa=(u8Temp1>>2)&0x01; // ok
+
+			// update on off status of SSPA
+			//if(u8Temp1 & 0x80)
+			//	BUCinfo[serverNum].alarm.rfon_sspa=1; // ok
+			//else
+			//	BUCinfo[serverNum].alarm.rfon_sspa=0; // alarm
+			u8Temp2=(u8Temp1>>7)&0x01; // alarm
+#if 1
+			// ignore the attenuation status if just change attenuation
+			if(bSSPAOnOffChanged[serverNum]){
+				if((u8Temp2 != BUCinfo[serverNum].alarm.rfon_sspa) && SSPAOnOffRetryCount[serverNum])
+					BUCClientSetBUCRFOnOff(serverNum, BUCinfo[serverNum].alarm.rfon_sspa);
+				else
+					bSSPAOnOffChanged[serverNum] = FALSE;
+			}else
+#endif
+				BUCinfo[serverNum].alarm.rfon_sspa=u8Temp2;
+
+			if(BUCinfo[serverNum].info.BUC_model==KUBAND)
+				BUCinfo[serverNum].operation.rfOperation = BUCinfo[serverNum].alarm.rfon_sspa;
+
+			pC->serverStatus |= SSPA_STATUS_BS_READY;
+			break;
+
+		case AGILIS_PROTOCOL_CMD_RF:
+			u8Temp1 = ASC2toHEX(&pGCmdIn->bits.Data[0]);
+
+
+			switch(u8Temp1){
+				case 1:
+					BUCinfo[serverNum].status.outpower_sign_sspa = '>';
+					break;
+				case 0xFF:
+					BUCinfo[serverNum].status.outpower_sign_sspa = '<';
+					break;
+				case 0:
+				default:
+					BUCinfo[serverNum].status.outpower_sign_sspa = '=';
+					break;
+			}
+
+			// PM1 temperature (ASCII 2 bytes)	
+			// assign to SSPAinfo.status.temp[][0]...
+			//SSPAinfo.status.temp_extsspa[serverNum][0] = ASC2toHEX(&pGCmdIn->bits.Data[4]);
+			i8Temp= (INT8)(ASC2toHEX(&pGCmdIn->bits.Data[4]));
+			
+			BUCinfo[serverNum].status.temp_sspa = i8Temp;
+
+			// PM2 temperature (ASCII 2 bytes)	
+			//SSPAinfo.status.temp_extsspa[serverNum][1] = ASC2toHEX(&pGCmdIn->bits.Data[6]);
+			// assign to SSPAinfo.status.temp[][1]...
+			//i8Temp2 = (INT8)(ASC2toHEX(&pGCmdIn->bits.Data[6]));
+		
+			//if(i8Temp1 > i8Temp2)
+			//	SSPAinfo.status.temp = i8Temp1;
+			//else
+			//	SSPAinfo.status.temp = i8Temp2;
+
+			// sign for reflected power (ASCII 2 bytes)	
+			/*
+			i8ReflectSign = ASC2toHEX(&pGCmdIn->bits.Data[18]);
+		    switch (i8ReflectSign){
+				case 0:
+					SSPAinfo.status.reflectpower_sign_extsspa[serverNum] = '=';
+					break;
+		
+		    	case 1:
+		    		SSPAinfo.status.reflectpower_sign_extsspa[serverNum] = '>';
+					break;
+		
+		    	case -1:
+		    		SSPAinfo.status.reflectpower_sign_extsspa[serverNum] = '<';
+					break;
+			}
+		
+			// reflected power in 0.1dB resolution (ASCII 4 bytes)	
+			u8Temp1 = ASC2toHEX(&pGCmdIn->bits.Data[20]);
+			u8Temp2 = ASC2toHEX(&pGCmdIn->bits.Data[22]);
+			u16ReflectPower = ((UINT16)u8Temp1 << 8) | (UINT16)u8Temp2;
+		
+			SSPAinfo.status.reflectpower_extsspa[serverNum] = u16ReflectPower;
+			*/
+			// SSPA RF output power
+			u8Temp1 = ASC2toHEX(&pGCmdIn->bits.Data[24]);
+			u8Temp2 = ASC2toHEX(&pGCmdIn->bits.Data[26]);
+			BUCinfo[serverNum].status.outpower_sspa = (UINT16)(((UINT16)u8Temp1 << 8) | (UINT16)u8Temp2);
+			pC->serverStatus |= SSPA_STATUS_RF_READY;
+		break;
+
+		case AGILIS_PROTOCOL_CMD_BV:
+			BUCinfo[serverNum].info.firmwareVersion_sspa[0] = ASC2toHEX(&pGCmdIn->bits.Data[0]);
+			BUCinfo[serverNum].info.firmwareVersion_sspa[1] = ASC2toHEX(&pGCmdIn->bits.Data[2]);
+			BUCinfo[serverNum].info.firmwareVersion_sspa[2] = ASC2toHEX(&pGCmdIn->bits.Data[4]);
+			BUCinfo[serverNum].info.firmwareVersion_sspa[3] = 0;
+			pC->serverStatus |= SSPA_STATUS_BV_READY;
+			break;
+
+		case AGILIS_PROTOCOL_CMD_AS:
+			// BUC alarm state
+			// sspa_state display alarm, 0 is alarm, 1 is OK
+			// 0x01, DC power supply alarm
+			// 0x02, -5V alarm
+			// 0x04, LO alarm
+			// 0x08, SSPA On/Off, 0 is Off, 1 is On
+			// 0x10, FAN alarm
+			// 0x20, temperature alarm
+			// 0x40, RF output power alarm
+			// 0x80, 10M alarm
+			u8Status = ASC2toHEX(&pGCmdIn->bits.Data[4]);
+			u8Atten  = ASC2toHEX(&pGCmdIn->bits.Data[8]);
+		
+			BUCinfo[serverNum].alarm.refclk =	((u8Status >> 7) & 1);
+			BUCinfo[serverNum].alarm.rflow	=	((u8Status >> 6) & 1);
+			BUCinfo[serverNum].alarm.templvl=	((u8Status >> 5) & 1);
+			//BUCinfo[serverNum].alarm.fan	=	((u8Status >> 4) & 1);
+			//BUCinfo[serverNum].alarm.rfon	=	((u8Status >> 3) & 1);
+
+			u8Temp2 = ((u8Status >> 3) & 1);
+#if 1
+			// ignore the attenuation status if just change attenuation
+			if(bFMBUCOnOffChanged[serverNum]){
+				if((u8Temp2 != BUCinfo[serverNum].alarm.rfon) && FMBUCOnOffRetryCount[serverNum])
+					BUCClientSetBUCRFOnOff(serverNum, BUCinfo[serverNum].alarm.rfon);
+				else
+					bFMBUCOnOffChanged[serverNum] = FALSE;
+			}else
+#endif
+				BUCinfo[serverNum].alarm.rfon = u8Temp2;
+			if(BUCinfo[serverNum].info.BUC_model==CBAND)
+				BUCinfo[serverNum].operation.rfOperation = BUCinfo[serverNum].alarm.rfon;
+			BUCinfo[serverNum].alarm.Lo 	=	((u8Status >> 2) & 1);
+			BUCinfo[serverNum].alarm.fetbias=	((u8Status >> 1) & 1);
+
+#if 1
+			// ignore the attenuation status if just change attenuation
+			if(bAttnChanged[serverNum]){
+				if((u8Atten != (BYTE)BUCinfo[serverNum].operation.usrSetAttn*8) && attnRetryCount[serverNum])
+					BUCClientSetBUCAttn(serverNum, BUCinfo[serverNum].operation.usrSetAttn);
+				else
+					bAttnChanged[serverNum] = FALSE;
+			}else
+#endif
+				BUCinfo[serverNum].operation.usrSetAttn = (float)u8Atten / 8.0;
+		
+			pC->serverStatus |= BUC_STATUS_AS_READY;
+			break;
+
+		case AGILIS_PROTOCOL_CMD_DA:
+			u8Atten 		= (UINT8)ASC2toHEX(&pGCmdIn->bits.Data[0]);
+			i8Temp 			= (INT8)ASC2toHEX(&pGCmdIn->bits.Data[2]);
+			u8InputPower	= (UINT8)ASC2toHEX(&pGCmdIn->bits.Data[4]);
+			u8OutputPower	= (UINT8)ASC2toHEX(&pGCmdIn->bits.Data[6]);
+		
+			BUCinfo[serverNum].status.inpower = u8InputPower;
+			if(u8InputPower < 0)
+				BUCinfo[serverNum].status.inpower_sign = '-';
+			else
+				BUCinfo[serverNum].status.inpower_sign = '=';
+		
+			BUCinfo[serverNum].status.outpower = u8OutputPower;
+			if(u8OutputPower < 0)
+				BUCinfo[serverNum].status.outpower_sign = '<';
+			else
+				BUCinfo[serverNum].status.outpower_sign = '=';
+		
+			BUCinfo[serverNum].status.temp = i8Temp;
+			if(i8Temp < 0){
+				BUCinfo[serverNum].status.temp_sign = '-';
+				BUCinfo[serverNum].status.temp *= (int)(-1);
+			}else
+				BUCinfo[serverNum].status.temp_sign = '=';
+		
+			//int reflectpower;
+			//char reflectpower_sign;
+		
+			pC->serverStatus |= BUC_STATUS_DA_READY;
+			break;
+
+		case AGILIS_PROTOCOL_CMD_VE:
+			if(u8DataLen == 0 || u8DataLen > 8 || (u8DataLen & 1))
+				return AgilisCmdStatus_Fail;
+
+	
+			//memcpy(VEdata, pGCmdIn->bits.Data, u8DataLen);
+		
+			memset(BUCinfo[serverNum].info.firmwareVersion, 0, sizeof(BUCinfo[serverNum].info.firmwareVersion));
+			//pData = BUCinfo.info.firmwareVersion;
+			for( i = 0 ; i < u8DataLen/2 - 1 ; i ++ ){
+				//if(	pGCmdIn->bits.Data[i+2]< '!' || pGCmdIn->bits.Data[i+2] > 'z' ||
+				//	pGCmdIn->bits.Data[i+3]< '!' || pGCmdIn->bits.Data[i+3] > 'z')
+				//	return AgilisCmdStatus_Fail;
+				//memcpy(temp, &pGCmdIn->bits.Data[i*2+2], sizeof(temp));
+				BUCinfo[serverNum].info.firmwareVersion[i]=ASC2toHEX(&pGCmdIn->bits.Data[i*2+2]);
+			}
+		
+			// check firmware version is valid
+			//if(	strlen(BUCinfo.info.firmwareVersion) == 0 ||
+			//	BUCinfo.info.firmwareVersion[0] < '!' || 
+			//	BUCinfo.info.firmwareVersion[0] > 'z'){
+			//	return AgilisCmdStatus_Fail;
+			//}
+		
+			// convert firmware version string '313030..." to "100..."
+			// skip first 2 reserved bytes
+			//for( i = 0 ; i < u8DataLen - 2 ; i += 2 ){
+			//	pData[i/2]=ASC2toHEX(&pGCmdIn->bits.Data[i+2]);
+			//}
+
+#if 0
+			// set BUC ID if it is not matching with the port sequence
+			if(pGCmdIn->bits.SourceID[2] != ASCII_VALUE(serverNum+1)){
+				BUCClientSetBUCID(serverNum+1);
+				return AgilisCmdStatus_Fail;
+			}
+#endif
+			pC->serverStatus |= BUC_STATUS_VE_READY;
+			break;
+
+		case AGILIS_PROTOCOL_CMD_RD:
+			if(!u8DataLen || (u8DataLen & 1))
+				return AgilisCmdStatus_Fail;
+		
+			memset(RDdata, 0, sizeof(RDdata));
+		
+			if(u8DataLen > 30)
+				return AgilisCmdStatus_Fail;
+		
+			// for BUC part numbers ALBxxx or 15, it should start with 'A' (0x41) or '1' (0x31)
+			if((pGCmdIn->bits.Data[0]=='4' && pGCmdIn->bits.Data[1]=='1') ||
+			   (pGCmdIn->bits.Data[0]=='3' && pGCmdIn->bits.Data[1]=='1') ){
+				//pData = BUCinfo.info.modelNo;
+				for(i=0;i<u8DataLen/2;i++){
+					//memcpy(temp, &pGCmdIn->bits.Data[i*2], sizeof(temp));
+					RDdata[i]=ASC2toHEX(&pGCmdIn->bits.Data[i*2]);
+				}
+		
+				memset(BUCinfo[serverNum].info.modelNo, 0, sizeof(BUCinfo[serverNum].info.modelNo));
+				memcpy(BUCinfo[serverNum].info.modelNo, RDdata, 15);
+		
+				// check model number is valid
+				//if(	strlen(BUCinfo.info.modelNo) == 0 	||
+				//	BUCinfo.info.modelNo[0] < '!' 		|| 
+				//	BUCinfo.info.modelNo[0] > 'z' 		){
+				//	return AgilisCmdStatus_Fail;
+				//}
+				if(	(memcmppgm2ram(&BUCinfo[serverNum].info.modelNo[4], "80", 2) == 0) ||
+					(memcmppgm2ram(&BUCinfo[serverNum].info.modelNo[4], "90", 2) == 0) )
+						BUCinfo[serverNum].info.BUC_model = CBAND;
+				else
+				if(	(memcmppgm2ram(&BUCinfo[serverNum].info.modelNo[4], "28", 2) == 0) ||
+					(memcmppgm2ram(&BUCinfo[serverNum].info.modelNo[4], "29", 2) == 0) )
+						BUCinfo[serverNum].info.BUC_model = KUBAND;
+				else
+				if(	memcmppgm2ram(&BUCinfo[serverNum].info.modelNo[4], "50", 2) == 0)
+						BUCinfo[serverNum].info.BUC_model = XBAND;
+				else
+						BUCinfo[serverNum].info.BUC_model = UNKNOWNBUC;
+
+				if(BUCinfo[serverNum].info.BUC_model == UNKNOWNBUC){
+					return AgilisCmdStatus_Fail;
+				}
+			
+				if(BUCinfo[serverNum].info.BUC_model == CBAND)
+				{
+					BUCinfo[serverNum].info.max_attn = 15;
+				}
+				else
+				if(BUCinfo[serverNum].info.BUC_model == KUBAND)
+				{
+					BUCinfo[serverNum].info.max_attn = 20;
+				}
+				else
+					BUCinfo[serverNum].info.max_attn = 0xFF;
+
+
+				// BUC part number is ready
+				pC->serverStatus |= BUC_STATUS_PN_READY;
+			
+			}else{
+				//pData = BUCinfo.info.serialNo;
+		
+				for(i=0;i<u8DataLen/2;i++){
+					//memcpy(temp, &pGCmdIn->bits.Data[i*2], sizeof(temp));
+					RDdata[i]=ASC2toHEX(&pGCmdIn->bits.Data[i*2]);
+				}
+		
+				memset(BUCinfo[serverNum].info.serialNo, 0, sizeof(BUCinfo[serverNum].info.serialNo));
+				memcpy(BUCinfo[serverNum].info.serialNo, RDdata, 15);
+		
+				// check serial number is valid
+				if(	strlen(BUCinfo[serverNum].info.serialNo) == 0 	||
+					BUCinfo[serverNum].info.serialNo[0] < '!' 		|| 
+					BUCinfo[serverNum].info.serialNo[0] > 'z' 		){
+					return AgilisCmdStatus_Fail;
+				}	
+		
+				// BUC serial number is ready
+				pC->serverStatus |= BUC_STATUS_SN_READY;
+			}
+			break;
+
+	}
+
+	pC->serverNoCommCount = 0;
+	//pC->serverCommStatus[serverNum] =  AgilisDeviceStatusOnline;
+	
+	return status;
+}
+
+
+
+// BUC server status commands
+AgilisCmdTable_t gBUCClientCmdTbl[]=
+{
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "AS", BUCClientDecodeResp},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "DA",	BUCClientDecodeResp},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "BS", BUCClientDecodeResp},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "RF",	BUCClientDecodeResp},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "BV", BUCClientDecodeResp},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "VE",	BUCClientDecodeResp},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "RD",	BUCClientDecodeResp},
+};
+
+
+
+
+// reset server info when no comm
+void BUCClientResetServerInfo(BYTE serverNum)
+{
+	if(serverNum >= BUC_MAX_SIZE) 
+		return;
+	
+	memset(&BUCinfo[serverNum].info, '0', sizeof(BUCinfo[serverNum].info));
+
+	strcpypgm2ram(BUCinfo[serverNum].info.modelNo,"???");
+	strcpypgm2ram(BUCinfo[serverNum].info.serialNo,"???");
+	strcpypgm2ram(BUCinfo[serverNum].info.deviceID,"???");
+	strcpypgm2ram(BUCinfo[serverNum].info.firmwareVersion,"???");
+
+	BUCinfo[serverNum].info.max_attn = 0xFF;
+
+	memset(&BUCinfo[serverNum].status, '0', sizeof(BUCinfo[serverNum].status));
+
+	BUCinfo[serverNum].status.inpower_sign = '=';
+	BUCinfo[serverNum].status.inpower = 0xFF;
+
+	BUCinfo[serverNum].status.outpower_sign = '=';
+	BUCinfo[serverNum].status.outpower = 0xFF;
+
+	//BUCinfo[serverNum].status.reflectpower_sign = '=';
+	//BUCinfo[serverNum].status.reflectpower = 0xFF;
+
+	BUCinfo[serverNum].status.temp_sign = '=';
+	BUCinfo[serverNum].status.temp = 0xFF;
+
+//	BUCinfo[serverNum].status.attn_sign = '=';
+	BUCinfo[serverNum].operation.usrSetAttn = 0xFF;
+	BUCinfo[serverNum].operation.rfOperation = 0;
+	BUCinfo[serverNum].operation.swLO = 0;
+
+	memset(&BUCinfo[serverNum].alarm, '1', sizeof(BUCinfo[serverNum].alarm));
+
+/*
+	BUCinfo[serverNum].alarm.Lo=0x01;
+	BUCinfo[serverNum].alarm.fetbias=0x01;
+	BUCinfo[serverNum].alarm.refclk=0x01;
+	BUCinfo[serverNum].alarm.rflow=0x01;
+	BUCinfo[serverNum].alarm.rfon=0x01;
+	BUCinfo[serverNum].alarm.templvl=0x01;
+	BUCinfo[serverNum].alarm.fan=0x01;
+*/
+	BUCinfo[serverNum].alarm.Lo=0x03;
+	BUCinfo[serverNum].alarm.fetbias=0x03;
+	BUCinfo[serverNum].alarm.refclk=0x03;
+	BUCinfo[serverNum].alarm.rflow=0x03;
+	BUCinfo[serverNum].alarm.rfon=0x03;
+	BUCinfo[serverNum].alarm.templvl=0x03;
+	//BUCinfo[serverNum].alarm.fan=0x03;
+
+	BUCinfo[serverNum].alarm.buc_sspa=0x03;
+	BUCinfo[serverNum].alarm.major_sspa=0x03;
+	BUCinfo[serverNum].alarm.reflect_sspa=0x03;
+	BUCinfo[serverNum].alarm.rflow_sspa=0x03;
+	BUCinfo[serverNum].alarm.rfon_sspa=0x03;
+	BUCinfo[serverNum].alarm.templvl_sspa=0x03;
+	BUCinfo[serverNum].alarm.tempoff_sspa=0x03;
+#if 1
+	bAttnChanged[serverNum]=FALSE;
+	bSSPAOnOffChanged[serverNum]=FALSE;
+	bFMBUCOnOffChanged[serverNum]=FALSE;
+#endif
+}
+
+void BUCClientInit(const rom char *UartForBUCServer1, const rom char *UartForBUCServer2)
+{
+
+	UINT8 i;
+	
+ 	memset(&gBUCClient, 0, sizeof(gBUCClient));
+
+	// initialize comm status
+	for(i=0;i<BUC_MAX_SIZE;i++){
+		gBUCClient[i].serverCommStatus = AgilisDeviceStatusNoComm;
+		
+		// temporary testing BUC client on uart0 and uart1
+		switch(i){
+			case 0:
+				gBUCClient[i].pUARTServer = AgilisDriverManagerOpen(UartForBUCServer1);
+				break;
+	
+			case 1:
+				gBUCClient[i].pUARTServer = AgilisDriverManagerOpen(UartForBUCServer2);
+				break;
+		}
+
+		gBUCClient[i].pResetServerInfoFunc = BUCClientResetServerInfo;
+		gBUCClient[i].pPollFunc = BUCClientPoll;
+		gBUCClient[i].pRespondFunc = AgilisDeviceManagerStdClientRespond;//BUCClientRespond;
+		gBUCClient[i].pCmdTable = gBUCClientCmdTbl;
+		gBUCClient[i].totalCmdNum = sizeof(gBUCClientCmdTbl)/sizeof(AgilisCmdTable_t);
+
+		BUCClientResetServerInfo(i);
+
+		AgilisDeviceManagerRegisterClient(&gBUCClient[i]);
+	}
+
+}
+
+// send command and data to BUC driver server
+AgilisCmdStatus_t BUCClientSendData(UINT8 serverNum, rom char* cmd, char *data)
+{
+	UINT8 u8NumOutBytes;
+	AgilisDeviceClient_t *pClient;
+
+	if(serverNum >= BUC_MAX_SIZE) return;
+
+	pClient = AgilisDeviceManagerGetBUCClient(serverNum);
+	if(!pClient) return AgilisCmdStatus_Fail;
+
+	// reset command request buffer
+	memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+	u8NumOutBytes = sizeof(gAgilisWriteBuf);
+
+	// pack the request 
+	AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+										(rom char*)"000",
+										cmd,
+										data,
+										gAgilisWriteBuf, 
+										&u8NumOutBytes);
+
+#if 0
+	AgilisUartTestDumpWriteBuf((rom char*)"uart0");
+#endif
+
+	if(u8NumOutBytes && pClient->pUARTServer){
+		// consume any incoming AUC response
+		pClient->pUARTServer->Read(gAgilisReadBuf, sizeof(gAgilisReadBuf));
+		DelayMS(10);
+		pClient->pUARTServer->Write(gAgilisWriteBuf, u8NumOutBytes);
+		DelayMS(100);
+		pClient->pUARTServer->Write(gAgilisWriteBuf, u8NumOutBytes);
+		DelayMS(100);
+	}
+
+	// reset command request buffer after use
+	memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+	
+	return AgilisCmdStatus_Ok;
+}
+
+// send command to BUC server to set RF on/off
+void BUCClientSetBUCRFOnOff(UINT8 serverNum, UINT8 onOff)
+ {
+	UINT8 u8NumInBytes,u8NumOutBytes,numCmd;
+	UINT8 u8Atten, u8A1data[2];
+	AgilisDeviceClient_t *pClient;
+	UINT8 i;
+	
+	if(serverNum >= BUC_MAX_SIZE) return;
+
+	if(onOff){
+		// for Ku Band, use BO command to turn on
+		if(BUCinfo[serverNum].info.BUC_model == KUBAND){
+			BUCClientSendData(serverNum, (rom char*)"BO", NULL);
+			BUCinfo[serverNum].alarm.rfon_sspa = 1;
+		}else{ // for C Band, use SO command to turn on
+			BUCClientSendData(serverNum, (rom char*)"SO", NULL);
+			BUCinfo[serverNum].alarm.rfon = 1;
+		}	
+
+		BUCinfo[serverNum].operation.rfOperation = 1;
+	}else{
+		// for Ku Band, use BF command to turn off
+		if(BUCinfo[serverNum].info.BUC_model == KUBAND){
+			BUCClientSendData(serverNum, (rom char*)"BF", NULL);
+			BUCinfo[serverNum].alarm.rfon_sspa = 0;
+		}else{ // for C Band, use SF command to turn off
+			BUCClientSendData(serverNum, (rom char*)"SF", NULL);
+			BUCinfo[serverNum].alarm.rfon = 0;
+		}
+		BUCinfo[serverNum].operation.rfOperation = 0;
+	}
+#if 1
+	if(BUCinfo[serverNum].info.BUC_model == KUBAND){
+		if(!bSSPAOnOffChanged[serverNum]){
+			bSSPAOnOffChanged[serverNum] = TRUE;
+			SSPAOnOffRetryCount[serverNum]=3;
+		}else
+		if(SSPAOnOffRetryCount[serverNum])
+			SSPAOnOffRetryCount[serverNum]--;
+	}else{
+		if(!bFMBUCOnOffChanged[serverNum]){
+			bFMBUCOnOffChanged[serverNum] = TRUE;
+			FMBUCOnOffRetryCount[serverNum]=3;
+		}else
+		if(FMBUCOnOffRetryCount[serverNum])
+			FMBUCOnOffRetryCount[serverNum]--;
+	}
+#endif
+}
+
+
+// send command to BUC server to set attenuation
+void BUCClientSetBUCAttn(UINT8 serverNum, float fAttn)
+ {
+	UINT8 u8NumInBytes,u8NumOutBytes,numCmd;
+	UINT8 u8Atten, u8A1data[3];
+	AgilisDeviceClient_t *pClient;
+
+	if(serverNum >= BUC_MAX_SIZE) return;
+
+	if(fAttn <= 0.0)
+		fAttn = 0.0;
+	else
+	if(fAttn >=	BUCinfo[serverNum].info.max_attn)
+		fAttn = BUCinfo[serverNum].info.max_attn;
+
+	BUCinfo[serverNum].operation.usrSetAttn = fAttn;
+
+	u8Atten = (UINT8)(fAttn * 8.0);
+
+	HEXto2ASC(u8Atten, &u8A1data[0]);
+	u8A1data[2]=0;
+	
+	BUCClientSendData(serverNum, (rom char*)"A1", u8A1data);
+#if 1
+	if(!bAttnChanged[serverNum]){
+		bAttnChanged[serverNum] = TRUE;
+		attnRetryCount[serverNum]=3;
+	}else
+	if(attnRetryCount[serverNum])
+		attnRetryCount[serverNum]--;
+#endif
+}
+
+/*
+// send command to BUC server to set attenuation
+void BUCClientSetBUCLO(UINT8 serverNum, BYTE u8LO)
+ {
+	UINT8 u8NumInBytes,u8NumOutBytes,numCmd;
+	UINT8 u8MFdata[3];
+	AgilisDeviceClient_t *pClient;
+	UINT8 sourceID[4], destinationID[4];
+
+	if(serverNum >= BUC_MAX_SIZE) return;
+
+	pClient = AgilisDeviceManagerGetBUCClient(serverNum);
+	
+	if(!pClient) return;
+
+	strcpypgm2ram(sourceID, BUCCLIENT_SOURCE_ID);
+	strcpypgm2ram(destinationID, AGILIS_PROTOCOL_ID_BROADCAST);
+
+	if(!pClient->pUARTServer)
+		return;
+	
+	// consume remaining response data from server first
+	// ...
+	//pClient->pUARTServer->Read(gAgilisReadBuf, sizeof(gAgilisReadBuf));
+
+
+	// reset command request buffer
+	memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+	u8NumOutBytes = sizeof(gAgilisWriteBuf);
+
+	// do nothing for other LO
+	if(u8LO >= BUC_SWLO_NUM)
+		return;
+
+	BUCinfo[serverNum].operation.swLO = u8LO;
+
+	u8MFdata[0]='0';
+	u8MFdata[1]=ASCII_VALUE(u8LO);
+	u8MFdata[2]=0;
+
+	// pack the request for A1 command
+	AgilisProtocolGCmdPackRequestPgm(	sourceID,
+										destinationID,
+										(rom char*)"MF",
+										u8MFdata,
+										gAgilisWriteBuf, 
+										&u8NumOutBytes);
+
+	if(u8NumOutBytes){
+		pClient->pUARTServer->Write(gAgilisWriteBuf, u8NumOutBytes);
+		//DelayMS(20); // yt: will cause unit to be reset by watchdog
+		// send again
+		pClient->pUARTServer->Write(gAgilisWriteBuf, u8NumOutBytes);
+	}
+
+	// reset command request buffer after use
+	memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+}
+*/
+
+// send command to BUC server to set ID (1 or 2)
+/*
+void BUCClientSetBUCID(UINT8 ID)
+ {
+	UINT8 u8NumOutBytes;
+	UINT8 u8IDdata[8];
+	AgilisDeviceClient_t *pClient;
+	UINT8 serverNum;
+
+	if(!ID) return;
+
+	serverNum = ID-1;
+
+	if(serverNum >= BUC_MAX_SIZE) return;
+
+	pClient = AgilisDeviceManagerGetBUCClient(serverNum);
+	
+	if(!pClient || !pClient->pUARTServer) return;
+	
+	memset(u8IDdata, 0, sizeof(u8IDdata));
+	
+	HEXto2ASC('0', &u8IDdata[0]);
+	HEXto2ASC('0', &u8IDdata[2]);
+	HEXto2ASC(ASCII_VALUE(ID), &u8IDdata[4]);
+
+	// consume remaining response data from server first
+	// ...
+	//pClient->pUARTServer->Read(gAgilisReadBuf, sizeof(gAgilisReadBuf));
+
+
+	// reset command request buffer
+	memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+	u8NumOutBytes = sizeof(gAgilisWriteBuf);
+	
+	// pack the request for A1 command
+	AgilisProtocolGCmdPackRequestPgm(	(rom char*)"666",
+										(rom char*)"000",
+										(rom char*)"ID",
+										u8IDdata,
+										gAgilisWriteBuf, 
+										&u8NumOutBytes);
+
+	if(u8NumOutBytes){
+		pClient->pUARTServer->Write(gAgilisWriteBuf, u8NumOutBytes);
+		DelayMS(100);
+		pClient->pUARTServer->Write(gAgilisWriteBuf, u8NumOutBytes);
+	}
+	// reset command request buffer after use
+	memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+}
+*/
+
+AgilisDeviceStatus_t BUCClientIsBUCServerConnected(UINT8 serverNum)
+{
+	AgilisDeviceStatus_t status;
+
+	// get device client instance and return the 
+	AgilisDeviceClient_t *pC = AgilisDeviceManagerGetBUCClient(serverNum);
+
+	if(!pC) return AgilisDeviceStatusNoComm;
+
+	if(serverNum >= BUC_MAX_SIZE) return AgilisDeviceStatusNoComm;
+
+	status = pC->serverCommStatus;
+
+	return status;
+}
+

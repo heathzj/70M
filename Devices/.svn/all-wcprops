@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/projects/ped-software/!svn/ver/8807/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices
+END
+RCUHLAccess.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/projects/ped-software/!svn/ver/8788/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/RCUHLAccess.c
+END
+RCUServer.c
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/projects/ped-software/!svn/ver/8730/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/RCUServer.c
+END
+AgilisDeviceManager.c
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/projects/ped-software/!svn/ver/8730/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/AgilisDeviceManager.c
+END
+RCULLAccess.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/projects/ped-software/!svn/ver/8730/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/RCULLAccess.c
+END
+RCUHLAccess.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/projects/ped-software/!svn/ver/8788/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/RCUHLAccess.h
+END
+RCUServer.h
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/projects/ped-software/!svn/ver/8686/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/RCUServer.h
+END
+AgilisDeviceManager.h
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/projects/ped-software/!svn/ver/8730/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/AgilisDeviceManager.h
+END
+BUCClient.c
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/projects/ped-software/!svn/ver/8807/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/BUCClient.c
+END
+RCULLAccess.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/projects/ped-software/!svn/ver/8718/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/RCULLAccess.h
+END
+BUCClient.h
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/AgilisDevices/BUCClient.h
+END

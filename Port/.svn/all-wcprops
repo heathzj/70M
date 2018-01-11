@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/projects/ped-software/!svn/ver/8737/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Port
+END
+AgilisSNMPLL.h
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/projects/ped-software/!svn/ver/8737/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Port/AgilisSNMPLL.h
+END
+HardwareProfile.h
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Port/HardwareProfile.h
+END
+TCPIPConfig.h
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/projects/ped-software/!svn/ver/8718/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Port/TCPIPConfig.h
+END
+AgilisConsoleInterface.c
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Port/AgilisConsoleInterface.c
+END

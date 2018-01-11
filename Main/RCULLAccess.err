@@ -1,0 +1,4 @@
+Warning[2060] C:\wzx\ZX\Converter\AgilisDevices\RCULLAccess.c 401 : shift expression has no effect
+Warning[2060] C:\wzx\ZX\Converter\AgilisDevices\RCULLAccess.c 403 : shift expression has no effect
+Warning[2054] C:\wzx\ZX\Converter\AgilisDevices\RCULLAccess.c 588 : suspicious pointer conversion
+Warning[2054] C:\wzx\ZX\Converter\AgilisDevices\RCULLAccess.c 645 : suspicious pointer conversion

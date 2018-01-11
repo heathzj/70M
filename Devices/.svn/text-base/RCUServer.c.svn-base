@@ -1,0 +1,1071 @@
+/*
+ * Copyright (C) 2012  ST Electronics (Satcom & Sensor Systems) Pte Ltd 
+ *
+ * RCU Server
+ * 
+ * - Decode RCU command request from RCU client
+ * - Encode RCU command response for RCU client
+ *
+ */
+
+#include "HardwareProfile.h"
+#include "Global.h"
+#include "define.h"
+#include "AgilisDriverManager.h"
+#include "AgilisUart.h"
+#include "AgilisProtocol.h"
+#include "AgilisDeviceManager.h"
+#include "RCUServer.h"
+#include "RCUHLAccess.h"
+#include "RCULLAccess.h"
+#include "BUCClient.h"
+
+
+AgilisDeviceServer_t gRCUServer;
+//UINT8 gAttnUpdateCounter[2]={0},gRFOnOffUpdateCounter[2]={0};
+
+extern RCULLDCB_t RCU0;
+
+
+AgilisCmdStatus_t RCUServerDecodeRCUReq (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum)
+{
+	AgilisCmdStatus_t status; 
+	UINT8 i,*pCmdData, u8Temp, *pInData;
+	Agilis_Z_Cmd_t *pZCmdIn=(Agilis_Z_Cmd_t *)pu8InBuf;
+	Agilis_Z_Cmd_t *pZCmdOut=(Agilis_Z_Cmd_t *)pu8OutBuf;
+	RCUinfo_s *pRCUinfo;
+	AgilisDeviceServer_t *pS=(AgilisDeviceServer_t *)pServer;
+	UINT32 u32Cmd,u32Addr[4];
+
+	if(!pu8InBuf || !pu8InBufSize || !pu8OutBuf || !pu8OutBufSize)
+		return AgilisCmdStatus_Fail;
+
+	// check RCU protocol command request 
+	if((status = AgilisProtocolZCmdReqCheck(pZCmdIn, RCUinfo.DeviceID)) != AgilisCmdStatus_Ok)
+		return status;
+
+	// command data begins at 2nd byte of Z command
+	pCmdData = &pZCmdOut->bits.Data[1];
+	i = 0;
+
+	// Get RCU Firmware Version from RCU HL	
+	pRCUinfo = RCUHLGetAlarmStatus(FALSE);
+	if(!pRCUinfo) return AgilisCmdStatus_Fail;
+
+	u32Cmd = ((UINT32)pZCmdIn->bits.Command[0] << 16ul) |
+			 ((UINT32)pZCmdIn->bits.Command[1] <<  8ul) |
+			 ((UINT32)pZCmdIn->bits.Command[2] & 0xFFul);
+
+	switch(u32Cmd){
+	//switch(pZCmdIn->bits.Command[1]){  
+		//case 'D': // GDS
+		case AGILIS_PROTOCOL_CMD_GDS:
+			pCmdData[i++] = '1'; // switch operate mode
+			pCmdData[i++] = ASCII_VALUE(RCU0.current_mode[0]);
+			if (pRCUinfo->opmode == AGILIS_PROTOCOL_MANUAL_MODE)
+			{
+				pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_MANUAL_MODE); // manual
+			}
+			else
+			{
+				pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_AUTO_MODE); // Auto
+			}
+		
+			pCmdData[i++] = '2'; // switch status
+
+			if(RCU0.current_position[0] == AGILIS_PROTOCOL_UNIT_ONLINE){
+				pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; // 
+				pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_UNIT_ONLINE); // 
+			}else{
+				pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; // 
+				pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_UNIT_STANDBY); // 
+			}
+
+			break;
+
+		case AGILIS_PROTOCOL_CMD_GSS:
+			if (pRCUinfo->txPathA_alarm == 0x0)//(RCU_Rx_Alarm[0] == 0x01)
+			{
+				pCmdData[i++] = AGILIS_PROTOCOL_TX_ALARM; //  Tx Alarm
+				pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //	path number
+				pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+			}
+			if (pRCUinfo->txPathB_alarm == 0x0)//(RCU_Tx_Alarm[0] == 0x01)
+			{
+				pCmdData[i++] = AGILIS_PROTOCOL_TX_ALARM; //  Tx Alarm
+				pCmdData[i++] = AGILIS_PROTOCOL_UNIT_B; //	path number
+				pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+			}
+			if (pRCUinfo->ocxo1_alarm == 0)//(!((RCU0.AlarmState & 0x04) == 0x04))
+			{
+				pCmdData[i++] = AGILIS_PROTOCOL_REF_ALARM; // Power Alarm
+				pCmdData[i++] = '1'; //  Power 1 number
+				pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+			}
+#ifdef RCU_OUTDOOR
+			// REF2 and power supply alarms applicable for outdoor RCU only
+			if (pRCUinfo->ocxo2_alarm == 0)//(!((RCU0.AlarmState & 0x08) == 0x08))
+			{
+				pCmdData[i++] = AGILIS_PROTOCOL_REF_ALARM; // Power Alarm
+				pCmdData[i++] = '2'; //  Power 2 number
+				pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+			}
+			if (pRCUinfo->ps1_alarm == 0)//(!((RCU0.AlarmState & 0x04) == 0x04))
+			{
+				pCmdData[i++] = AGILIS_PROTOCOL_PSU_ALARM; // Power Alarm
+				pCmdData[i++] = '1'; //  Power 1 number
+				pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+			}
+			if (pRCUinfo->ps2_alarm == 0)//(!((RCU0.AlarmState & 0x08) == 0x08))
+			{
+				pCmdData[i++] = AGILIS_PROTOCOL_PSU_ALARM; // Power Alarm
+				pCmdData[i++] = '2'; //  Power 2 number
+				pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+			}
+#endif // #ifdef RCU_OUTDOOR
+			pCmdData[i++] = 'A'; //  Redundancy Mode
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //	path number
+			if (pRCUinfo->opmode == AGILIS_PROTOCOL_MANUAL_MODE)//(current_mode[0] == MANUAL_MODE)
+			{
+				pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_MANUAL_MODE); // manual
+			}
+			else
+			{
+				pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_AUTO_MODE); // Auto
+			}
+
+			pCmdData[i++] = 'B'; //  Redundancy status
+#if 1
+			if (RCU0.Switch_Status[0] == 1)
+			{
+				pCmdData[i++] = AGILIS_PROTOCOL_UNIT_B; //	path number
+				pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_UNIT_STANDBY); // Unit B offline
+			}
+			else
+			{
+				pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //	path number
+				pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_UNIT_STANDBY); // Unit A offline
+			}
+#else
+			if (pRCUinfo->txPathA_status == AGILIS_PROTOCOL_UNIT_STANDBY)
+				pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //	path A standby
+			else
+			if (pRCUinfo->txPathB_status == AGILIS_PROTOCOL_UNIT_STANDBY)
+				pCmdData[i++] = AGILIS_PROTOCOL_UNIT_B; //	path B standby
+			pCmdData[i++] = ASCII_VALUE(AGILIS_PROTOCOL_UNIT_STANDBY); // Unit B offline
+#endif
+
+			break;
+
+		case AGILIS_PROTOCOL_CMD_GFV:
+		//case 'F': // GFV
+			// Get RCU Firmware Version from RCU HL	
+			pCmdData[0] = 'R';
+			memcpy(&pCmdData[1], RCUinfo.firmwareVersion, 3);
+			i = 4; //version is RXXX
+			break;
+
+		case AGILIS_PROTOCOL_CMD_GAL:
+			// TX alarm status of Unit A
+			pCmdData[i++] = AGILIS_PROTOCOL_TX_ALARM; //	Tx Alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_MAJOR_ALARM; //	major Alarm
+			// report Unit A alarm status
+			if (RCU0.current_position[0] == AGILIS_PROTOCOL_POSITION_A)
+			{
+				if (pRCUinfo->txPathA_alarm == 0x01)//(RCU_Tx_Alarm[0] == 0x01)
+				{
+					pCmdData[i++] = AGILIS_PROTOCOL_OK;
+				}
+				else
+				{
+					pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+				}
+			}
+			else
+			{
+				if (pRCUinfo->txPathB_alarm == 0x01)//(RCU_Rx_Alarm[0] == 0x01)
+				{
+					pCmdData[i++] = AGILIS_PROTOCOL_OK;
+				}
+				else
+				{
+					pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+				}
+			}
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //  path number
+			pCmdData[i++] = AGILIS_PROTOCOL_ALARM_ENABLED; // switch mode
+		
+		
+			// TX alarm status of Unit B
+			pCmdData[i++] = AGILIS_PROTOCOL_TX_ALARM; //	Tx Alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_MAJOR_ALARM; //	major Alarm
+			if (RCU0.current_position[0] == AGILIS_PROTOCOL_POSITION_B)
+			{
+				if (pRCUinfo->txPathB_alarm == 0x01) //(RCU_Rx_Alarm[0] == 0x01) 
+				{
+					pCmdData[i++] = AGILIS_PROTOCOL_OK;
+				}
+				else
+				{
+					pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+				}
+			}
+			else
+			{
+		
+				if (pRCUinfo->txPathA_alarm == 0x01)//(RCU_Tx_Alarm[0] == 0x01) 
+				{
+					pCmdData[i++] = AGILIS_PROTOCOL_OK;
+				}
+				else
+				{
+					pCmdData[i++] = AGILIS_PROTOCOL_ALARM;
+				}
+		
+			}
+		
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_B; //  path number
+			pCmdData[i++] = ASCII_VALUE(pRCUinfo->opmode); // switch mode
+		
+			// RCU internal reference alarm and RCU internal power supply alarm
+		
+			// zhang todo: add RCUinfo.xxxx1_alarm_enable bits to RCUinfo_s structure
+			// the alarms below should be reported only if enabled
+			// ....	
+			
+			// REF 1 alarm status
+			pCmdData[i++] = AGILIS_PROTOCOL_REF_ALARM; //	RCU internal reference alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_MAJOR_ALARM; //	major alarm ?
+			pCmdData[i++] = pRCUinfo->ocxo1_alarm?AGILIS_PROTOCOL_OK:AGILIS_PROTOCOL_ALARM;
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //  path number, not required for RCU internal reference alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_ALARM_ENABLED; // switch mode
+		
+			// REF 2 alarm status
+			pCmdData[i++] = AGILIS_PROTOCOL_REF_ALARM; //	RCU internal reference alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_MAJOR_ALARM; //	major alarm?
+#ifdef RCU_OUTDOOR
+			pCmdData[i++] = pRCUinfo->ocxo2_alarm?AGILIS_PROTOCOL_OK:AGILIS_PROTOCOL_ALARM;
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //  path number, not required for RCU internal reference alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_ALARM_ENABLED; // switch mode
+#else
+			pCmdData[i++] = AGILIS_PROTOCOL_OK;
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //  path number, not required for RCU internal reference alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_ALARM_DISABLED; // switch mode
+#endif
+		
+			// PSU 1 alarm status
+			pCmdData[i++] = AGILIS_PROTOCOL_PSU_ALARM; //	RCU internal power supply alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_MAJOR_ALARM; //	major alarm?
+#ifdef RCU_OUTDOOR
+			pCmdData[i++] = pRCUinfo->ps1_alarm?AGILIS_PROTOCOL_OK:AGILIS_PROTOCOL_ALARM; //	major Alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //  path number, not required for RCU internal power supply alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_ALARM_ENABLED; // switch mode
+#else
+			pCmdData[i++] = AGILIS_PROTOCOL_OK; //	no Alarm for indoor RCU
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //  path number, not required for RCU internal power supply alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_ALARM_DISABLED; // switch mode
+#endif
+		
+			// PSU 2 alarm status
+			pCmdData[i++] = AGILIS_PROTOCOL_PSU_ALARM; //	RCU internal power supply alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_MAJOR_ALARM; //	major alarm?
+#ifdef RCU_OUTDOOR
+			pCmdData[i++] = pRCUinfo->ps2_alarm?AGILIS_PROTOCOL_OK:AGILIS_PROTOCOL_ALARM; //	major Alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //  path number, not required for RCU internal power supply alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_ALARM_ENABLED; // switch mode
+#else
+			pCmdData[i++] = AGILIS_PROTOCOL_OK; //	major Alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_UNIT_A; //  path number, not required for RCU internal power supply alarm
+			pCmdData[i++] = AGILIS_PROTOCOL_ALARM_DISABLED; // switch mode
+#endif
+			break;
+
+		case AGILIS_PROTOCOL_CMD_GPN:
+			for( i = 0 ; i < 15 ; i++ )
+				HEXto2ASC(RCUinfo.modelNo[i], &pCmdData[i*2]);
+
+			i = 30;
+			break;
+			
+		case AGILIS_PROTOCOL_CMD_GSN:
+			for( i = 0 ; i < 15 ; i++ )
+				HEXto2ASC(RCUinfo.serialNo[i], &pCmdData[i*2]);
+
+			i = 30;
+			break;
+
+		case AGILIS_PROTOCOL_CMD_FPN:
+			// set RCU part number to RCU HL	
+			RCUHLSetModelNumber(pZCmdIn->bits.Data);
+			break;
+
+		case AGILIS_PROTOCOL_CMD_FSN:
+			// set RCU serial number to RCU HL	
+			RCUHLSetSerialNumber(pZCmdIn->bits.Data);
+			break;
+
+		//case 'N': // GNS
+		case AGILIS_PROTOCOL_CMD_GNS:
+ 			// DHCP
+			pCmdData[i++] = '1';
+			pCmdData[i++] = (AppConfig.Flags.bIsDHCPEnabled)?'1':'0'; //
+
+ 			// IP Address
+			pCmdData[i++] = '2';
+			u8Temp = (UINT8)(AppConfig.MyIPAddr.Val & 0xFFul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyIPAddr.Val >> 8ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyIPAddr.Val >> 16ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyIPAddr.Val >> 24ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+
+ 			// Subnet Mask
+			pCmdData[i++] = '3';
+			u8Temp = (UINT8)(AppConfig.MyMask.Val & 0xFFul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyMask.Val >> 8ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyMask.Val >> 16ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyMask.Val >> 24ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+
+ 			// Gateway
+			pCmdData[i++] = '4';
+			u8Temp = (UINT8)(AppConfig.MyGateway.Val & 0xFFul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyGateway.Val >> 8ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyGateway.Val >> 16ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			u8Temp = (UINT8)(AppConfig.MyGateway.Val >> 24ul);
+			HEXto2ASC(u8Temp, &pCmdData[i]);
+			i+=2;
+			break;
+
+		case AGILIS_PROTOCOL_CMD_SDS:
+			switch(pZCmdIn->bits.Data[0]){
+				case '1': // set switch 1 auto/manual
+					RCULLSetMode(pZCmdIn->bits.Data[2] & 0x01);
+					break;
+	
+				case '2':
+					// set switch mode again to resolve the non-switching bug when switch's AC supply is off then on
+					RCUHLSetMode(RCUinfo.opmode);
+	
+					if (RCU0.current_mode[0] != AGILIS_PROTOCOL_MANUAL_MODE) // manual mode can set switch position
+						break;
+
+					RCUHLSetPath(NUMERIC_VALUE(pZCmdIn->bits.Data[1]), NUMERIC_VALUE(pZCmdIn->bits.Data[2]));		
+
+					break;
+			}
+			i = 0; // no data returned
+			break;
+
+		case AGILIS_PROTOCOL_CMD_FST:
+			// factory reset for network parameters	
+			RCULLSetDefaultValue(); 
+			i = 0; // no data returned
+			break;
+
+		case AGILIS_PROTOCOL_CMD_SDI:
+			// set RCU Device ID to RCU HL	
+			status = RCUHLSetDeviceID(NUMERIC_VALUE(pZCmdIn->bits.Data[0]));
+			i = 0; // no data returned
+			break;
+
+		case AGILIS_PROTOCOL_CMD_SNS:
+			// command data
+			pInData = pZCmdIn->bits.Data;
+		
+			// set RCU Device Status to RCU HL	
+			// data length should be offset from 0x30
+			switch(pInData[0]){
+				case '1': // DHCP enable/disable
+					if(pInData[1]=='1')
+				      AppConfig.Flags.bIsDHCPEnabled = TRUE;
+					else
+				      AppConfig.Flags.bIsDHCPEnabled = FALSE;
+					break;
+					
+				case '2': // IP address
+					u32Addr[0] = ASC2toHEX(&pInData[1]);
+					u32Addr[1] = ASC2toHEX(&pInData[3]);
+					u32Addr[2] = ASC2toHEX(&pInData[5]);
+					u32Addr[3] = ASC2toHEX(&pInData[7]);
+					AppConfig.MyIPAddr.Val = u32Addr[0] | u32Addr[1]<<8ul | u32Addr[2]<<16ul | u32Addr[3]<<24ul;
+					break;
+	
+				case '3': // Subnet mask
+					u32Addr[0] = ASC2toHEX(&pInData[1]);
+					u32Addr[1] = ASC2toHEX(&pInData[3]);
+					u32Addr[2] = ASC2toHEX(&pInData[5]);
+					u32Addr[3] = ASC2toHEX(&pInData[7]);
+					AppConfig.MyMask.Val = u32Addr[0] | u32Addr[1]<<8ul | u32Addr[2]<<16ul | u32Addr[3]<<24ul;
+					break;
+	
+				case '4': // Gateway
+					u32Addr[0] = ASC2toHEX(&pInData[1]);
+					u32Addr[1] = ASC2toHEX(&pInData[3]);
+					u32Addr[2] = ASC2toHEX(&pInData[5]);
+					u32Addr[3] = ASC2toHEX(&pInData[7]);
+					AppConfig.MyGateway.Val = u32Addr[0] | u32Addr[1]<<8ul | u32Addr[2]<<16ul | u32Addr[3]<<24ul;
+					break;
+	
+				default:
+					return AgilisCmdStatus_Fail;
+			}
+			SaveAppConfig();
+			i = 0; // no data returned
+			break;
+
+		default:
+			return AgilisCmdStatus_Fail;
+	}
+		
+	if(status == AgilisCmdStatus_Ok){
+		pZCmdOut->bits.Data[0] = AGILIS_PROTOCOL_Z_CMD_RESP_PASS;
+		pZCmdOut->bits.DataLength = ASCII_VALUE(i); // data size excluding ACK byte
+	}else{
+		pZCmdOut->bits.Data[0] = AGILIS_PROTOCOL_Z_CMD_RESP_FAIL;
+		pZCmdOut->bits.DataLength = ASCII_VALUE(0); // 1 ACK byte only
+	}
+
+	// Pack RCU cmd response with Alarm Status data
+	AgilisProtocolZCmdPackResponse(RCUinfo.DeviceID, pZCmdIn, pZCmdOut, pu8OutBufSize);
+
+	// send RCU cmd response to client
+	if(pS->pUARTClient[clientNum])
+		pS->pUARTClient[clientNum]->Write(pu8OutBuf, *pu8OutBufSize);
+
+	return status;
+}
+
+
+// proxy AS/DA/VE/RD command response from BUC
+AgilisCmdStatus_t RCUServerDecodeFMBUCReq (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum)
+{
+	AgilisCmdStatus_t status; 
+	UINT8 i,*pCmdData;
+	Agilis_G_Cmd_t *pGCmdIn=(Agilis_G_Cmd_t *)pu8InBuf;
+	Agilis_G_Cmd_t *pGCmdOut=(Agilis_G_Cmd_t *)pu8OutBuf;
+	AgilisDeviceServer_t *pS=(AgilisDeviceServer_t *)pServer;
+	AgilisDeviceClient_t *pClient;
+	UINT8 temp[20], u8Temp, serverNum;
+	UINT16 u16Cmd;
+	float fAttn;
+
+	if(!pServer || !pu8InBuf || !pu8InBufSize || !pu8OutBuf || !pu8OutBufSize)
+		return AgilisCmdStatus_Fail;
+
+	// check BUC protocol command request 
+	if((status = AgilisProtocolGCmdReqCheck(pGCmdIn, NULL/*BUCinfo.info.deviceID*/)) != AgilisCmdStatus_Ok)
+		return status;
+
+	// todo: check ID
+	// set to which BUC
+	serverNum = NUMERIC_VALUE(pGCmdIn->bits.DestinationID[2])-1;
+
+	if(serverNum >= BUC_MAX_SIZE)
+		return AgilisCmdStatus_Fail;
+
+	pClient = AgilisDeviceManagerGetBUCClient(serverNum);
+	if(!pClient) return AgilisCmdStatus_Fail;
+	
+	// command data begins at 2nd byte of G command
+	pCmdData = pGCmdOut->bits.Data;
+
+	u16Cmd = (UINT16)pGCmdIn->bits.Command[0]<<8 | pGCmdIn->bits.Command[1];
+	
+	switch(u16Cmd){
+		case AGILIS_PROTOCOL_CMD_BS:
+			if(!(pClient->serverStatus & SSPA_STATUS_BS_READY))
+				return AgilisCmdStatus_Fail;
+
+			for(i=0;i<7;i++)
+		    	HEXto2ASC(RESERVE_BYTE,&pCmdData[i*2]);
+
+			u8Temp = (  BUCinfo[serverNum].alarm.major_sspa &  1) |
+					 (									  1 << 1) |
+ 					 (									  1 << 2) |
+ 					 (BUCinfo[serverNum].alarm.templvl_sspa << 3) |
+ 					 (									  1 << 4) |
+ 					 (	BUCinfo[serverNum].alarm.rflow_sspa << 5) |
+					 (   								  1 << 6) |
+					 (   								  1 << 7);
+
+			HEXto2ASC(u8Temp, &pCmdData[0]);
+
+			u8Temp = (BUCinfo[serverNum].alarm.tempoff_sspa &  1) |
+					 (	  BUCinfo[serverNum].alarm.buc_sspa << 1) |
+					 (BUCinfo[serverNum].alarm.reflect_sspa << 2) |
+ 					 (									  1 << 3) |
+ 					 (									  1 << 4) |
+ 					 (									  1 << 5) |
+ 					 (									  1 << 6) |
+					 (BUCinfo[serverNum].alarm.rfon_sspa    << 7);
+
+			HEXto2ASC(u8Temp,  &pCmdData[2]);
+
+			pGCmdOut->bits.DataLength = ASCII_VALUE(14);  // length of data in ascii char
+			break;
+
+		case AGILIS_PROTOCOL_CMD_RF:
+
+			if(!(pClient->serverStatus & SSPA_STATUS_RF_READY))
+				return AgilisCmdStatus_Fail;
+
+			for(i=0;i<14;i++)
+		    	HEXto2ASC(RESERVE_BYTE,&pCmdData[i*2]);
+
+			switch(BUCinfo[serverNum].status.outpower_sign_sspa){
+				case '<':
+					u8Temp = 0xFF;
+					break;
+				case '>':
+					u8Temp = 1;
+					break;
+				default:
+				case '=':
+					u8Temp = 0;
+					break;
+			}
+		    HEXto2ASC(u8Temp,&pCmdData[0]);
+
+			// SSPA temp
+		    HEXto2ASC(BUCinfo[serverNum].status.temp_sspa,&pCmdData[4]);
+			// SSPA output power
+			u8Temp = (BUCinfo[serverNum].status.outpower_sspa >> 8);
+		    HEXto2ASC(u8Temp,&pCmdData[24]);
+			u8Temp = (BUCinfo[serverNum].status.outpower_sspa & 0xFF);
+		    HEXto2ASC(u8Temp,&pCmdData[26]);
+			pGCmdOut->bits.DataLength = ASCII_VALUE(28);  // length of data in ascii char
+			break;
+
+		case AGILIS_PROTOCOL_CMD_BV:
+			if(!(pClient->serverStatus & SSPA_STATUS_BV_READY))
+				return AgilisCmdStatus_Fail;
+
+			// pack SSPA firmware version
+			HEXto2ASC(BUCinfo[serverNum].info.firmwareVersion_sspa[0], &pCmdData[0]); 						
+			HEXto2ASC(BUCinfo[serverNum].info.firmwareVersion_sspa[1], &pCmdData[2]); 						
+			HEXto2ASC(BUCinfo[serverNum].info.firmwareVersion_sspa[2], &pCmdData[4]); 						
+			pGCmdOut->bits.DataLength = ASCII_VALUE(6); // length of data in ascii char
+			break;
+
+		case AGILIS_PROTOCOL_CMD_ID:
+			i = NUMERIC_VALUE(pGCmdIn->bits.Data[5]); // receiving 303031
+		
+			//if(i > 2) return AgilisCmdStatus_Fail; 
+		
+			// system already set ID to BUC
+			//BUCClientSetBUCID(i);
+		
+			pGCmdOut->bits.Data[0] = 0;
+			pGCmdOut->bits.DataLength = 0; // no data returned
+			break;
+
+		case AGILIS_PROTOCOL_CMD_A1: // A1 command
+			// return now if com is not ready for the BUC
+			if(!(pClient->serverStatus & BUC_STATUS_VE_READY))
+				return AgilisCmdStatus_Fail;
+
+			fAttn = (float)ASC2toHEX(&pGCmdIn->bits.Data[0])/8.0;
+			BUCClientSetBUCAttn(serverNum, fAttn);
+			pGCmdOut->bits.Data[0] = 0; // no returned data
+			pGCmdOut->bits.DataLength = 0; // length of data in ascii char
+			break;
+
+		case AGILIS_PROTOCOL_CMD_SO: // SO command
+		case AGILIS_PROTOCOL_CMD_SF: // SF command
+		case AGILIS_PROTOCOL_CMD_BO: // BO command
+		case AGILIS_PROTOCOL_CMD_BF: // BF command
+			// return now if com is not ready for the BUC
+			if(!(pClient->serverStatus & BUC_STATUS_VE_READY))
+				return AgilisCmdStatus_Fail;
+
+			if(pGCmdIn->bits.Command[1] == 'O')
+				BUCClientSetBUCRFOnOff(serverNum, ON);
+			else
+				BUCClientSetBUCRFOnOff(serverNum, OFF);
+
+			pGCmdOut->bits.Data[0] = 0; // no returned data
+			pGCmdOut->bits.DataLength = 0; // length of data in ascii char
+			break;
+
+		case AGILIS_PROTOCOL_CMD_AS: // AS command
+			// return now if AS data is not ready for BUC
+			if(!(pClient->serverStatus & BUC_STATUS_AS_READY))
+				return AgilisCmdStatus_Fail;
+
+			// fill in '0' for reserved bytes
+			pCmdData[0] = 
+			pCmdData[1] = 
+			pCmdData[2] = 
+			pCmdData[3] = 
+			pCmdData[6] = 
+			pCmdData[7] = ASCII_VALUE(0);
+			// Get BUC AS info from BUC HL info
+		
+			// AS device status
+			u8Temp =(BUCinfo[serverNum].alarm.fetbias	<< 1) |
+					(BUCinfo[serverNum].alarm.Lo	 	<< 2) |
+					(BUCinfo[serverNum].alarm.rfon	 	<< 3) |
+					(                                 1 << 4) |  //(BUCinfo[serverNum].alarm.fan[2] 	<< 4) |
+					(BUCinfo[serverNum].alarm.templvl	<< 5) |
+					(BUCinfo[serverNum].alarm.rflow	 	<< 6) |
+					(BUCinfo[serverNum].alarm.refclk    << 7);
+			HEXto2ASC(u8Temp, &pCmdData[4]);
+	
+			// user attenuation
+			u8Temp = (UINT8)(BUCinfo[serverNum].operation.usrSetAttn * 8.0);
+			HEXto2ASC(u8Temp, &pCmdData[8]);
+				
+			pGCmdOut->bits.DataLength = ASCII_VALUE(10);  // length of data in ascii char
+			break;
+			
+		case AGILIS_PROTOCOL_CMD_DA: // DA command
+			// return now if DA data is not ready for BUC 1
+			if(!(pClient->serverStatus & BUC_STATUS_DA_READY))
+				return AgilisCmdStatus_Fail;
+	
+			// user attenuation
+			u8Temp = (UINT8)(BUCinfo[serverNum].operation.usrSetAttn * 8.0);
+			HEXto2ASC(u8Temp, &pCmdData[0]);
+	
+			// temperature
+			u8Temp = BUCinfo[serverNum].status.temp;
+			HEXto2ASC(u8Temp, &pCmdData[2]);
+	
+			// RF input
+			u8Temp = BUCinfo[serverNum].status.inpower;
+			HEXto2ASC(u8Temp, &pCmdData[4]);
+	
+			// RF output
+			u8Temp = BUCinfo[serverNum].status.outpower;
+			HEXto2ASC(u8Temp, &pCmdData[6]);
+	
+			pGCmdOut->bits.DataLength = ASCII_VALUE(8); // length of data in ascii char
+			break;
+
+		case AGILIS_PROTOCOL_CMD_VE: // VE command
+			// return now if VE data is not ready for BUC
+			if(!(pClient->serverStatus & BUC_STATUS_VE_READY))
+				return AgilisCmdStatus_Fail;
+		
+			memcpy(temp, BUCinfo[serverNum].info.firmwareVersion, 3);
+		
+			// set first 2 reserved bytes as 0
+			pCmdData[0] = 
+			pCmdData[1] = '0';
+		
+			for(i=0;i<3;i++){
+				HEXto2ASC(temp[i], &pCmdData[i*2+2]);
+			}
+		
+			pGCmdOut->bits.DataLength = ASCII_VALUE(8); // length of data in ascii char
+			break;
+		
+		case AGILIS_PROTOCOL_CMD_RD: // RD command
+			memset(temp, 0, sizeof(temp));
+		
+			// check for "1B10" for part no. or "1B20" for serial no.
+			if(memcmppgm2ram(pGCmdIn->bits.Data, AGILIS_PROTOCOL_RD_ADDR_PART_NO, 4) == 0){
+				// return now if P/N is not ready for BUC 1
+				if(!(pClient->serverStatus & BUC_STATUS_PN_READY))
+					return AgilisCmdStatus_Fail;
+		
+				memcpy(temp, BUCinfo[serverNum].info.modelNo, 15);
+			}else
+			if(memcmppgm2ram(pGCmdIn->bits.Data, AGILIS_PROTOCOL_RD_ADDR_SERIAL_NO, 4) == 0){
+				// return now if S/N is not ready for BUC 1
+				if(!(pClient->serverStatus & BUC_STATUS_SN_READY))
+					return AgilisCmdStatus_Fail;
+	
+				memcpy(temp, BUCinfo[serverNum].info.serialNo, 15);
+			}else
+				return AgilisCmdStatus_Fail;
+		
+			for(i=0;i<15;i++){
+				HEXto2ASC(temp[i], &pCmdData[i*2]);
+			}
+		
+			pGCmdOut->bits.DataLength = ASCII_VALUE(30); // length of data in ascii char
+			break;
+			
+		case AGILIS_PROTOCOL_CMD_BT: // BT command
+		case AGILIS_PROTOCOL_CMD_BL: // BL command
+			memset(temp, 0, sizeof(temp));
+		
+			// check for "1B10" for part no. or "1B20" for serial no.
+			if(pGCmdIn->bits.Command[1] == 'T'){
+				// return now if P/N is not ready for BUC 1
+				if(!(pClient->serverStatus & BUC_STATUS_PN_READY))
+					return AgilisCmdStatus_Fail;
+		
+				memcpy(temp, BUCinfo[serverNum].info.modelNo, 15);
+			}else
+			if(pGCmdIn->bits.Command[1] == 'L'){
+				// return now if S/N is not ready for BUC 1
+				if(!(pClient->serverStatus & BUC_STATUS_SN_READY))
+					return AgilisCmdStatus_Fail;
+	
+				memcpy(temp, BUCinfo[serverNum].info.serialNo, 15);
+			}else
+				return AgilisCmdStatus_Fail;
+		
+			for(i=0;i<15;i++){
+				HEXto2ASC(temp[i], &pCmdData[i*2]);
+			}
+		
+			pGCmdOut->bits.DataLength = ASCII_VALUE(30); // length of data in ascii char
+			break;
+				
+		default:
+			return AgilisCmdStatus_Fail;
+				
+	}
+	
+	AgilisProtocolGCmdPackResponse(pGCmdIn->bits.DestinationID, pGCmdIn, pGCmdOut, pu8OutBufSize);
+
+	// send cmd respond to the client
+	if(pS->pUARTClient[clientNum])
+		pS->pUARTClient[clientNum]->Write(pu8OutBuf, *pu8OutBufSize);
+
+	return status;
+}
+
+
+
+AgilisCmdStatus_t RCUServerForwardCmd (void *pServer, UINT8 *pu8InBuf, UINT8 *pu8InBufSize, UINT8 *pu8OutBuf, UINT8 *pu8OutBufSize, UINT8 clientNum)
+{
+	AgilisCmdStatus_t status; 
+	Agilis_G_Cmd_t *pGCmdIn=(Agilis_G_Cmd_t *)pu8InBuf;
+	Agilis_G_Cmd_t *pGCmdOut=(Agilis_G_Cmd_t *)pu8OutBuf;
+	AgilisDeviceServer_t *pS=(AgilisDeviceServer_t *)pServer;
+	UINT8 serverNum,retry,u8OutBufSize;
+	BOOL bBroadcast;
+	UINT16 u16RespSize;
+	
+	if(!pServer || !pu8InBuf || !pu8InBufSize || !pu8OutBuf || !pu8OutBufSize)
+		return AgilisCmdStatus_Fail;
+
+	// check RCU protocol command request 
+	if((status = AgilisProtocolGCmdReqCheck(pGCmdIn, NULL)) != AgilisCmdStatus_Ok)
+		return status;
+
+	bBroadcast = FALSE;
+	serverNum = 0xFF;
+	
+	// broadcast to both BUCs if it is broadcast ID 000
+	if(	memcmppgm2ram(pGCmdIn->bits.DestinationID, AGILIS_PROTOCOL_ID_BROADCAST, 3) == 0){
+		// if it is ID command, send to the uart port connected to the BUC only
+		if(	memcmppgm2ram(pGCmdIn->bits.DestinationID, "ID", 2) == 0){
+			if(memcmppgm2ram(pGCmdIn->bits.DestinationID, AGILIS_PROTOCOL_ID_BUC_001, 3) == 0){
+				serverNum = RCU_SERVER_BUC_UART_PORT_0;
+			}else
+			if(memcmppgm2ram(pGCmdIn->bits.DestinationID, AGILIS_PROTOCOL_ID_BUC_002, 3) == 0){
+				serverNum = RCU_SERVER_BUC_UART_PORT_1;
+			}else
+				return  AgilisCmdStatus_Fail;
+		}else{
+			// broadcast to all
+			bBroadcast = TRUE;
+		}
+	}else	
+	if(	memcmppgm2ram(pGCmdIn->bits.DestinationID, AGILIS_PROTOCOL_ID_BUC_001, 3) == 0 ||
+		memcmppgm2ram(pGCmdIn->bits.DestinationID, AGILIS_PROTOCOL_ID_SSPA_801, 3) == 0 ){
+
+		// todo: if BUC 1 is not connected, no need to forward to it
+		if(BUCClientIsBUCServerConnected(0) == AgilisDeviceStatusNoComm)
+			return AgilisCmdStatus_Fail;
+
+		serverNum = RCU_SERVER_BUC_UART_PORT_0;
+		
+	}else
+	if( memcmppgm2ram(pGCmdIn->bits.DestinationID, AGILIS_PROTOCOL_ID_BUC_002, 3) == 0 ||
+		memcmppgm2ram(pGCmdIn->bits.DestinationID, AGILIS_PROTOCOL_ID_SSPA_802, 3) == 0 ){
+
+		// todo: if BUC 2 is not connected, no need to forward to it
+		if(BUCClientIsBUCServerConnected(1) == AgilisDeviceStatusNoComm)
+			return AgilisCmdStatus_Fail;
+
+		serverNum = RCU_SERVER_BUC_UART_PORT_1;
+	}else
+		return  AgilisCmdStatus_Fail;
+
+	// todo: check if BUC server # is online 
+	// ...
+	if(bBroadcast){
+		for(serverNum=0;serverNum<BUC_MAX_SIZE;serverNum++){
+
+			// todo: if BUC server is not connected, no need to forward to it
+			if(BUCClientIsBUCServerConnected(serverNum) == AgilisDeviceStatusNoComm)
+				continue;
+			
+			// forward request from client to BUC server #
+			pS->pUARTServer[serverNum]->Write(pu8InBuf, *pu8InBufSize);
+			
+			// how much delay to wait for BUC server response?
+			DelayMS(200);
+			
+			// read command response from BUC server
+			u16RespSize = 0;
+			u16RespSize = pS->pUARTServer[serverNum]->Read(pu8OutBuf, *pu8OutBufSize);
+			
+			// forward response from BUC server 1 to client
+			if(u16RespSize != 0){
+				pu8OutBuf[u16RespSize]=0;
+				if(pS->pUARTClient[clientNum])
+					pS->pUARTClient[clientNum]->Write(pu8OutBuf, u16RespSize);
+			}
+		}
+	}else
+	//forward command to respective BUC
+	if(serverNum != 0xFF){
+		HitWatchDog();
+
+		// absorb other command responses sent earlier first
+		retry = 5;
+		while(retry-- && u16RespSize){
+			DelayMS(30);
+			u16RespSize = pS->pUARTServer[serverNum]->Read(pu8OutBuf, *pu8OutBufSize);
+		}
+		//pS->pUARTServer[serverNum]->Read(pu8OutBuf, *pu8OutBufSize);
+
+			// forward request from client to BUC server #
+			pS->pUARTServer[serverNum]->Write(pu8InBuf, *pu8InBufSize);
+	
+			// read command response from BUC server
+			retry = 10;
+			while(retry-- && !u16RespSize){
+				DelayMS(30);
+				u16RespSize = pS->pUARTServer[serverNum]->Read(pu8OutBuf, *pu8OutBufSize);
+			}
+			HitWatchDog();
+			// forward response from BUC server 1 to client
+			if(u16RespSize != 0){
+				pu8OutBuf[u16RespSize]=0; // terminate the buffer properly
+				if(pS->pUARTClient[clientNum])
+					pS->pUARTClient[clientNum]->Write(pu8OutBuf, u16RespSize);
+			}
+	}
+
+	return status;
+
+}
+
+
+
+AgilisCmdTable_t gRCUServerCmdTbl[]=
+{
+	// Z commands to be responded by RCU server
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "GDS", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "GSS", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "GDI", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "SDI", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "GFV", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "GAL", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "SDS", RCUServerDecodeRCUReq},
+#ifdef RCUR
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "GLS", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "SLS", RCUServerDecodeRCUReq},
+#endif
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "GPN", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "FPN", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "GSN", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "FSN", RCUServerDecodeRCUReq},
+	{AGILIS_PROTOCOL_Z_CMD_STARTCHAR, "FST", RCUServerDecodeRCUReq},
+
+	// G commands to be handled by proxy cache
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "BS",	RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "RF", RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "AS",	RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "DA", RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "BL",	RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "BT",	RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "BV",	RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "RD", RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "VE", RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "A1", RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "SO", RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "SF", RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "BO", RCUServerDecodeFMBUCReq},
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "BF", RCUServerDecodeFMBUCReq},
+
+	// last function must be G command forward function for BUC servers
+	{AGILIS_PROTOCOL_G_CMD_STARTCHAR, "??",	RCUServerForwardCmd}
+	
+};
+
+
+
+AgilisCmdStatus_t RCUServerCmdLookUp(UINT8 *pData, UINT8 *pNumCmd)
+{
+	UINT8 i;
+	AgilisCmdStatus_t status; 
+	BOOL bFound;
+
+	bFound = FALSE;
+	status = AgilisCmdStatus_Fail;
+
+	if(!pData || !pNumCmd) 
+		return status;
+
+	// loop through command table
+	for(i = 0 ; i < sizeof(gRCUServerCmdTbl)/sizeof(AgilisCmdTable_t) ; i++){
+		// check start char of command table
+		switch(gRCUServerCmdTbl[i].start){
+			// check Z command code
+			case AGILIS_PROTOCOL_Z_CMD_STARTCHAR:
+				if (memcmp(gRCUServerCmdTbl[i].cmd, &pData[5], 3) == 0) {
+					*pNumCmd = i;
+					status = AgilisCmdStatus_Ok;
+					bFound = TRUE;
+				}
+				break;
+			
+			// check G command code
+			case AGILIS_PROTOCOL_G_CMD_STARTCHAR:
+				if (memcmp(gRCUServerCmdTbl[i].cmd, &pData[7], 2) == 0) {
+					*pNumCmd = i;
+					status = AgilisCmdStatus_Ok;
+					bFound = TRUE;
+				}
+				break;
+		}
+
+		if(bFound)
+			break;
+	}
+
+	// if command is not found, use the last function which is forward function for BUC command
+	if(!bFound && pData[0] == AGILIS_PROTOCOL_G_CMD_STARTCHAR){
+		*pNumCmd = sizeof(gRCUServerCmdTbl)/sizeof(AgilisCmdTable_t) - 1;
+		status = AgilisCmdStatus_Ok;
+	}
+	
+	return status;
+}
+
+
+// Respond to incoming PC/LCD/WiFi request
+void RCUServerRespond(void *p)
+ {
+	 AgilisCmdStatus_t status; 
+	 UINT8 clientNum,u8NumInBytes,u8NumOutBytes,numFunc,u8BufPos,numPacket;
+	Agilis_G_Cmd_t *pGCmdIn=(Agilis_G_Cmd_t *)gAgilisReadBuf;
+	AgilisDeviceServer_t *pServer = (AgilisDeviceServer_t *)p;
+
+	 // read command request from UART port connected to client 1 (PC/ASRC)
+	 for( clientNum = 0 ; clientNum < MAX_CLIENT ; clientNum++ ){
+	 	if(pServer->pUARTClient[clientNum]){
+
+			// clear read buffer
+			memset(gAgilisReadBuf, 0, sizeof(gAgilisReadBuf));
+	 		u8NumInBytes = sizeof(gAgilisReadBuf);
+			u8NumOutBytes = sizeof(gAgilisWriteBuf);
+
+			// read from client port i
+	 		if((u8NumInBytes = pServer->pUARTClient[clientNum]->Read(gAgilisReadBuf, u8NumInBytes)) == 0)
+		 		continue;
+
+			// check if it is valid G command packet
+			//if(AgilisProtocolCmdCheck(gAgilisReadBuf, SSPAinfo.info.deviceID, RCUinfo.DeviceID) != AgilisCmdStatus_Ok)
+			//	continue;
+
+			// forward to AUC if the destination ID is 501
+			//if(	memcmppgm2ram(pGCmdIn->bits.DestinationID, AGILIS_PROTOCOL_ID_AUC_501, 3) == 0){
+			//	IBUCServerForwardCmd(pServer, gAgilisReadBuf, &u8NumInBytes, gAgilisWriteBuf, &u8NumOutBytes, clientNum);
+			//	continue;
+			//}
+			
+			// yt todo: check destination ID for IBUC
+			// ...
+
+			HitWatchDog();
+
+			// multiple packet handling
+			u8BufPos = 0;
+			numPacket = 0;
+			AgilisProtocolGetCmdPacketStartPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf));
+
+			while(u8NumInBytes){
+	 			// look up for the command request function
+				if(AgilisProtocolCmdLookUp(&gAgilisReadBuf[u8BufPos], &numFunc, pServer->pCmdTable, pServer->totalCmdNum) != AgilisCmdStatus_Ok){
+#ifdef SUPPORT_MULTIPLE_PACKET
+					AgilisProtocolGetNextCmdPacketPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf)-u8BufPos);
+					if(	!u8BufPos || u8BufPos >= sizeof(gAgilisReadBuf))
+#endif
+						break;
+				}			 
+
+		 		// reset command response buffer
+		 		memset(gAgilisWriteBuf, 0, sizeof(gAgilisWriteBuf));
+	 			u8NumOutBytes = sizeof(gAgilisWriteBuf);
+ 
+		 		// execute the command request function or forward the request
+		 		status = pServer->pCmdTable[numFunc].pCmdFunc(pServer, &gAgilisReadBuf[u8BufPos], &u8NumInBytes, gAgilisWriteBuf, &u8NumOutBytes, clientNum);
+
+				//if(gAgilisReadBuf[0]=='G' && gAgilisReadBuf[7]=='S')
+				//	debugPrintf2("S\r");
+
+#ifdef SUPPORT_MULTIPLE_PACKET
+				AgilisProtocolGetNextCmdPacketPos(&u8BufPos, gAgilisReadBuf, sizeof(gAgilisReadBuf)-u8BufPos);
+				if(!u8BufPos || u8BufPos >= sizeof(gAgilisReadBuf))
+#endif
+					break;
+				
+				// delay 5ms before sending out next response
+				DelayMS(5);
+
+				// break out of while loop if handled more than 3 packets
+				if(numPacket++ >= 3)
+					break;
+			}
+	 	}
+	 }
+ 
+	 // send the command response to the PC/wifi server -> should be done inside pCmdFunc() above
+	 //if(status == AgilisCmdStatus_Ok && u8NumOutBytes)
+	//	 pServer->pDrvTable->Write(gAgilisWriteBuf, u8NumOutBytes);
+
+ } 
+
+void RCUServerInit(rom char *UartForPCClient, rom char *UartForLCDClient, rom char *UartForWiFiClient, rom char *UartForBUCServer0, rom char *UartForBUCServer1)
+{
+	memset(&gRCUServer, 0, sizeof(gRCUServer));
+
+	gRCUServer.pUARTClient[0] = AgilisDriverManagerOpen(UartForPCClient);
+	gRCUServer.pUARTClient[1] = AgilisDriverManagerOpen(UartForLCDClient);
+	gRCUServer.pUARTClient[2] = AgilisDriverManagerOpen(UartForWiFiClient);
+	gRCUServer.pUARTServer[0] = AgilisDriverManagerOpen(UartForBUCServer0);
+	gRCUServer.pUARTServer[1] = AgilisDriverManagerOpen(UartForBUCServer1);
+
+	gRCUServer.pCmdTable = gRCUServerCmdTbl;
+	gRCUServer.totalCmdNum = sizeof(gRCUServerCmdTbl)/sizeof(AgilisCmdTable_t);
+	gRCUServer.pRespondFunc = RCUServerRespond;
+
+	RCUHLInit();
+
+	AgilisDeviceManagerRegisterServer(&gRCUServer);
+}
+
+
+
+
+

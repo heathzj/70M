@@ -1,0 +1,238 @@
+/***********************************************************/
+/*									                       */
+/*        For getting Device Information on RCU  		   */
+/*											               */
+/***********************************************************/
+
+
+#include "AgilisSNMPLL.h"
+
+BYTE myRef;
+  
+/*      This for getting RCU Manager IP              	   */
+BOOL Agilissnmpll_getRCUManagerip(SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)
+{
+	myRef = *ref;
+	if ( Manager_IP.Val == 0u )
+    {
+		myRef = SNMP_END_OF_VAR;
+    }
+	else
+    {
+       	val->dword = (((Manager_IP.Val<<24ul)&0xff000000)
+			        |((Manager_IP.Val<<8ul)&0x00ff0000)
+				    |((Manager_IP.Val>>8ul)&0x0000ff00)
+				    |((Manager_IP.Val>>24ul)&0x000000ff));
+        myRef = SNMP_END_OF_VAR;
+    }  
+    *ref = myRef;
+    return TRUE;	
+}	
+
+
+
+/*      This for getting RCU Device IP              	   */
+BOOL Agilissnmpll_getRCUDeviceip(SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)	
+{	
+      myRef = *ref;
+	if ( AppConfig.MyIPAddr.Val == 0u )
+	{	
+		myRef = SNMP_END_OF_VAR;
+	}
+    else
+    {
+       	val->dword = Agilissnmpll_dword_swap(AppConfig.MyIPAddr.Val);
+        myRef = SNMP_END_OF_VAR;
+    }  
+	 *ref = myRef;
+	 return TRUE;
+}
+
+
+/*      This for getting RCU Device IP Mask                */
+BOOL Agilissnmpll_getRCUDeviceipMask(SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)
+{
+      myRef = *ref;
+	 if ( AppConfig.MyMask.Val == 0u )
+            myRef = SNMP_END_OF_VAR;
+       else
+      {
+       val->dword = Agilissnmpll_dword_swap(AppConfig.MyMask.Val);
+       myRef = SNMP_END_OF_VAR;
+      }      
+	*ref = myRef;
+    return TRUE;
+} 
+	 
+
+/*      This for getting RCU Device IP Gateway            */	 
+BOOL Agilissnmpll_getRCUDeviceipGateway(SNMP_INDEX index, BYTE* ref, SNMP_VAL* val)
+{  
+      myRef = *ref;   
+	if ( AppConfig.MyGateway.Val == 0u )
+    {  
+		myRef = SNMP_END_OF_VAR;
+	}
+    else
+    {
+        val->dword = Agilissnmpll_dword_swap(AppConfig.MyGateway.Val);
+        myRef = SNMP_END_OF_VAR;
+    }  
+  *ref = myRef;
+  return TRUE;	 
+}	 
+	 
+	 
+
+/*      This for getting RCU Serial Number          	   */
+BOOL Agilissnmpll_getRCUSerialNumber(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  myRef = *ref;
+  
+  if(RCUinfo.SerialNumber[0] == 0u)
+     myRef = SNMP_END_OF_VAR;
+	 
+  else
+  {
+    val->byte = RCUinfo.SerialNumber[myRef++];
+	if(RCUinfo.SerialNumber[myRef]== 0u)
+	   myRef = SNMP_END_OF_VAR;
+  }
+
+  *ref = myRef;
+  return TRUE;
+}
+
+
+/*      This for getting RCU Device ID           	        */
+BOOL Agilissnmpll_getRCUDeviceID(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  myRef = *ref;
+  
+  if(RCUinfo.DeviceID[0] == 0u)
+     myRef = SNMP_END_OF_VAR;
+	 
+  else
+  {
+    val->byte = RCUinfo.DeviceID[myRef++];
+	if(RCUinfo.DeviceID[myRef]== 0u)
+	   myRef = SNMP_END_OF_VAR;
+  }
+  *ref = myRef;
+  return TRUE;
+}
+
+
+
+/*      This for getting RCU Part Number           	        */
+BOOL Agilissnmpll_getRCUPartNumber(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  myRef = *ref;
+  
+  if(RCUinfo.PartNumber[0] == 0u)
+     myRef = SNMP_END_OF_VAR;
+	 
+  else
+  {
+    val->byte = RCUinfo.PartNumber[myRef++];
+	if(RCUinfo.PartNumber[myRef]== 0u)
+	   myRef  = SNMP_END_OF_VAR;
+  }
+  *ref = myRef;
+  return TRUE;
+}
+
+
+
+/*      This for getting RCU Firmware Version                */
+BOOL Agilissnmpll_getRCUFwVer(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+  myRef = *ref;
+  
+  if(RCUinfo.FwVer[0] == 0u)
+     myRef  = SNMP_END_OF_VAR;
+	 
+  else
+  {
+    val->byte = RCUinfo.FwVer[myRef++];
+	if(RCUinfo.FwVer[myRef]== 0u)
+	   myRef  = SNMP_END_OF_VAR;
+  }
+  *ref = myRef;
+  return TRUE;
+}
+
+
+/*      This for getting RCU Tx PathA Status          */
+
+BOOL Agilissnmpll_getRCUtxPathA_status(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+ 	val->byte = RCUinfo.txPathA_status;
+	return TRUE;
+}
+
+
+/*      This for getting RCU Tx PathB Status           */
+BOOL Agilissnmpll_getRCUtxPathB_status(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+ 
+
+	val->byte = RCUinfo.txPathB_status;
+	return TRUE;
+}
+
+
+
+/*      This for getting RCU Operation Mode            */
+BOOL Agilissnmpll_getRCUopMode(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+
+ 
+ val->byte =RCUinfo.comMode;
+ return TRUE;
+}
+
+
+
+/*      This for getting RCU Tx Mode                   */
+BOOL Agilissnmpll_getRCUTxMode(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+  val->byte = RCUinfo.opmode;
+  return TRUE;
+}
+
+
+
+/*      This for getting RCU Tx Switch                 */
+BOOL Agilissnmpll_getRCUTxSwitch(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+  val->byte = RCUinfo.txPath_selection;
+  return TRUE;
+}
+
+
+
+/*      This for getting RCU Tx State                 */
+BOOL Agilissnmpll_getRCUTxState(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+	val->byte = RCUinfo.txPath_selection;
+	return TRUE;
+}
+
+
+/*      This for Setting RCU Tx Switch                 */
+BOOL Agilissnmpll_setRCUTxSwitch(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+    RCULLSetPath(val->byte);
+  return TRUE;
+}
+
+
+
+/*      This for Setting RCU Tx Mode                   */
+
+BOOL Agilissnmpll_setRCUTxMode(SNMP_INDEX index, BYTE *var, SNMP_VAL *val)
+{
+    RCULLSetMode(val->byte);
+  return TRUE;
+}

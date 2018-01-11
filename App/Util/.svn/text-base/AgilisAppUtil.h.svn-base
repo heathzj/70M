@@ -1,0 +1,10 @@
+
+#include "Global.h"
+
+/*Optimizing Functions*/
+void AgilisAppUtil_validate_attenuation(BUCinfo_t*);
+DWORD AgilisAppUtil_dword_swap(DWORD);
+BYTE* Agilis_util_convert_ascii(DWORD);
+DWORD Agilis_util_parse_set_freq(BYTE *, unsigned int , unsigned int );
+float Agilis_util_parse_attn(BYTE *);
+

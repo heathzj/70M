@@ -1,0 +1,3 @@
+Warning[2064] C:\ZX\Converter\App\WebUI\AgilisHTTPGetDevInfo.c 347 : static function 'HTTPPostSNMPCommunity' not defined
+Warning[2064] C:\ZX\Converter\App\WebUI\AgilisHTTPGetDevInfo.c 347 : static function 'HTTPPostConfig' not defined
+Warning[2064] C:\ZX\Converter\App\WebUI\AgilisHTTPGetDevInfo.c 347 : static function 'HTTPPostlut' not defined

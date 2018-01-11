@@ -1,0 +1,166 @@
+~inc:header.inc~
+<title>Configuration</title>
+  <tr>
+  	<td>
+		<div class="pagetab" style="height:605px" >
+			
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="center" colspan="3" height="42" bgcolor="#cac8c8"><center>INTERFACE CONFIGURATION</center><div id="pwd"><a href="/password.htm">Change Password</a></div></td>
+						</tr>
+						<tr>
+							<td align="left" colspan="3" height="42" bgcolor="#e2e2e2">
+								<center>																	
+									<table border="0" cellpadding="2">
+										<FORM METHOD=GET action=config.htm>									
+										<tr>
+											<td align="left" style="width: 280px;"><b>Device ID </b></td>
+											<td><input type=text size=20 id="deviceid" name="deviceid" value="~ID~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>Serial Communication Mode[PC] </b></td>
+											<td align="left"><select align="left" id="serial" name="serial"><option ~comModeSelected(TRUE)~>RS485 </option><option ~comModeSelected(FALSE)~>RS232 </option></select></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=POST action=config.htm>
+										<tr>
+											<td align="left"><b>DHCP Enable</b></td>
+											<td align="left"><input id="dhcp" name="dhcp" value="1" type="checkbox" onclick="dhcpClicked();" ~config_dhcpchecked~ /> </td>
+											<td><input class="stylishButton" type="submit" value="Set"></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>Device IP </b></td>
+											<td><input type=text size=20 id="DIP" name="DIP" value="~static_ip~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>Device Subnet Mask </b></td>
+											<td><input type=text size=20 id="subnet" name="subnet" value="~config_subnet~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>Device Gateway </b></td>
+											<td><input type=text size=20 id="gateway" name="gateway" value="~config_gw~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+									</table>
+									<div ><font color="blue"><b><i>Caution: Setting a wrong IP here may cause the Device to be not accessible.</i></b></font></div>
+								</center>
+							</td>
+						</tr>
+						<tr>
+							<td class="tableHeader" align="center" colspan="3" height="42" bgcolor="#cac8c8"><center>OPERATION</center></td>
+						</tr>
+						<tr>
+							<td align="center" bgcolor="#e2e2e2" width="33%" >
+									<table border="0" width="100%" cellpadding="2">									
+										<tr>
+											<td class="tableHeader" align="center" colspan="4" height="32" bgcolor="#cac8c8"><center>RCU</center></td>
+										</tr>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="center" width="10%"><b>&nbsp;</b></td>
+											<td align="left" width="38%"><b>Switch Mode </b></td>
+											<td align="left"><select align="left" id="swmode" name="mode" onclick="modesel();"><option ~swmodeSelected(FALSE)~>Auto </option><option ~swmodeSelected(TRUE)~>Manual </option></select></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="center"><b>&nbsp;</b></td>
+											<td align="left" style="width: 250px;"><b>Online Path </b></td>
+											<td align="left"><select align="left" id="onlinepath" name="path"><option ~pathSelected(TRUE)~>A&nbsp;  </option><option ~pathSelected(FALSE)~>B </option></select></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										<tr>
+											<td align="center" colspan="4"><b>&nbsp;<br /><br /></b></td>
+										</tr>
+										</FORM>									
+									</table>						
+							</td>
+							<td align="center" bgcolor="#e2e2e2" width="33%" >
+									<table border="0" width="100%" cellpadding="2">									
+										<tr>
+											<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center>BUC A</center></td>
+										</tr>
+										<FORM METHOD=GET action=config.htm>
+										<tr id="buc">
+											<td align="left" width="55%"><b>Attenuation</b><i style="font-size:14px">(0-~maxattn(1)~dB,0.5dB Step)</i>: </td>
+											<td align="left"><input type=text size=7 id="Attn1" name="Attn1" value="~buc1Atten~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>											
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>RF Output </b></td>
+											<td align="left"><select align="left" id="rfop1" name="rfop1"><option ~buc1rfSelected(TRUE)~>ON </option><option ~buc1rfSelected(FALSE)~>OFF </option></select></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<tr>
+											<td align="center" colspan="4"><b>&nbsp;<br /><br /></b></td>
+										</tr>
+									</table>						
+							</td>
+							<td align="center" bgcolor="#e2e2e2" width="33%" >
+									<table border="0" width="100%" cellpadding="2">
+										<tr>
+											<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center>BUC B</center></td>
+										</tr>
+										<FORM METHOD=GET action=config.htm>
+										<tr id="buc">
+											<td align="left" width="55%"><b>Attenuation</b><i style="font-size:14px">(0-~maxattn(2)~dB,0.5dB Step)</i>:</td>
+											<td align="left"><input type=text size=7 id="Attn2" name="Attn2" value="~buc2Atten~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>RF Output </b></td>
+											<td align="left"><select align="left" id="rfop2" name="rfop2"><option ~buc2rfSelected(TRUE)~>ON </option><option ~buc2rfSelected(FALSE)~>OFF </option></select></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<tr>
+											<td align="center" colspan="4"><b>&nbsp;<br /><br /></b></td>
+										</tr>
+									</table>					
+							</td>
+						</tr>
+						<tr>
+							<td align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><a href="config.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>					
+				</div>
+~inc:footer.inc~
+
+<script type="text/javascript">
+
+function dhcpClicked() 
+{
+	checkDHCP();
+}
+
+function modesel()
+{
+	checkMODE();
+}
+
+</script>
+</div>
+</td>
+</tr>
+	</body>
+</html>

@@ -1,0 +1,17 @@
+#ifndef _AGILISUARTTEST_H_
+#ifndef _AGILISUARTTEST_H_
+
+
+
+void AgilisUartTestWrite(void);
+UINT16 AgilisUartTestRead(void);
+
+
+
+
+
+
+
+
+#endif // _AGILISUARTTEST_H_
+

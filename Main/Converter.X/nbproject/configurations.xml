@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="62">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <logicalFolder name="App\SNMP" displayName="App\SNMP" projectFiles="true">
+        <itemPath>../../App/SNMP/mib.h</itemPath>
+        <itemPath>../../App/SNMP/SNMPMibRegistry.h</itemPath>
+        <itemPath>../../App/SNMP/SNMPLL.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="App\WebUI" displayName="App\WebUI" projectFiles="true">
+        <itemPath>../../App/WebUI/HTTPApp.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/HTTPPrint.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Devices" displayName="Devices" projectFiles="true">
+        <itemPath>../../Devices/BUCClient.h</itemPath>
+        <itemPath>../../Devices/DeviceManager.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Drivers\Drivers"
+                     displayName="Drivers\Drivers"
+                     projectFiles="true">
+        <itemPath>../../Drivers/UARTISR.h</itemPath>
+        <itemPath>../../Drivers/DriverManager.h</itemPath>
+        <itemPath>../../Drivers/Uart.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Drivers\External-Peripherals"
+                     displayName="Drivers\External-Peripherals"
+                     projectFiles="true">
+        <itemPath>../../Drivers/External-Peripherals/devadc.h</itemPath>
+        <itemPath>../../Drivers/External-Peripherals/DualUART.h</itemPath>
+        <itemPath>../../Drivers/External-Peripherals/oled_c1.h</itemPath>
+        <itemPath>../../Drivers/External-Peripherals/oled_c2.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Drivers\MCU-Internal"
+                     displayName="Drivers\MCU-Internal"
+                     projectFiles="true">
+        <itemPath>../../Drivers/MCU-Internal/flash.h</itemPath>
+        <itemPath>../../Drivers/MCU-Internal/devspi.h</itemPath>
+        <itemPath>../../Drivers/MCU-Internal/i2c_c1.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet"
+                     displayName="OEM-Lib\Ethernet"
+                     projectFiles="true">
+        <itemPath>../../Microchip/Include/TCPIP Stack/Announce.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/ARP.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/DNS.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/DynDNS.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/ETH97J60.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/IP.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/MAC.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/NBNS.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/SMTP.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/SNTP.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/StackTsk.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/TCP.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/TCPIP.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/TCPPerformanceTest.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/Telnet.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/TFTPc.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/UART.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/UDP.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/UDPPerformanceTest.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/SSL.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/ARCFOUR.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/RSA.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet\DHCP"
+                     displayName="OEM-Lib\Ethernet\DHCP"
+                     projectFiles="true">
+        <itemPath>../../Microchip/Include/TCPIP Stack/DHCP.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet\HTTP"
+                     displayName="OEM-Lib\Ethernet\HTTP"
+                     projectFiles="true">
+        <itemPath>../../Microchip/Include/TCPIP Stack/HTTP2.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/HTTP.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet\ICMP"
+                     displayName="OEM-Lib\Ethernet\ICMP"
+                     projectFiles="true">
+        <itemPath>../../Microchip/Include/TCPIP Stack/ICMP.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet\SNMP"
+                     displayName="OEM-Lib\Ethernet\SNMP"
+                     projectFiles="true">
+        <itemPath>../../Microchip/Include/TCPIP Stack/SNMP.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Others"
+                     displayName="OEM-Lib\Others"
+                     projectFiles="true">
+        <itemPath>../../Microchip/Include/TCPIP Stack/UART2TCPBridge.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/Tick.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/MPFS2.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/MPFS.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/Random.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/Hashes.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/Delay.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/BigInt.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/Reboot.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/Helpers.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Storage"
+                     displayName="OEM-Lib\Storage"
+                     projectFiles="true">
+        <itemPath>../../Microchip/Include/TCPIP Stack/SPIFlash.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/SPIRAM.h</itemPath>
+        <itemPath>../../Microchip/Include/TCPIP Stack/XEEPROM.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Port" displayName="Port" projectFiles="true">
+        <itemPath>../../Port/TCPIPConfig.h</itemPath>
+        <itemPath>../../Port/HardwareProfile.h</itemPath>
+        <itemPath>../../Microchip/Include/GenericTypeDefs.h</itemPath>
+        <itemPath>../../Microchip/Include/Compiler.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Util" displayName="Util" projectFiles="true">
+        <itemPath>../../App/Util/AppUtil.h</itemPath>
+      </logicalFolder>
+      <itemPath>../define.h</itemPath>
+      <itemPath>../Main.h</itemPath>
+      <itemPath>../Global.h</itemPath>
+      <itemPath>../singcom.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="LinkerScript"
+                   displayName="Linker Files"
+                   projectFiles="true">
+      <itemPath>../../lkr/18f97j60.lkr</itemPath>
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <logicalFolder name="App\WebUI" displayName="App\WebUI" projectFiles="true">
+        <itemPath>../../App/WebUI/HTTPApp.c</itemPath>
+        <itemPath>../../App/WebUI/HTTPGetDevInfo.c</itemPath>
+        <itemPath>../../App/WebUI/HTTPPrint.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Bootstrap" displayName="Bootstrap" projectFiles="true">
+        <itemPath>../../Bootstrap/Initialization.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Drivers\External-Peripherals"
+                     displayName="Drivers\External-Peripherals"
+                     projectFiles="true">
+        <itemPath>../../Drivers/External-Peripherals/devadc.c</itemPath>
+        <itemPath>../../Drivers/External-Peripherals/oled_c1.c</itemPath>
+        <itemPath>../../Drivers/External-Peripherals/oled_c2.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="Drivers\MCU-Internal"
+                     displayName="Drivers\MCU-Internal"
+                     projectFiles="true">
+        <itemPath>../../Drivers/MCU-Internal/MPFSImg2.c</itemPath>
+        <itemPath>../../Drivers/MCU-Internal/devspi.c</itemPath>
+        <itemPath>../../Drivers/MCU-Internal/ISR.c</itemPath>
+        <itemPath>../../Drivers/MCU-Internal/internalADC.c</itemPath>
+        <itemPath>../../Drivers/MCU-Internal/i2c_c1.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet"
+                     displayName="OEM-Lib\Ethernet"
+                     projectFiles="true">
+        <itemPath>../../Microchip/TCPIP Stack/StackTsk.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/TCP.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/UDP.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/ARP.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/ETH97J60.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/IP.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet\DHCP"
+                     displayName="OEM-Lib\Ethernet\DHCP"
+                     projectFiles="true">
+        <itemPath>../../Microchip/TCPIP Stack/DHCP.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/DHCPs.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet\HTTP"
+                     displayName="OEM-Lib\Ethernet\HTTP"
+                     projectFiles="true">
+        <itemPath>../../Microchip/TCPIP Stack/HTTP2.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet\ICMP"
+                     displayName="OEM-Lib\Ethernet\ICMP"
+                     projectFiles="true">
+        <itemPath>../../Microchip/TCPIP Stack/ICMP.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Ethernet\SNMP"
+                     displayName="OEM-Lib\Ethernet\SNMP"
+                     projectFiles="true">
+        <itemPath>../../Microchip/TCPIP Stack/SNMP.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Others"
+                     displayName="OEM-Lib\Others"
+                     projectFiles="true">
+        <itemPath>../../Microchip/TCPIP Stack/Delay.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/Helpers.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/UART.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/Tick.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/MPFS2.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/UART2TCPBridge.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="OEM-Lib\Storage"
+                     displayName="OEM-Lib\Storage"
+                     projectFiles="true">
+        <itemPath>../../Microchip/TCPIP Stack/SPIEEPROM.c</itemPath>
+        <itemPath>../../Microchip/TCPIP Stack/SPIFlash.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="SNMP" displayName="SNMP" projectFiles="true">
+        <itemPath>../../App/SNMP/SNMPApp.c</itemPath>
+        <itemPath>../../App/SNMP/SNMPLLiBUCDevInfo.c</itemPath>
+        <itemPath>../../App/SNMP/SNMPLLiBUCOp.c</itemPath>
+        <itemPath>../../App/SNMP/SNMPLLiBUCStatus.c</itemPath>
+        <itemPath>../../App/SNMP/SNMPSysInfo.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="SysLib" displayName="SysLib" projectFiles="true">
+        <itemPath>../../SysLib/util.c</itemPath>
+      </logicalFolder>
+      <itemPath>../Main.c</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+    <logicalFolder name="OtherFiles" displayName="Other Files" projectFiles="false">
+      <itemPath>../../Microchip/TCPIP Stack/TCPIP Stack Version.txt</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>..</Elem>
+    <Elem>..\..\App\Util</Elem>
+    <Elem>..\..\Drivers\External-Peripherals</Elem>
+    <Elem>..\..\App\SNMP</Elem>
+    <Elem>..\..\lkr</Elem>
+    <Elem>..\..\Drivers\MCU-Internal</Elem>
+    <Elem>..\..\Microchip\Include</Elem>
+    <Elem>..\..\Drivers</Elem>
+    <Elem>..\..\Bootstrap</Elem>
+    <Elem>..\..\SysLib</Elem>
+    <Elem>..\..\Microchip\Include\TCPIP Stack</Elem>
+    <Elem>..\..\App\WebUI</Elem>
+    <Elem>..\..\Microchip\TCPIP Stack</Elem>
+    <Elem>..\..\Port</Elem>
+    <Elem>..\..\Devices</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="default" type="2">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <targetDevice>PIC18F97J60</targetDevice>
+        <targetHeader></targetHeader>
+        <targetPluginBoard></targetPluginBoard>
+        <platformTool>ICD3PlatformTool</platformTool>
+        <languageToolchain>XC8</languageToolchain>
+        <languageToolchainVersion>1.41</languageToolchainVersion>
+        <platform>3</platform>
+      </toolsSet>
+      <compileType>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+        <archiverTool>
+        </archiverTool>
+        <loading>
+          <useAlternateLoadableFile>false</useAlternateLoadableFile>
+          <parseOnProdLoad>false</parseOnProdLoad>
+          <alternateLoadableFile></alternateLoadableFile>
+        </loading>
+        <subordinates>
+        </subordinates>
+      </compileType>
+      <makeCustomizationType>
+        <makeCustomizationPreStepEnabled>false</makeCustomizationPreStepEnabled>
+        <makeCustomizationPreStep></makeCustomizationPreStep>
+        <makeCustomizationPostStepEnabled>false</makeCustomizationPostStepEnabled>
+        <makeCustomizationPostStep></makeCustomizationPostStep>
+        <makeCustomizationPutChecksumInUserID>false</makeCustomizationPutChecksumInUserID>
+        <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
+        <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
+      </makeCustomizationType>
+      <HI-TECH-COMP>
+        <property key="asmlist" value="true"/>
+        <property key="define-macros" value=""/>
+        <property key="disable-optimizations" value="false"/>
+        <property key="extra-include-directories" value=""/>
+        <property key="favor-optimization-for" value="-speed,+space"/>
+        <property key="identifier-length" value="255"/>
+        <property key="local-generation" value="false"/>
+        <property key="operation-mode" value="free"/>
+        <property key="opt-xc8-compiler-strict_ansi" value="false"/>
+        <property key="optimization-assembler" value="true"/>
+        <property key="optimization-assembler-files" value="true"/>
+        <property key="optimization-debug" value="false"/>
+        <property key="optimization-global" value="true"/>
+        <property key="optimization-invariant-enable" value="false"/>
+        <property key="optimization-invariant-value" value="16"/>
+        <property key="optimization-level" value="9"/>
+        <property key="optimization-set" value="default"/>
+        <property key="optimization-speed" value="false"/>
+        <property key="optimization-stable-enable" value="false"/>
+        <property key="preprocess-assembler" value="true"/>
+        <property key="undefine-macros" value=""/>
+        <property key="use-cci" value="false"/>
+        <property key="use-iar" value="false"/>
+        <property key="verbose" value="false"/>
+        <property key="warning-level" value="-3"/>
+        <property key="what-to-do" value="ignore"/>
+      </HI-TECH-COMP>
+      <HI-TECH-LINK>
+        <property key="additional-options-checksum" value=""/>
+        <property key="additional-options-code-offset" value=""/>
+        <property key="additional-options-command-line" value=""/>
+        <property key="additional-options-errata" value=""/>
+        <property key="additional-options-extend-address" value="false"/>
+        <property key="additional-options-trace-type" value=""/>
+        <property key="additional-options-use-response-files" value="false"/>
+        <property key="backup-reset-condition-flags" value="false"/>
+        <property key="calibrate-oscillator" value="false"/>
+        <property key="calibrate-oscillator-value" value="0x3400"/>
+        <property key="clear-bss" value="true"/>
+        <property key="code-model-external" value="wordwrite"/>
+        <property key="code-model-rom" value=""/>
+        <property key="create-html-files" value="false"/>
+        <property key="data-model-ram" value=""/>
+        <property key="data-model-size-of-double" value="24"/>
+        <property key="data-model-size-of-float" value="24"/>
+        <property key="display-class-usage" value="false"/>
+        <property key="display-hex-usage" value="false"/>
+        <property key="display-overall-usage" value="true"/>
+        <property key="display-psect-usage" value="false"/>
+        <property key="fill-flash-options-addr" value=""/>
+        <property key="fill-flash-options-const" value=""/>
+        <property key="fill-flash-options-how" value="0"/>
+        <property key="fill-flash-options-inc-const" value="1"/>
+        <property key="fill-flash-options-increment" value=""/>
+        <property key="fill-flash-options-seq" value=""/>
+        <property key="fill-flash-options-what" value="0"/>
+        <property key="format-hex-file-for-download" value="false"/>
+        <property key="initialize-data" value="true"/>
+        <property key="keep-generated-startup.as" value="false"/>
+        <property key="link-in-c-library" value="true"/>
+        <property key="link-in-peripheral-library" value="false"/>
+        <property key="managed-stack" value="false"/>
+        <property key="opt-xc8-linker-file" value="false"/>
+        <property key="opt-xc8-linker-link_startup" value="false"/>
+        <property key="opt-xc8-linker-serial" value=""/>
+        <property key="program-the-device-with-default-config-words" value="true"/>
+      </HI-TECH-LINK>
+      <ICD3PlatformTool>
+        <property key="tracecontrol.medium" value="0"/>
+        <property key="tracecontrol.select" value="0"/>
+      </ICD3PlatformTool>
+      <XC8-config-global>
+        <property key="advanced-elf" value="false"/>
+        <property key="output-file-format" value="-mcof,+elf"/>
+        <property key="stack-size-high" value=""/>
+        <property key="stack-size-low" value=""/>
+        <property key="stack-size-main" value=""/>
+        <property key="stack-type" value="compiled"/>
+      </XC8-config-global>
+    </conf>
+  </confs>
+</configurationDescriptor>

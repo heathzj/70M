@@ -1,0 +1,103 @@
+/*
+ * Copyright (C) 2012  ST Electronics (Satcom & Sensor Systems) Pte Ltd 
+ *
+ * Agilis UART Driver Header
+ *
+ */
+
+#ifndef _AGILISUART_H_
+#define _AGILISUART_H_
+
+#include "AgilisDriverManager.h"
+
+
+// UART configuration ioctl
+typedef struct {
+   AgilisDriverManagerIoctl_t tIoctl;    // dev IOCTL cfg
+   UINT32    u32Value;                  // param for different uart config
+} AgilisUartConfig_t;
+
+
+// UART error report structure
+typedef struct {
+	UINT32	u32ParityErrorCnt;
+   	UINT32  u32RxFrameErrorCnt;
+   	UINT32  u32RxOverrunErrorCnt;
+   	UINT32  u32TxOverrunErrorCnt;
+} AgilisUartErrorReport_t;
+
+typedef enum {
+	AgilisUartStatus_Ok,
+	AgilisUartStatus_Fail
+}AgilisUartStatus_t;
+
+enum {
+	AGILIS_UART_CONFIG_MODE_RS232,
+	AGILIS_UART_CONFIG_MODE_RS422,
+	AGILIS_UART_CONFIG_MODE_RS485
+};
+
+enum {
+	AGILIS_UART_CONFIG_BAUDRATE_9600,
+	AGILIS_UART_CONFIG_BAUDRATE_38400,
+	AGILIS_UART_CONFIG_BAUDRATE_115200
+};
+
+// UART configuration opcodes
+enum {
+   AGILIS_UART_CONFIG_SET_BAUDRATE,  // configure baud rate
+   AGILIS_UART_CONFIG_SET_MODE      // configure RS232/422/485 mode
+};
+
+
+// UART 0 port
+void AgilisUart0Init(UINT8 comMode);
+AgilisDriverDescriptor_t *AgilisUart0Open(rom char *name);
+UINT16 AgilisUart0Ioctl(void *pData, UINT16 u16Size);
+UINT16 AgilisUart0Read(void *pData, UINT16 u16Size);
+UINT16 AgilisUart0Write(void *pData, UINT16 u16Size);
+UINT16 AgilisUart0Close(void);
+UINT16 AgilisUart0ErrorReport(void *pData, UINT16 u16Size);
+
+// UART 1 port
+void AgilisUart1Init(UINT8 comMode);
+AgilisDriverDescriptor_t *AgilisUart1Open(rom char *name);
+UINT16 AgilisUart1Ioctl(void *pData, UINT16 u16Size);
+UINT16 AgilisUart1Read(void *pData, UINT16 u16Size);
+UINT16 AgilisUart1Write(void *pData, UINT16 u16Size);
+UINT16 AgilisUart1Close(void);
+UINT16 AgilisUart1ErrorReport(void *pData, UINT16 u16Size);
+
+// UART 2 port
+void AgilisUart2Init(UINT8 comMode);
+AgilisDriverDescriptor_t *AgilisUart2Open(rom char *name);
+UINT16 AgilisUart2Ioctl(void *pData, UINT16 u16Size);
+UINT16 AgilisUart2Read(void *pData, UINT16 u16Size);
+UINT16 AgilisUart2Write(void *pData, UINT16 u16Size);
+UINT16 AgilisUart2Close(void);
+UINT16 AgilisUart2ErrorReport(void *pData, UINT16 u16Size);
+
+// UART 3 port
+void AgilisUart3Init(UINT8 comMode);
+AgilisDriverDescriptor_t *AgilisUart3Open(rom char *name);
+UINT16 AgilisUart3Ioctl(void *pData, UINT16 u16Size);
+UINT16 AgilisUart3Read(void *pData, UINT16 u16Size);
+UINT16 AgilisUart3Write(void *pData, UINT16 u16Size);
+UINT16 AgilisUart3Close(void);
+UINT16 AgilisUart3ErrorReport(void *pData, UINT16 u16Size);
+
+// UART 4 port
+void AgilisUart4Init(UINT8 comMode);
+AgilisDriverDescriptor_t *AgilisUart4Open(rom char *name);
+UINT16 AgilisUart4Ioctl(void *pData, UINT16 u16Size);
+UINT16 AgilisUart4Read(void *pData, UINT16 u16Size);
+UINT16 AgilisUart4Write(void *pData, UINT16 u16Size);
+UINT16 AgilisUart4Close(void);
+UINT16 AgilisUart4ErrorReport(void *pData, UINT16 u16Size);
+
+void AgilisUartTestWrite(rom char* pUartName, rom char *pData);
+void AgilisUartTestRead(rom char* pUartName);
+
+
+#endif // _AGILISUART_H_
+

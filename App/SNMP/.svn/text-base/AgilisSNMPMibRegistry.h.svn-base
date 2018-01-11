@@ -1,0 +1,71 @@
+/* This file consists of all the command table implementation */
+
+#if defined STACK_USE_SNMP_SERVER
+
+typedef BOOL (*Agilis_CMD_Tbl_fptr_t) (SNMP_INDEX ,BYTE*, SNMP_VAL *);
+
+
+typedef struct cmd_tbl_block_s
+  {
+	  char param_id;
+	  Agilis_CMD_Tbl_fptr_t  fptr_get;
+      Agilis_CMD_Tbl_fptr_t  fptr_set;
+  }SNMP_cmd_tbl_block_t;
+
+ 
+#ifdef DEFINE_SNMP_GLOBAL_VAR 
+ 
+ #define CMD_TBL_SIZE_MAX  (sizeof(SNMP_cmd_tbl)/sizeof(SNMP_cmd_tbl_block_t))
+
+ #define SEARCH_INDEX(var,i)  {while((!(SNMP_cmd_tbl[i].param_id == var)) && (i < CMD_TBL_SIZE_MAX)){i++;}}
+ //&& (i < CMD_TBL_SIZE_MAX)
+ #pragma udata gpr8
+const SNMP_cmd_tbl_block_t SNMP_cmd_tbl[]=
+	{
+/***************************************TRAPINFO**********************************/
+		{TRAP_RECEIVER_ID,		  &Agilissnmp_get_trap_resp	,	  		 NULL},
+		{TRAP_COMMUNITY,		  &Agilissnmp_get_trap_resp	,	  		 NULL},
+		{BUC_DEVICEID,            &Agilissnmpll_getBUCdeviceID,          NULL},
+		{BUC_PARTNUM,             &Agilissnmpll_getBUCPartNo,            NULL},
+		{BUC_SERIALNUM,           &Agilissnmpll_getBUCserialNo,          NULL},
+		{BUC_FIRMWAREVERSION,     &Agilissnmpll_getBUCfirmwareVersion,   NULL},
+		{BUC_INPUTPOWER,          &Agilissnmpll_getBUCinpower,           NULL},
+		{BUC_RFOUTPUTPOWER,       &Agilissnmpll_getBUCoutpower,          NULL},
+		{BUC_TEMPERATURE,         &Agilissnmpll_getBUCtemp,              NULL},
+		{BUC_REFLECTEDPOWER,      &Agilissnmpll_getBUCreflectpower,      NULL},
+		{BUC_RFOPERATION,         &Agilissnmpll_getBUCrfOperation,       &Agilissnmpll_SetBUCrfOperation },
+		{BUC_ATTENUATION,         &Agilissnmpll_getBUCAttn,              &Agilissnmpll_setBUCAttn        },
+		{BUC_LOLOCK,              &Agilissnmpll_alarmBUC_lolock,         NULL},
+		{BUC_POWERAMPLIFIER,      &Agilissnmpll_alarmBUC_powerAmp,       NULL},
+		{BUC_TEMPLEVEL,           &Agilissnmpll_alarmBUC_TempLevel,      NULL},
+		{BUC_FETBIAS,             &Agilissnmpll_alarmBUC_fetBias,        NULL},
+		{BUC_RFLOW,               &Agilissnmpll_alarmBUC_rfLow,          NULL},
+		{BUC_RESERVED,            &Agilissnmpll_alarmBUC_reserved,       NULL},
+		{MANAGERIP,               &Agilissnmpll_getRCUManagerip,         NULL},
+		{RCUDEVICEIP,             &Agilissnmpll_getRCUDeviceip,          NULL},
+		{RCUDEVICEIPMASK,         &Agilissnmpll_getRCUDeviceipMask,      NULL},
+		{RCUDEVICEIPGATEWAY,      &Agilissnmpll_getRCUDeviceipGateway,   NULL},
+		{RCUDEVICEID,             &Agilissnmpll_getRCUDeviceID,          NULL},
+		{RCUPARTNO,               &Agilissnmpll_getRCUPartNumber,        NULL},
+		{RCUSERIALNO,             &Agilissnmpll_getRCUSerialNumber,      NULL},
+		{RCUFIRMWAREVERSION,      &Agilissnmpll_getRCUFwVer,             NULL},
+		{TXPATHASTATUS,           &Agilissnmpll_getRCU_ALARM_status,     NULL},
+		{TXPATHBSTATUS,           &Agilissnmpll_getRCU_ALARM_status,     NULL},
+		{PS1ALARM,	  	 	      &Agilissnmpll_getRCU_ALARM_status,     NULL},
+		{PS2ALARM,	  	 	      &Agilissnmpll_getRCU_ALARM_status,     NULL},
+		{OCXO1ALARM,	  	 	  &Agilissnmpll_getRCU_ALARM_status, 	 NULL},
+		{OCXO2ALARM,	  	 	  &Agilissnmpll_getRCU_ALARM_status,	 NULL},
+		{BUC1COMMALARM,	  	 	  &Agilissnmpll_getRCU_ALARM_status,	 NULL},
+		{BUC2COMMALARM,	  	 	  &Agilissnmpll_getRCU_ALARM_status,	 NULL},
+		{RCU_SUMMARY_ALARM,	 	  &Agilissnmpll_get_RCU_ALARM_status, NULL},
+		{BUC_SUMMARY_ALARM,	 	  &Agilissnmpll_get_BUC_ALARM_status, NULL},
+		{RCUMODE,		          &Agilissnmpll_getRCUTxMode,            &Agilissnmpll_setRCUTxMode},
+		{RCUACTIVEPATH,           &Agilissnmpll_getRCUTxSwitch,          &Agilissnmpll_setRCUTxSwitch}
+//		{MONITOR_DEVICESTATE,     &Agilissnmpll_getRCUopMode,            NULL}
+		
+    };
+ #else
+ extern const SNMP_cmd_tbl_block_t SNMP_cmd_tbl[]; 
+ #endif
+
+#endif 

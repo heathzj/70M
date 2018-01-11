@@ -1,0 +1,848 @@
+#include"AgilisHTTPApp.h"
+#include "define.h"
+/****************************************************************************
+  Section:
+	Dynamic Variable Callback Functions
+  ***************************************************************************/
+
+/*****************************************************************************
+  Function:
+	void HTTPPrint_varname(void)
+	
+  Internal:
+  	See documentation in the TCP/IP Stack API or HTTP2.h for details.
+  ***************************************************************************/
+
+#if defined(STACK_USE_HTTP2_SERVER)
+
+BYTE global_char_temp[12];
+
+
+/*******************RCU Information***********************/
+
+/* Device ID */
+void HTTPPrint_ID(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+	if(RCUinfo.DeviceID[0] >= '1' && RCUinfo.DeviceID[0] <= '9')
+	{
+		global_char_temp[0] = RCUinfo.DeviceID[0];
+		global_char_temp[1] = 'R';
+	}
+	else
+	{
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+		return;
+	}
+   TCPPutString(sktHTTP, global_char_temp);
+}
+
+
+void HTTPPrint_RCUModel(void)
+{
+   TCPPutString(sktHTTP, RCUinfo.modelNo);
+}
+
+void HTTPPrint_RCUSerial(void)
+{
+   TCPPutString(sktHTTP, RCUinfo.serialNo);
+}
+
+void HTTPPrint_dhcp_status(void)
+{
+	if(AppConfig.Flags.bIsDHCPEnabled)
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"Enabled");
+	else if(!AppConfig.Flags.bIsDHCPEnabled)
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"Disabled");
+	return;
+}
+
+/* Device IP */
+void HTTPPrintIP(IP_ADDR ip)
+{
+	BYTE i;
+	memset(global_char_temp, 0, sizeof(global_char_temp));	
+	for(i = 0; i < 4u; i++)
+	{
+		if(i)
+		TCPPut(sktHTTP, '.');
+		uitoa(ip.v[i], global_char_temp);
+		TCPPutString(sktHTTP, global_char_temp);
+	}
+}
+
+void HTTPPrint_MIP(void)
+{
+	HTTPPrintIP(Manager_IP);
+	return;
+}
+
+void HTTPPrint_static_ip(void)
+{
+	if(AppConfig.Flags.bIsDHCPEnabled)
+		HTTPPrintIP(MyStaticIPAddr);
+	else
+		HTTPPrintIP(AppConfig.MyIPAddr);
+	return;
+}
+
+void HTTPPrint_config_ip(void)
+{
+	HTTPPrintIP(AppConfig.MyIPAddr);
+	return;
+}
+void HTTPPrint_config_subnet(void)
+{
+	HTTPPrintIP(AppConfig.MyMask);
+	return;
+}
+void HTTPPrint_config_gw(void)
+{
+	HTTPPrintIP(AppConfig.MyGateway);
+	return;
+}
+/* RCU Firmware Version */
+void HTTPPrint_RCUfwver(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+	memcpy((void*)global_char_temp,(void*) RCUinfo.firmwareVersion, sizeof(RCUinfo.firmwareVersion));
+	TCPPutString(sktHTTP, global_char_temp);
+}
+
+void HTTPPrint_comMode(void)
+{
+	if(RCUinfo.comMode == RS485)
+	{
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"RS485");
+	}
+	else if(RCUinfo.comMode == RS232)
+	{
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"RS232");
+	}
+	else
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"???");
+return;
+}
+/****************END OF RCU Information*******************/
+
+/*******************BUC1 Information***********************/
+void HTTPPrint_buc1id(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+	if(BUCinfo[0].info.deviceID[2] == '1')
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"001");
+	else if(BUCinfo[0].info.deviceID[2] == '2')
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"002");
+	else
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"???");
+}
+
+void HTTPPrint_buc1Model(void)
+{
+   TCPPutString(sktHTTP, BUCinfo[0].info.modelNo);
+}
+void HTTPPrint_buc1Serial(void)
+{
+   TCPPutString(sktHTTP, BUCinfo[0].info.serialNo);
+}
+void HTTPPrint_buc1fwver(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+	memcpy((void*)global_char_temp,(void*) BUCinfo[0].info.firmwareVersion, sizeof(BUCinfo[0].info.firmwareVersion));
+	TCPPutString(sktHTTP, global_char_temp);
+}
+
+/****************END OF BUC1 Information*******************/
+
+
+/*******************BUC2 Information***********************/
+
+void HTTPPrint_buc2id(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+	if(BUCinfo[1].info.deviceID[2] == '1')
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"001");
+	else if(BUCinfo[1].info.deviceID[2] == '2')
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"002");
+	else
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"???");
+}
+
+void HTTPPrint_buc2Model(void)
+{
+   TCPPutString(sktHTTP, BUCinfo[1].info.modelNo);
+}
+void HTTPPrint_buc2Serial(void)
+{
+   TCPPutString(sktHTTP, BUCinfo[1].info.serialNo);
+}
+void HTTPPrint_buc2fwver(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+	memcpy((void*)global_char_temp,(void*) BUCinfo[1].info.firmwareVersion, sizeof(BUCinfo[1].info.firmwareVersion));
+	TCPPutString(sktHTTP, global_char_temp);
+}
+/****************END OF BUC2 Information*******************/
+
+
+/**********************Status Page*************************/
+void HTTPPrint_pathselect(void)
+{
+   if(RCUinfo.txPath_selection == 1)
+   {
+	    TCPPutROMString(sktHTTP, (ROM BYTE*)"PathA");
+   }
+   else if(RCUinfo.txPath_selection == 2)
+   {
+    	TCPPutROMString(sktHTTP, (ROM BYTE*)"PathB");
+   }
+   else
+   {
+    	TCPPutROMString(sktHTTP, (ROM BYTE*)"???");
+   }
+}
+
+void HTTPPrint_swmode(void)
+{
+    BYTE Value[8];
+   if(RCUinfo.opmode==1)
+   {
+    	TCPPutROMString(sktHTTP, (ROM BYTE*)"Manual");
+   }
+
+   else if (RCUinfo.opmode==0)
+   {
+    	TCPPutROMString(sktHTTP, (ROM BYTE*)"Auto");
+   }
+}
+
+void HTTPPrint_buc1Outpower(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+	if((BUCinfo[0].status.outpower== 0xFF )||
+	   (BUCinfo[0].info.firmwareVersion[1] == '?'))
+	{
+   		TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+		return;
+	}
+    else
+	if(BUCinfo[0].info.BUC_model == KUBAND)
+	{
+		if(BUCinfo[0].status.outpower_sign_sspa == '<')
+		{
+			//global_char_temp[0] = '<';
+			strcpypgm2ram(global_char_temp,"&lt;");
+	   		uitoa(BUCinfo[0].status.outpower, (BYTE*)global_char_temp+4);
+		}
+		else if(BUCinfo[0].status.outpower_sign_sspa == '>')
+		{
+			global_char_temp[0] = '>';
+	   		uitoa(BUCinfo[0].status.outpower, (BYTE*)global_char_temp+1);
+		}
+		else
+    		uitoa(BUCinfo[0].status.outpower, (BYTE*)global_char_temp);
+	}
+	else
+	{
+		if(BUCinfo[0].status.outpower_sign == '<')
+		{
+			strcpypgm2ram(global_char_temp,"&lt;");
+	   		uitoa(BUCinfo[0].status.outpower, (BYTE*)global_char_temp+4);
+		}
+		else
+	   		uitoa(BUCinfo[0].status.outpower, (BYTE*)global_char_temp);
+	}
+
+	TCPPutString(sktHTTP, global_char_temp);
+}
+
+
+void HTTPPrint_maxattn(WORD buc_num)
+{
+	if(BUCinfo[buc_num-1].info.BUC_model == CBAND)
+	{
+   		TCPPutROMString(sktHTTP, (ROM BYTE*)"15");
+	}
+	else
+	if(BUCinfo[buc_num-1].info.BUC_model == KUBAND)
+	{
+   		TCPPutROMString(sktHTTP, (ROM BYTE*)"20");
+	}
+	else
+	if( (BUCinfo[buc_num-1].info.BUC_model == UNKNOWNBUC) ||
+		(BUCinfo[buc_num-1].info.max_attn  == 0xFF)    ||
+		(BUCinfo[buc_num-1].info.firmwareVersion[1] == '?') )
+	{
+   		TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+	}
+}
+
+void HTTPPrint_buc1Atten(void)
+{
+	if((BUCinfo[0].operation.usrSetAttn==0xFF)||
+	   (BUCinfo[0].info.firmwareVersion[1] == '?'))
+	{
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+		return;
+	}
+	else
+	{
+		Agilis_util_convert_ascii ((DWORD)(BUCinfo[0].operation.usrSetAttn*10ul));
+		TCPPutString(sktHTTP, global_char_temp);
+	}
+}
+
+
+void HTTPPrint_buc1rfop(void)
+{
+  if(BUCinfo[0].info.firmwareVersion[1] == '?')
+  {
+	 TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+	 return;
+  }
+  if(BUCinfo[0].operation.rfOperation == 0)
+  {
+	 TCPPutROMString(sktHTTP, (ROM BYTE*)"OFF");
+  }
+  else
+  {
+	 TCPPutROMString(sktHTTP, (ROM BYTE*)"ON");
+  }
+}
+
+void HTTPPrint_buc2rfop(void)
+{
+  if(BUCinfo[1].info.firmwareVersion[1] == '?')
+  {
+	 TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+	 return;
+  }
+
+  if(BUCinfo[1].operation.rfOperation == 0)
+  {
+	 TCPPutROMString(sktHTTP, (ROM BYTE*)"OFF");
+  }
+  else
+  {
+	 TCPPutROMString(sktHTTP, (ROM BYTE*)"ON");
+  }
+}
+
+void HTTPPrint_buc1temp(void)
+{
+   memset(global_char_temp, 0, sizeof(global_char_temp));
+
+	if((BUCinfo[0].status.temp ==0xFF)||
+	   (BUCinfo[0].info.firmwareVersion[1] == '?'))
+	{
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+		return;	
+	}
+	else if (BUCinfo[0].status.temp >= 0)
+	{
+	    uitoa(BUCinfo[0].status.temp, (BYTE*)global_char_temp);
+	}
+	else
+	{
+   		global_char_temp[0]='-';
+   		uitoa(BUCinfo[0].status.temp*(-1), (BYTE*)(global_char_temp+1));
+	} 
+  TCPPutString(sktHTTP, global_char_temp);
+}
+
+void HTTPPrint_buc2Outpower(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+	if((BUCinfo[1].status.outpower== 0xFF )||
+	   (BUCinfo[1].info.firmwareVersion[1] == '?'))
+	{
+   		TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+		return;
+	}
+    else 
+	if(BUCinfo[1].info.BUC_model == KUBAND)
+	{
+		if(BUCinfo[1].status.outpower_sign_sspa == '<')
+		{
+			strcpypgm2ram(global_char_temp,"&lt;");
+	   		uitoa(BUCinfo[1].status.outpower, (BYTE*)global_char_temp+4);
+		}
+		else if(BUCinfo[1].status.outpower_sign_sspa == '>')
+		{
+			global_char_temp[0] = '>';
+	   		uitoa(BUCinfo[1].status.outpower, (BYTE*)global_char_temp+1);
+		}
+		else
+    		uitoa(BUCinfo[1].status.outpower, (BYTE*)global_char_temp);
+	}
+	else
+	{
+		if(BUCinfo[1].status.outpower_sign == '<')
+		{
+			strcpypgm2ram(global_char_temp,"&lt;");
+	   		uitoa(BUCinfo[1].status.outpower, (BYTE*)global_char_temp+4);
+		}
+		else
+	   		uitoa(BUCinfo[1].status.outpower, (BYTE*)global_char_temp);
+	}
+	TCPPutString(sktHTTP, global_char_temp);
+}
+
+
+void HTTPPrint_buc2Atten(void)
+{
+	if((BUCinfo[1].operation.usrSetAttn==0xFF)||
+	   (BUCinfo[1].info.firmwareVersion[1] == '?'))
+	{
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+		return;
+	}
+	else
+	{
+		Agilis_util_convert_ascii ((DWORD)(BUCinfo[1].operation.usrSetAttn*10ul));
+		TCPPutString(sktHTTP, global_char_temp);
+	}
+}
+
+
+void HTTPPrint_buc2temp(void)
+{
+	memset(global_char_temp, 0, sizeof(global_char_temp));
+
+	if((BUCinfo[1].status.temp ==0xFF)||
+	   (BUCinfo[1].info.firmwareVersion[1] == '?'))
+	{
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"??");
+		return;	
+	}
+	else if (BUCinfo[1].status.temp >= 0)
+	{
+	    uitoa(BUCinfo[1].status.temp, (BYTE*)global_char_temp);
+	}
+	else
+	{
+   		global_char_temp[0]='-';
+   		uitoa(BUCinfo[1].status.temp*(-1), (BYTE*)(global_char_temp+1));
+	} 
+  TCPPutString(sktHTTP, global_char_temp);
+}
+
+/******************END OF Status Page**********************/
+
+
+
+/**********************Config Page*************************/
+
+void HTTPPrint_comModeSelected(WORD state)
+{
+	if((state && (RCUinfo.comMode == RS485)) || (!state && (RCUinfo.comMode == RS232)))
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"SELECTED");
+	return;
+}
+
+void HTTPPrint_config_dhcpchecked(void)
+{
+	if(AppConfig.Flags.bIsDHCPEnabled)
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"checked");
+	else if(!AppConfig.Flags.bIsDHCPEnabled)
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"unchecked");
+	return;
+}
+
+void HTTPPrint_swmodeSelected(WORD state)
+{
+	// Print output if TRUE and ON or if FALSE and OFF
+	if((state && RCUinfo.opmode) || (!state && !RCUinfo.opmode))
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"SELECTED");
+	return;
+
+}
+
+void HTTPPrint_pathSelected(WORD state)
+{
+	// Print output if TRUE and ON or if FALSE and OFF
+	if((state && (RCUinfo.txPath_selection==1)) || (!state && (RCUinfo.txPath_selection==2)))
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"SELECTED");
+	return;
+
+}
+
+void HTTPPrint_buc1rfSelected(WORD state)
+{
+	// Print output if TRUE and ON or if FALSE and OFF
+	if((state && BUCinfo[0].operation.rfOperation) || (!state && !BUCinfo[0].operation.rfOperation))
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"SELECTED");
+	return;
+}
+
+void HTTPPrint_buc2rfSelected(WORD state)
+{
+	// Print output if TRUE and ON or if FALSE and OFF
+	if((state && BUCinfo[1].operation.rfOperation) || (!state && !BUCinfo[1].operation.rfOperation))
+		TCPPutROMString(sktHTTP, (ROM BYTE*)"SELECTED");
+	return;
+}
+
+
+/*******************END OF Config Page*************************/
+
+void HTTPPrint_setpasscolor(void)
+{
+//    BYTE Temp[8] = {0};
+memset(global_char_temp	, 0, sizeof(global_char_temp));
+
+    if(webpassinfo.setpasscolor==passred)
+		strcpypgm2ram(global_char_temp,"red");
+    else if(webpassinfo.setpasscolor==passgreen)
+		strcpypgm2ram(global_char_temp,"green");
+		
+    TCPPutString(sktHTTP, global_char_temp);
+}
+
+
+void HTTPPrint_setpass(void)
+{
+    BYTE Temp[30] = {0};
+	
+    switch (webpassinfo.setpass)
+	{
+     case successful:
+		strcpypgm2ram(Temp,"Set Successful.");
+     break;
+	
+     case invalid_charactor:
+		strcpypgm2ram(Temp,"Invalid character contained.");
+     break;
+
+     case too_long:
+		strcpypgm2ram(Temp,"Password too long.");
+     break;
+
+     case old_password_wrong:
+		strcpypgm2ram(Temp,"Old password wrong.");
+     break;
+
+     case repeat_password_different:
+		strcpypgm2ram(Temp,"Repeat password is different.");
+     break;
+
+	 default:
+		strcpypgm2ram(Temp,"   \t");
+     break;
+
+	}
+	
+    TCPPutString(sktHTTP, Temp);
+}
+
+
+
+/******************* Alarms *************************/
+void HTTPPrint_pathAalarm(void)
+{
+	int num;
+	memset(global_char_temp	, 0, sizeof(global_char_temp));
+   	num =(RCUinfo.txPathA_alarm==0)?0:1;
+	uitoa(num, (BYTE*)global_char_temp);
+
+    TCPPutString(sktHTTP, global_char_temp);
+}
+
+void HTTPPrint_pathBalarm(void)
+{
+    BYTE Value[8] = {0};
+		int num;
+		num =(RCUinfo.txPathB_alarm==0)?0:1;
+		uitoa(num, (BYTE*)Value);
+		
+    TCPPutString(sktHTTP, Value);
+}
+
+void HTTPPrint_PS1alarm(void)
+{
+	BYTE Value[8] = {0};
+	int num;
+
+	num =(RCUinfo.ps1_alarm==0)?0:1;
+	uitoa(num, (BYTE*)Value);
+	TCPPutString(sktHTTP, Value);
+}
+
+
+void HTTPPrint_PS2alarm(void)
+{
+	BYTE Value[8] = {0};
+	int num;
+	num =(RCUinfo.ps2_alarm==0)?0:1;
+	uitoa(num, (BYTE*)Value);
+	TCPPutString(sktHTTP, Value);
+}
+
+void HTTPPrint_OCXO1alarm(void)
+{
+	BYTE Value[5] = {0};
+	int num;
+	num =(RCUinfo.ocxo1_alarm==0)?0:1;
+	uitoa(num, (BYTE*)Value);
+	TCPPutString(sktHTTP, Value);
+}
+
+
+void HTTPPrint_OCXO2alarm(void)
+{
+	BYTE Value[5] = {0};
+	int num;
+	num =(RCUinfo.ocxo2_alarm==0)?0:1;
+	uitoa(num, (BYTE*)Value);
+	TCPPutString(sktHTTP, Value);
+}
+
+void HTTPPrint_buc1Comalarm(void)
+{
+	BYTE Value[5] = {0};
+	int num;
+	num = (BUCinfo[0].info.firmwareVersion[1] == '?')?0:1;
+	uitoa(num, (BYTE*)Value);
+	TCPPutString(sktHTTP, Value);
+}
+
+void HTTPPrint_buc2Comalarm(void)
+{
+	BYTE Value[5] = {0};
+	int num;
+	num = (BUCinfo[1].info.firmwareVersion[1] == '?')?0:1;
+	uitoa(num, (BYTE*)Value);
+	TCPPutString(sktHTTP, Value);
+}
+
+void HTTPPrint_led(WORD num)
+{
+   BYTE Value[5] = {0};
+
+	switch(num)
+	{
+		case 0:
+            num = 3; //N.A
+			break;
+		case 1:
+		//	num = BUCinfo[0].alarm.fan;
+           num = 3; //N/A
+			break;
+		case 2:
+         if(BUCinfo[0].info.BUC_model==KUBAND)
+			num = (BUCinfo[0].alarm.templvl_sspa == 0)?0:1;
+		 else
+			num = (BUCinfo[0].alarm.templvl==0)?0:1;
+        	break;
+		case 3:
+         if(BUCinfo[0].info.BUC_model==KUBAND)
+			num = BUCinfo[0].alarm.rfon_sspa;
+		 else
+			num = BUCinfo[0].alarm.rfon;
+			break;
+		case 4:
+       	 if(BUCinfo[0].info.BUC_model==KUBAND)
+			num = (BUCinfo[0].alarm.rflow_sspa==0)?2:1;
+         else
+			num = (BUCinfo[0].alarm.rflow==0)?2:1;
+		   break;
+		case 5:
+           if(BUCinfo[0].info.BUC_model==CBAND)  
+            num = BUCinfo[0].alarm.refclk;
+           else
+            num =3;//N/A
+			break;
+		case 6:
+			//num = BUCinfo[0].alarm.fetbias;
+            num =3;//N/A
+			break;
+		case 7:
+          if((BUCinfo[0].info.BUC_model==KUBAND)||(BUCinfo[0].info.BUC_model==CBAND))
+			num = BUCinfo[0].alarm.Lo;
+          else
+            num = 3;
+			break;
+
+		default:
+			num = 0;
+	}
+
+	if(BUCinfo[0].info.firmwareVersion[1] == '?')
+		num = 3;
+
+    uitoa(num, (BYTE*)Value);
+
+   	TCPPutString(sktHTTP, Value);
+	return;
+}
+
+void HTTPPrint_ned(WORD num)
+{
+   BYTE Value[5] = {0};
+	switch(num)
+	{
+		case 0:
+			//num = LED0_IO;
+            num = 3; //N.A
+			break;
+		case 1:
+		//	num = BUCinfo[0].alarm.fan;
+           num = 3; //N/A
+			break;
+		case 2:
+         if(BUCinfo[1].info.BUC_model==KUBAND)
+			num = (BUCinfo[1].alarm.templvl_sspa == 0)?0:1;
+		 else
+			num = (BUCinfo[1].alarm.templvl == 0)?0:1;
+        	break;
+		case 3:
+          if(BUCinfo[1].info.BUC_model==KUBAND)
+			num = BUCinfo[1].alarm.rfon_sspa;
+          else
+			num = BUCinfo[1].alarm.rfon;
+			break;
+		case 4:
+           if(BUCinfo[1].info.BUC_model==KUBAND)
+			  num = (BUCinfo[1].alarm.rflow_sspa == 0)?2:1;
+           else
+			  num = (BUCinfo[1].alarm.rflow == 0)?2:1;
+		   break;
+		case 5:
+           if(BUCinfo[1].info.BUC_model==CBAND)  
+            num = BUCinfo[1].alarm.refclk;
+           else
+            num =3;//N/A
+			break;
+		case 6:
+			//num = BUCinfo[0].alarm.fetbias;
+            num =3;//N/A
+			break;
+		case 7:
+          if((BUCinfo[1].info.BUC_model==KUBAND)||(BUCinfo[1].info.BUC_model==CBAND))
+			num = BUCinfo[1].alarm.Lo;
+          else
+            num = 3;
+			break;
+
+		default:
+			num = 0;
+	}
+
+	if(BUCinfo[1].info.firmwareVersion[1] == '?')
+		num = 3;
+
+    uitoa(num, (BYTE*)Value);
+    TCPPutString(sktHTTP, Value);
+	return;
+}
+
+
+/******************* END Alarms *************************/
+/*------------------------------------------------------*/
+/******************* END Alarms *************************/
+
+
+void HTTPPrint_maf(void)
+{
+  BYTE Out[4] = {0};
+  Out[0]=Int2Hex(AppConfig.MyMACAddr.v[4]/16);
+  Out[1]=Int2Hex(AppConfig.MyMACAddr.v[4]%16);
+  //uitoa(mac5,(BYTE*)(Out));
+  TCPPutString(sktHTTP, Out);
+}
+
+
+void HTTPPrint_mas(void)
+{
+  BYTE Out[4] = {0};
+  Out[0]=Int2Hex(AppConfig.MyMACAddr.v[5]/16);
+  Out[1]=Int2Hex(AppConfig.MyMACAddr.v[5]%16);
+  //uitoa(mac6,(BYTE*)(Out));
+  TCPPutString(sktHTTP, Out);
+}
+
+
+void HTTPPrint_Ostart(void)
+{
+/*
+    BYTE Out[8] = {0};
+    uitoa(rfout_offset,(BYTE*)(Out));
+    TCPPutString(sktHTTP, Out);
+*/
+}
+void HTTPPrint_Oend(void)
+{
+/*
+     BYTE Out[8] = {0};
+    uitoa(rfout_offset+rfout_num,(BYTE*)(Out));
+     TCPPutString(sktHTTP, Out);
+*/
+}
+
+void HTTPPrint_ctemp(void)
+{
+/*
+  BYTE Out[8] = {0};
+	   Out[0] = '0';
+  uitoa(sspa_temp_shutdown_thd_degree,(BYTE*)(Out));
+//todo  uitoa(ctemp,(BYTE*)(Out));
+  TCPPutString(sktHTTP, Out);
+*/
+}
+
+void HTTPPrint_config_mac(void)
+{
+	BYTE i;
+	
+	if(TCPIsPutReady(sktHTTP) < 18u)
+	{//need 17 bytes to write a MAC
+		curHTTP.callbackPos = 0x01;
+		return;
+	}	
+	
+	// Write each byte
+	for(i = 0; i < 6u; i++)
+	{
+		if(i)
+			TCPPut(sktHTTP, ':');
+		TCPPut(sktHTTP, btohexa_high(AppConfig.MyMACAddr.v[i]));
+		TCPPut(sktHTTP, btohexa_low(AppConfig.MyMACAddr.v[i]));
+	}
+	
+	// Indicate that we're done
+	curHTTP.callbackPos = 0x00;
+	return;
+}
+
+
+
+
+// SNMP Read communities configuration page
+void HTTPPrint_read_comm(WORD num)
+{
+	#if defined(STACK_USE_SNMP_SERVER)
+	// Ensure no one tries to read illegal memory addresses by specifying 
+	// illegal num values.
+	if(num >= SNMP_MAX_COMMUNITY_SUPPORT)
+		return;
+		
+	// Send proper string
+	TCPPutString(sktHTTP, AppConfig.readCommunity[num]);
+	#endif
+}
+
+// SNMP Write communities configuration page
+void HTTPPrint_write_comm(WORD num)
+{
+	#if defined(STACK_USE_SNMP_SERVER)
+	// Ensure no one tries to read illegal memory addresses by specifying 
+	// illegal num values.
+	if(num >= SNMP_MAX_COMMUNITY_SUPPORT)
+		return;
+		
+	// Send proper string
+	TCPPutString(sktHTTP, AppConfig.writeCommunity[num]);
+	#endif
+}
+
+#endif

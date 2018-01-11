@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/projects/ped-software/!svn/ver/8813/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main
+END
+RCUT.tagsrc
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/projects/ped-software/!svn/ver/8730/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/RCUT.tagsrc
+END
+define.h
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/projects/ped-software/!svn/ver/8813/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/define.h
+END
+RCUT.mcw
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/projects/ped-software/!svn/ver/8813/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/RCUT.mcw
+END
+Main.c
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/projects/ped-software/!svn/ver/8788/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/Main.c
+END
+c018i.c
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/c018i.c
+END
+Global.h
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/projects/ped-software/!svn/ver/8730/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/Global.h
+END
+RCUT.mptags
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/projects/ped-software/!svn/ver/8813/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/RCUT.mptags
+END
+Main.h
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/Main.h
+END
+NMakefile
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/projects/ped-software/!svn/ver/8813/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/NMakefile
+END
+RCUT.mcp
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/projects/ped-software/!svn/ver/8718/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/RCUT.mcp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/projects/ped-software/!svn/ver/8813/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/Makefile
+END
+RCUT.mcs
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/projects/ped-software/!svn/ver/8730/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Main/RCUT.mcs
+END

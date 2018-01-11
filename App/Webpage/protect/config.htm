@@ -1,0 +1,321 @@
+~inc:header.inc~
+<title>Configuration</title>
+  <tr>
+  	<td>
+		<div class="pagetab" style="height:605px" >
+			
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="center" colspan="3" height="42" bgcolor="#aaa8a8"><center>INTERFACE CONFIGURATION</center><div id="pwd"><a href="/password.htm">Change Password</a></div></td>
+						</tr>
+					</table>
+					<table border="0" width="100%">
+						<tr>
+							<td align="left" colspan="3" height="42" bgcolor="#e2e2e2">
+								<center>																	
+									<table border="0" cellpadding="2">
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>Device IP </b></td>
+											<td><input type=text size=20 id="DIP" name="DIP" value="~static_ip~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>Device Subnet Mask </b></td>
+											<td><input type=text size=20 id="subnet" name="subnet" value="~config_subnet~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+										<FORM METHOD=GET action=config.htm>
+										<tr>
+											<td align="left"><b>Device Gateway </b></td>
+											<td><input type=text size=20 id="gateway" name="gateway" value="~config_gw~"></td>
+											<td><input class="stylishButton" type="submit" value="Set "></td>
+										</tr>
+										</FORM>
+									</table>
+									<div ><font color="blue"><b><i>Caution: Setting a wrong IP here may cause the Device to be not accessible.</i></b></font></div>
+								</center>
+							</td>
+						</tr>
+					</table>
+					
+					
+					<table border="0" width="100%">
+					<tr valign="top">
+						<td align="center" bgcolor="#e2e2e2" width="25%" >
+						<table border="0" width="100%" cellpadding="2">									
+							<tr>
+								<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><b>Up Converter</b></a></center></td>
+							</tr>
+						</table>
+						
+						<table border="0" width="100%">
+						<tr>
+							<td align="left" colspan="3" height="42" bgcolor="#e2e2e2">
+								<center>
+								
+								<table border="0" cellpadding="2">
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Output Frequency </b></td>
+											<td><input type=text size=20 id="converterarffreq" name="converterarffreq" value="~converterarffreq~"><b> MHz</b></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>
+
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Attenuation/Power </b></td>
+											<td><input type=text size=20 id="converteraatten" name="converteraatten" value="~converteraatten~"><b> dB/dBm</b></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>
+										
+<!-- 										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Up Converter Output Power </b></td>
+											<td><input type=text size=20 id="outputpowera" name="outputpowera" value="~outputpowera~"><b> dBm</b></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>	 -->
+                                <!--
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Set Power </b></td>
+											<td><input type=text size=20 id="setpowera" name="setpowera" value="~setpowera~"><b> dBm</b></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>	
+								   -->		
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>ALC </b></td>
+											<td align="left"><select align="left" name="ALCa"><option ~ALCaSelected(TRUE)~>ON </option><option ~ALCaSelected(FALSE)~>OFF </option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>	
+                             
+                                
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>RF</b></td>
+											<td align="left"><select align="left" name="Mutea"><option ~MuteaSelected(TRUE)~>Enabled </option><option ~MuteaSelected(FALSE)~>Disabled </option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>											
+
+									</table>	
+									
+								</center>																	
+							</td>
+						</tr>
+						</table>
+						</td>
+							
+                            
+                    <!--zj        
+						<td align="center" bgcolor="#e2e2e2" width="25%" >
+						<table border="0" width="100%" cellpadding="2">									
+							<tr>
+								<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><b>Down Converter</b></a></center></td>
+							</tr>
+						</table>
+						
+						<table border="0" width="100%">
+						<tr>
+							<td align="left" colspan="3" height="42" bgcolor="#e2e2e2">
+								<center>
+								
+								<table border="0" cellpadding="2">
+
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Input Frequency </b></td>
+											<td><input type=text size=20 id="converterbrffreq" name="converterbrffreq" value="~converterbrffreq~"><b> MHz</b></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>
+
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Attenuation </b></td>
+											<td><input type=text size=20 id="converterbatten" name="converterbatten" value="~converterbatten~"><b> dB</b></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>
+								--zj>
+                                
+                                    <!-- 
+                                         <FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Down Converter Output Power </b></td>
+											<td><input type=text size=20 id="outputpowerb" name="outputpowerb" value="~outputpowerb~"><b> dBm</b></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM> 
+                                    -->
+								<!--		
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Set Power </b></td>
+											<td><input type=text size=20 id="setpowerb" name="setpowerb" value="~setpowerb~"><b> dBm</b></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>
+										
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>ALC </b></td>
+											<!--<td><input type=text size=20 id="ALCb" name="ALCb" value="~ALCb~"></td>-->
+                                            
+                            <!--                
+											<td align="left"><select align="left" name="ALCb"><option ~ALCbSelected(TRUE)~>ON </option><option ~ALCbSelected(FALSE)~>OFF </option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>											
+										
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>RF</b></td>
+											<td align="left"><select align="left" name="Muteb"><option ~MutebSelected(TRUE)~>Enabled </option><option ~MutebSelected(FALSE)~>Disabled </option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>												
+										
+									</table>	
+									
+								</center>																	
+							</td>
+						</tr>
+						</table>
+						</td>
+                        
+                        -->
+
+                        <!--
+						<td align="center" bgcolor="#e2e2e2" width="25%" >
+						<table border="0" width="100%" cellpadding="2">									
+							<tr>
+								<td class="tableHeader" align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><b>DC Controller</b></a></center></td>
+							</tr>
+						</table>
+						
+						<table border="0" width="100%">
+						<tr>
+							<td align="left" colspan="3" height="42" bgcolor="#e2e2e2">
+								<center>
+								
+								<table border="0" cellpadding="2">
+
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>LNB DC </b></td>
+											<td align="left"><select align="left" name="18Vctrl"><option ~DC18VSelected(TRUE)~>ON </option><option ~DC18VSelected(FALSE)~>OFF </option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>
+										
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>BUC DC </b></td>
+											<td align="left"><select align="left" name="24Vctrl"><option ~DC24VSelected(TRUE)~>ON </option><option ~DC24VSelected(FALSE)~>OFF </option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>										
+
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>LNB REF </b></td>
+											<td align="left"><select align="left" name="LNBREF"><option ~LNBREFSelected(TRUE)~>ON </option><option ~LNBREFSelected(FALSE)~>OFF </option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>
+										
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>BUC REF </b></td>
+											<td align="left"><select align="left" name="BUCREF"><option ~BUCREFSelected(TRUE)~>ON </option><option ~BUCREFSelected(FALSE)~>OFF </option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>	
+
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Clear BUC OverCurrent</b></td>
+											<td align="left"><select align="left" name="ClearBUCIAlm"><option ~ClearBUCIAlm(TRUE)~>Clear</option></select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>	
+										
+										<FORM METHOD=GET action=config.htm>
+											<tr>
+											<td align="left"><b>Clear LNB OverCurrent</b></td>
+											<td align="left"><select align="left" name="ClearLNBIAlm"><option ~ClearLNBIAlm(TRUE)~>Clear </option><</select></td>
+											<td align="left" ><input class="stylishButton" type="submit" value="Set "></td>
+											</tr>
+										</FORM>											
+										
+									</table>	
+									
+								</center>																	
+							</td>	
+						</tr>
+						</table>
+						</td>
+						
+						-->
+							
+							
+						</tr>
+						</table>	
+						
+						
+					
+
+			
+				
+
+					
+
+						
+						</table>											
+						
+						
+				</table>
+				
+				
+
+	
+			
+				
+						
+					<table border="0" width="100%">
+						<tr>
+							<td align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><a href="config.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>					
+				</div>
+~inc:footer.inc~
+
+<script type="text/javascript">
+
+function dhcpClicked() 
+{
+	checkDHCP();
+}
+
+function modesel()
+{
+	checkMODE();
+}
+
+</script>
+</div>
+</td>
+</tr>
+	</body>
+</html>

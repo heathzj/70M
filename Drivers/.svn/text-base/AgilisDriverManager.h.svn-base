@@ -1,0 +1,48 @@
+/*
+ * Copyright (C) 2012  ST Electronics (Satcom & Sensor Systems) Pte Ltd 
+ *
+ * Agilis Driver Manager Header
+ *
+ */
+
+#ifndef _DEV_H_
+#define _DEV_H_
+
+#include "GenericTypeDefs.h"
+
+#define AGILISDRIVERMANAGER_MAX_NUM_DEVICES    6
+
+// Agilis device driver descriptor
+typedef struct _AgilisDriverDescriptor_t {
+   rom char *pDevName;
+   struct _AgilisDriverDescriptor_t *(*Open) (rom char *pDevName);
+   //WORD (*Ioctl)(void *pData, UINT16 u16Size);
+   WORD (*Read) (void *pData, UINT16 u16Size);
+   WORD (*Write)(void *pData, UINT16 u16Size);
+   //WORD (*ErrorReport)(void *pData, UINT16 u16Size);
+   //WORD (*Close)(void);
+} AgilisDriverDescriptor_t;
+
+// device ioctl enum
+typedef enum {
+   AGILISDRIVERMANAGER_IOCTL_ARRIVAL,
+   AGILISDRIVERMANAGER_IOCTL_ATTACH,
+   AGILISDRIVERMANAGER_IOCTL_CONFIG,
+   AGILISDRIVERMANAGER_IOCTL_SUSPEND
+} AgilisDriverManagerIoctlOpcode_t;
+
+// device generic ioctls
+// - these are calls that must be implemented by all drivers
+typedef struct {
+   AgilisDriverManagerIoctlOpcode_t DevOp;
+   UINT32	u32Param;
+} AgilisDriverManagerIoctl_t;
+
+
+void 						AgilisDriverManagerInit(void);
+void     					AgilisDriverManagerRegister (AgilisDriverDescriptor_t *pDevTable);
+AgilisDriverDescriptor_t  *AgilisDriverManagerOpen     (rom char *name);
+UINT16	 					AgilisDriverManagerClose    (void);
+
+
+#endif /* _DEV_H_ */

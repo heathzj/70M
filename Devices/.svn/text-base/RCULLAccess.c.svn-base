@@ -1,0 +1,698 @@
+/*
+ * Copyright (C) 2012  ST Electronics (Satcom & Sensor Systems) Pte Ltd 
+ *
+ * RCU Low Level Access 
+ * 
+ */
+
+#include "define.h"
+#include "Global.h"
+#include "devadc.h"
+#include "devspi.h"
+#include "AgilisDualUART.h"
+#include "TCPIP Stack/XEEPROM.h"
+#include "tcpipconfig.h"
+#include "AgilisProtocol.h"
+#include "RCULLAccess.h"
+#include "internalADC.h"
+
+
+
+RCULLDCB_t RCU0;
+
+
+BYTE BankData[4]={0,0,0,0};
+BYTE temp1,temp2,temp3,temp4;
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: SetCPLDGPIO()
+
+DESCRIPTION: 
+    This function set CPLD GPIO value
+
+INPUT PARAMETERS: 
+    CPLD GPIO pin number
+    CPLD GPIO value
+
+RETURN:
+    None
+
+NOTES:
+06		OUT0
+07		OUT1
+08		OUT2
+09		OUT3
+10		OUT4
+11		OUT5
+12		OUT6
+13		OUT7
+14		OUT8
+15		OUT9
+17		OUT10
+18		OUT11
+19		OUT12
+20		OUT13
+21		OUT14
+22		OUT15
+-----------------------------------------------------------------------------*/
+
+void SetCPLDGPIO(unsigned char IOPin, unsigned char value)
+{
+	BYTE temp_data, dataoutput;
+
+	// 0~5 is FormC control pin
+	if (IOPin < 6)
+	{
+		// get Bank 0 data
+		dataoutput = 0x00 | BankData[0];
+		// set value 
+		if (value == 1)
+		{
+			dataoutput |= (1 << IOPin);
+			BankData[0] |= (1 << IOPin);
+		}
+		else
+		{
+			dataoutput &= ~(1 << IOPin);
+			BankData[0] &= ~(1 << IOPin);
+		}
+	}
+	// 6~11 is output pin
+	else if (IOPin < 12)
+	{
+		// get Bank 1 data
+		dataoutput = 0x40 | BankData[1];
+		// set value 
+		if (value == 1)
+		{
+			dataoutput |= (1 << (IOPin - 6));
+			BankData[1] |= (1 << (IOPin - 6));
+		}
+		else
+		{
+			dataoutput &= ~(1 << (IOPin - 6));
+			BankData[1] &= ~(1 << (IOPin - 6));
+		}
+	}
+	// 12~17 is output pin
+	else if (IOPin < 18)
+	{
+		// get Bank 2 data
+		dataoutput = 0x80 | BankData[2];
+		// set value 
+		if (value == 1)
+		{
+			dataoutput |= (1 << (IOPin - 12));
+			BankData[2] |= (1 << (IOPin - 12));
+		}
+		else
+		{
+			dataoutput &= ~(1 << (IOPin - 12));
+			BankData[2] &= ~(1 << (IOPin - 12));
+		}
+	}
+	// 18~23 is output pin
+	else if (IOPin < 24)
+	{
+		// get Bank 3 data
+		dataoutput = 0xC0 | BankData[3];
+		// set value 
+		if (value == 1)
+		{
+			dataoutput |= (1 << (IOPin - 18));
+			BankData[3] |= (1 << (IOPin - 18));
+		}
+		else
+		{
+			dataoutput &= ~(1 << (IOPin - 18));
+			BankData[3] &= ~(1 << (IOPin - 18));
+		}
+	}
+	CS_CPLD = CS_ENABLE;
+	temp_data = ReadWriteSPI2(dataoutput);
+    
+	CS_CPLD = CS_DISABLE;
+}
+
+
+void RCULLInit(void)
+{
+
+	// ... Call this after Initdata() Function or else the value could be overwrite by default value
+	BYTE byte_temp[2],temp_char;
+	BYTE i;
+
+
+	// read from EEPROM
+	for (i = 0;i < 15;i++)
+	{
+		XEEReadArray(EEADR_PartNo + (i * 2), (BYTE*)byte_temp, 2);
+		//if(	byte_temp[0] < '!' || byte_temp[0] > 'z')
+		//	byte_temp[0] = '0';
+		//if(	byte_temp[1] < '!' || byte_temp[1] > 'z' ) 
+		//	byte_temp[1] = '0';
+		temp_char =  (char)ASC2toHEX((BYTE *)byte_temp);
+		if(	temp_char < '!' || temp_char > 'z')
+			temp_char = 0;
+		RCUinfo.modelNo[i] = temp_char;
+	}
+
+	for (i = 0;i < 15;i++)
+	{
+	    XEEReadArray(EEADR_SerialNo + (i * 2), (BYTE*)byte_temp, 2);
+		//if(	byte_temp[0] < '!' || byte_temp[0] > 'z')
+		//	byte_temp[0] = '0';
+		//if(	byte_temp[1] < '!' || byte_temp[1] > 'z' ) 
+		//	byte_temp[1] = '0';
+		temp_char =  (char)ASC2toHEX((BYTE *)byte_temp);
+		if(	temp_char < '!' || temp_char > 'z')
+			temp_char = 0;
+		RCUinfo.serialNo[i] = temp_char;
+	}
+
+	XEEReadArray(EEADR_RCU_Enable_Option, (BYTE *)&i, 1);
+	RCUinfo.EnableOption = i;
+
+	XEEReadArray(EEADR_RCU_Switch1_Mode,(BYTE*)RCU0.current_mode, 2);
+
+	// if switch mode is invalid, set to auto mode
+	if(	RCU0.current_mode[0] != AGILIS_PROTOCOL_AUTO_MODE && 
+		RCU0.current_mode[0] != AGILIS_PROTOCOL_MANUAL_MODE)
+		RCU0.current_mode[0] = AGILIS_PROTOCOL_AUTO_MODE;
+
+	RCUinfo.opmode = RCU0.current_mode[0];
+	RCULLSetMode(RCUinfo.opmode);
+
+	RCULLGetDeviceID(RCUinfo.DeviceID);
+
+	XEEReadArray(EEADR_COMMODE, (BYTE *)&(RCUinfo.comMode), 1);
+	// if com mode is invalid, set to RS485
+	if(RCUinfo.comMode != RS485 && RCUinfo.comMode != RS232)
+		RCUinfo.comMode = RS485;
+
+	switch(RCUinfo.comMode){
+		case RS232:
+			Comm0Mode232();
+			break;
+
+		case RS422:
+			Comm0Mode422();
+			break;
+
+		case RS485:
+		default:
+			Comm0Mode485Rx();
+			break;
+	}
+
+	// get alarm status
+	RCULLGetRCUAlarmStatus();
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: SelectAutoMode()
+
+DESCRIPTION: 
+    This function sets the CPLD to automode
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+
+void RCULLSelectAutoMode(void)
+{
+    SWITCH_MODE = AGILIS_PROTOCOL_AUTO_MODE;
+    RCU0.current_mode[0] = AGILIS_PROTOCOL_AUTO_MODE;
+    RCU0.current_mode[1] = AGILIS_PROTOCOL_AUTO_MODE;
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: SelectManualMode()
+
+DESCRIPTION: 
+    This function sets the CPLD to manual mode
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+
+void RCULLSelectManualMode(void)
+{
+    // update switch mode when in auto mode, then switch auto to manual it will not switch
+	// in auto mode, Switch Pos need follow switch real status, then when auto to manual mode it will not switch
+
+	if (READ_SWITCH1_POS == 0x00) // switch 1 status
+	{
+		TxBActivate();
+	}
+	else
+	{
+		TxAActivate();
+	}
+
+	if (READ_SWITCH2_POS == 0) // switch 1 status
+	{
+		RxBActivate();
+	}
+	else
+	{
+		RxAActivate();
+	}
+
+    SWITCH_MODE = AGILIS_PROTOCOL_MANUAL_MODE;
+    RCU0.current_mode[0] = AGILIS_PROTOCOL_MANUAL_MODE;
+    RCU0.current_mode[1] = AGILIS_PROTOCOL_MANUAL_MODE;
+}
+
+void TxAActivate(void)
+{
+    SET_SWITCH1_POS = 1;
+    RCU0.current_position[0] = AGILIS_PROTOCOL_POSITION_A;
+}
+
+void TxBActivate(void)
+{
+    SET_SWITCH1_POS = 0;
+    RCU0.current_position[0] = AGILIS_PROTOCOL_POSITION_B;
+}
+
+void RxAActivate(void)
+{
+    SET_SWITCH2_POS = 1;
+    RCU0.current_position[1] = AGILIS_PROTOCOL_POSITION_A;
+}
+
+void RxBActivate(void)
+{
+    SET_SWITCH2_POS = 0;
+    RCU0.current_position[1] = AGILIS_PROTOCOL_POSITION_B;
+}
+
+
+// yt: legacy function called by snmp and http codes
+void RCULLSetMode(UINT8 u8RCUMode)
+{
+	
+	if (u8RCUMode == AGILIS_PROTOCOL_AUTO_MODE) // set switch auto
+	{
+		RCULLSelectAutoMode();
+		RCUinfo.opmode = AGILIS_PROTOCOL_AUTO_MODE;
+	}
+		
+	else // set switch manual
+	{
+		RCULLSelectManualMode();
+		RCUinfo.opmode = AGILIS_PROTOCOL_MANUAL_MODE;
+	}
+	
+	XEEBeginWrite(EEADR_RCU_Switch1_Mode);
+	XEEWriteArray((BYTE*)RCU0.current_mode, 2);
+}
+
+// yt: legacy function called by snmp and http codes
+void RCULLSetPath(UINT8 path)
+{
+	if (path == 1) // set switch online
+	{
+		RCUinfo.txPath_selection = AGILIS_PROTOCOL_UNIT_A-'0';
+		TxAActivate();
+		// keep switch to B mode to make sure next time switch will work
+		DelayMS(100);
+	}
+	else // set switch 1 standby
+	{
+		RCUinfo.txPath_selection = AGILIS_PROTOCOL_UNIT_B-'0';
+		TxBActivate();
+		// set SSPA Off when SSPA standby
+		// if SSPA online and no major alarm, no user set SSPA off, SSPA need on
+	}
+
+	XEEBeginWrite(EEADR_RCU_Switch1_Pos);
+	XEEWriteArray((BYTE*)RCU0.current_position, 2);	
+}
+
+
+
+void RCULLSetComMode(UINT8 comMode)
+{
+	XEEBeginWrite(EEADR_COMMODE);
+	XEEWriteArray((BYTE*)&comMode, 1);
+
+	switch(comMode){
+		case RS232:
+			Comm0Mode232();
+			break;
+
+		case RS485:
+			Comm0Mode485Rx();
+			break;
+	}
+}
+
+/*-----------------------------------------------------------------------------
+FUNCTION NAME: GetRCUAlarmStatus()
+
+DESCRIPTION: 
+    This function processes RCU various status and signals and reported the Alarm 
+    status for different states.
+
+INPUT PARAMETERS: 
+    None
+
+RETURN:
+    None
+
+NOTES:
+
+-----------------------------------------------------------------------------*/
+
+void RCULLGetRCUAlarmStatus(void)
+{
+
+	RCU0.AlarmState = 0;
+
+	
+	RCU0.OCXO1_Hex = GetOneCHADC0(OCXO1_DET) ;
+	RCU0.OCXO2_Hex = GetOneCHADC0(OCXO2_DET);
+	RCU0.PS1_Hex = GetOneCHADC1(PS1_DET);
+	RCU0.PS2_Hex = GetOneCHADC0(PS2_DET);
+
+
+	// Reference low is ok, high is alarm
+	if (RCU0.OCXO1_Hex > ALARM_THRESHOLD) // Reference 1 alarm
+		RCU0.AlarmState &= ~STATE_REF1_OK;
+	else
+		RCU0.AlarmState |= STATE_REF1_OK;
+	
+	// Reference low is ok, high is alarm
+	if (RCU0.OCXO2_Hex > ALARM_THRESHOLD) // Reference 2 alarm
+		RCU0.AlarmState &= ~STATE_REF2_OK;
+	else
+		RCU0.AlarmState |= STATE_REF2_OK;
+	
+	// power low is alarm, high is ok
+	if (RCU0.PS1_Hex < ALARM_THRESHOLD) // Power 1 alarm
+		RCU0.AlarmState &= ~STATE_PS1_OK;
+	else
+		RCU0.AlarmState |= STATE_PS1_OK;
+	
+	// power low is alarm, high is ok
+	if (RCU0.PS2_Hex < ALARM_THRESHOLD) // Power 2 alarm
+		RCU0.AlarmState &= ~STATE_PS2_OK;
+	else
+		RCU0.AlarmState |= STATE_PS2_OK;
+	
+
+#if 1 // yt
+	RCU0.PATH_ALARM_1_Value = GetOneADC(13);
+	//RCU0.PATH_ALARM_2_Value = GetOneADC(14);
+	RCU0.PATH_ALARM_3_Value = GetOneADC(15);
+//	RCU0.PATH_ALARM_4_Value = GetOneADC(7);
+#endif
+
+    if (RCU0.PATH_ALARM_1_Value < 0x20) // Tx 1 alarm
+    {
+    	RCU0.RCU_Tx_Alarm[0] = 0x01;
+    }
+    else
+    {
+    	RCU0.RCU_Tx_Alarm[0] = 0x00;
+    }
+    if (RCU0.PATH_ALARM_2_Value < 0x20) // Tx 2 alarm
+    {
+    	RCU0.RCU_Tx_Alarm[1] = 0x01;
+    }
+    else
+    {
+    	RCU0.RCU_Tx_Alarm[1] = 0x00;
+    }
+    if (RCU0.PATH_ALARM_3_Value < 0x20) // Rx 1 alarm
+    {
+    	RCU0.RCU_Rx_Alarm[0] = 0x01;
+    }
+    else
+    {
+    	RCU0.RCU_Rx_Alarm[0] = 0x00;
+    }
+    if (RCU0.PATH_ALARM_4_Value < 0x20) // Rx 2 alarm
+    {
+    	RCU0.RCU_Rx_Alarm[1] = 0x01;
+    }
+    else
+    {
+    	RCU0.RCU_Rx_Alarm[1] = 0x00;
+    }
+
+
+  	if (READ_SWITCH1_POS == 0x00) // switch 1 status
+    {
+   		RCU0.Switch_Status[0] = Standby; 
+		RCUinfo.txPath_selection = AGILIS_PROTOCOL_UNIT_B - '0';
+    }
+    else
+    {
+		RCU0.Switch_Status[0] = Online; 
+		RCUinfo.txPath_selection = AGILIS_PROTOCOL_UNIT_A - '0';
+    }
+
+
+    if (READ_SWITCH2_POS == 0x00) // switch 2 status
+    {
+    	RCU0.Switch_Status[1] = Standby; 
+    }
+    else
+    {
+    	RCU0.Switch_Status[1] = Online;
+    }
+    
+	RCUinfo.opmode = RCU0.current_mode[0];
+
+
+	if (RCU0.RCU_Rx_Alarm[0] == 0x01)
+	{
+		RCUinfo.txPathA_status = AGILIS_PROTOCOL_OK - '0';
+		RCUinfo.txPathA_alarm = AGILIS_PROTOCOL_OK - '0';
+	}
+	else
+	{
+		RCUinfo.txPathA_status = AGILIS_PROTOCOL_ALARM - '0';
+		RCUinfo.txPathA_alarm = AGILIS_PROTOCOL_ALARM - '0';
+	}
+	if (RCU0.RCU_Tx_Alarm[0] == 0x01)
+	{
+		RCUinfo.txPathB_status = AGILIS_PROTOCOL_OK - '0';
+		RCUinfo.txPathB_alarm = AGILIS_PROTOCOL_OK - '0';
+	}
+	else
+	{
+		RCUinfo.txPathB_status = AGILIS_PROTOCOL_ALARM - '0';
+		RCUinfo.txPathB_alarm = AGILIS_PROTOCOL_ALARM - '0';
+	}
+
+}
+
+
+AgilisCmdStatus_t RCULLGetDeviceID(BYTE *pID)
+{
+	if(!pID) return AgilisCmdStatus_Fail;
+
+	XEEReadArray(EEADR_RCU_ID, (BYTE*)pID, 2);
+
+	return AgilisCmdStatus_Ok;
+}
+
+
+AgilisCmdStatus_t RCULLSetDeviceID(UINT8 *pID)
+{
+	if(!*pID) return AgilisCmdStatus_Fail;
+
+	XEEBeginWrite(EEADR_RCU_ID);
+	XEEWriteArray((BYTE*)pID, 2);
+
+	return AgilisCmdStatus_Ok;	
+}
+
+
+AgilisCmdStatus_t RCULLGetPartNumber (BYTE *pData, BYTE *size)
+{
+	BYTE i, byte_temp;
+	WORD int_tmp;
+		
+	if(!pData || !size)
+		return AgilisCmdStatus_Fail;
+/*
+	int_tmp = EEADR_PartNo;
+	XEEReadArray(int_tmp, (BYTE*)&byte_tmp, 1);
+	for (i = 0; (i < AGILIS_PART_NUMBER_SIZE_MAX)&& !(byte_tmp < '!' || byte_tmp > 'z'); i++)
+	{
+		int_tmp++;
+		pData[i] = byte_tmp;		   
+		XEEReadArray(int_tmp, (BYTE*)&byte_tmp, 1);
+	}
+*/
+	for (i = 0;i < 30;i++)
+	{
+	    XEEReadArray(EEADR_PartNo + i, (BYTE*)&byte_temp, 1);
+		if(byte_temp < '!' || byte_temp > 'z' ||
+		   byte_temp < '!' || byte_temp > 'z' ) 
+			byte_temp = '0';
+		pData[i] = byte_temp;
+	}
+	
+	*size = i;
+	
+	return AgilisCmdStatus_Ok;
+
+}
+
+AgilisCmdStatus_t RCULLSetPartNumber (BYTE *pData, BYTE size)
+{
+	AgilisCmdStatus_t status;
+
+	if(!pData || !size)
+		return AgilisCmdStatus_Fail;
+
+	if (size < AGILIS_PART_NUMBER_SIZE_MAX)
+	{
+		BYTE temp[30];
+		memset(temp, '0', sizeof(temp));
+		memcpy(temp, pData, size);
+		XEEBeginWrite(EEADR_PartNo);
+		XEEWriteArray((BYTE*)temp, size);
+		XEEBeginWrite(EEADR_PartNo + size);
+		XEEWrite('\0');
+	}
+	else
+	{
+		XEEBeginWrite(EEADR_PartNo);
+		XEEWriteArray((BYTE*)pData, AGILIS_PART_NUMBER_SIZE_MAX);
+	}
+}
+
+
+AgilisCmdStatus_t RCULLGetSerialNumber (BYTE *pData, BYTE *size)
+{
+	BYTE i, byte_temp;
+		
+	if(!pData || !size)
+		return AgilisCmdStatus_Fail;
+/*
+	WORD int_tmp;
+	int_tmp = EEADR_SerialNo;
+	XEEReadArray(int_tmp, (BYTE*)&byte_tmp, 1);
+	for (i = 0; (i < AGILIS_SERIAL_NUMBER_SIZE_MAX) && !(byte_tmp < '!' || byte_tmp > 'z'); i++)
+	{
+		int_tmp++;
+		pData[i] = byte_tmp;		  
+		// yt: later try to do one read with full size
+		XEEReadArray(int_tmp, (BYTE*)&byte_tmp, 1);
+	}
+*/
+	for (i = 0;i < 30;i++)
+	{
+	    XEEReadArray(EEADR_SerialNo + i, (BYTE*)&byte_temp, 1);
+		if(byte_temp < '!' || byte_temp > 'z' ||
+		   byte_temp < '!' || byte_temp > 'z' ) 
+			byte_temp = '0';
+		pData[i] = byte_temp;
+	}
+	
+	*size = i;
+	
+	return AgilisCmdStatus_Ok;
+
+}
+
+
+AgilisCmdStatus_t RCULLSetSerialNumber(BYTE *pData, BYTE size)
+{
+	if(!pData || !size)
+		return AgilisCmdStatus_Fail;
+
+	if (size < AGILIS_SERIAL_NUMBER_SIZE_MAX)
+	{
+		BYTE temp[30];
+		memset(temp, '0', sizeof(temp));
+		memcpy(temp, pData, size);
+		XEEBeginWrite(EEADR_SerialNo);
+		XEEWriteArray((BYTE*)temp, size);
+		XEEBeginWrite(EEADR_SerialNo + size);
+		XEEWrite('\0');
+	}
+	else
+	{
+		XEEBeginWrite(EEADR_SerialNo);
+		XEEWriteArray((BYTE*)pData, AGILIS_SERIAL_NUMBER_SIZE_MAX);
+	}
+
+	return AgilisCmdStatus_Ok;
+}
+
+void RCULLSetDefaultValue(void)
+{	
+
+	unsigned char count, count2;
+
+	Manager_IP.v[0]=192;
+	Manager_IP.v[1]=168;
+	Manager_IP.v[2]=1;
+	Manager_IP.v[3]=10;
+
+	Read2[0][0]=192;
+	Read2[0][1]=168;
+	Read2[0][2]=1;
+	Read2[0][3]=10;
+
+
+	AppConfig.Flags.bIsDHCPEnabled=FALSE;
+	AppConfig.MyIPAddr.Val = MY_DEFAULT_IP_ADDR_BYTE1 | MY_DEFAULT_IP_ADDR_BYTE2<<8ul | MY_DEFAULT_IP_ADDR_BYTE3<<16ul | MY_DEFAULT_IP_ADDR_BYTE4<<24ul;
+	AppConfig.DefaultIPAddr.Val = AppConfig.MyIPAddr.Val;
+	AppConfig.MyMask.Val = MY_DEFAULT_MASK_BYTE1 | MY_DEFAULT_MASK_BYTE2<<8ul | MY_DEFAULT_MASK_BYTE3<<16ul | MY_DEFAULT_MASK_BYTE4<<24ul;
+	AppConfig.DefaultMask.Val = AppConfig.MyMask.Val;
+	AppConfig.MyGateway.Val = MY_DEFAULT_GATE_BYTE1 | MY_DEFAULT_GATE_BYTE2<<8ul | MY_DEFAULT_GATE_BYTE3<<16ul | MY_DEFAULT_GATE_BYTE4<<24ul;
+	AppConfig.PrimaryDNSServer.Val = MY_DEFAULT_PRIMARY_DNS_BYTE1 | MY_DEFAULT_PRIMARY_DNS_BYTE2<<8ul  | MY_DEFAULT_PRIMARY_DNS_BYTE3<<16ul  | MY_DEFAULT_PRIMARY_DNS_BYTE4<<24ul;
+	AppConfig.SecondaryDNSServer.Val = MY_DEFAULT_SECONDARY_DNS_BYTE1 | MY_DEFAULT_SECONDARY_DNS_BYTE2<<8ul  | MY_DEFAULT_SECONDARY_DNS_BYTE3<<16ul  | MY_DEFAULT_SECONDARY_DNS_BYTE4<<24ul;
+
+	SaveAppConfig();
+	
+	strcpypgm2ram(webpassinfo.webpassword, "admin");
+
+    count=0;
+	while(webpassinfo.webpassword[count]!=0)
+	{
+		count++;	
+	}
+    if(count >8)
+		strcpypgm2ram(webpassinfo.webpassword, "admin");
+
+
+	for(count2=0;count2<count;count2++)
+	{
+
+		if((webpassinfo.webpassword[count2]<0x30)||(webpassinfo.webpassword[count2]>0x7A))
+		{
+			strcpypgm2ram(webpassinfo.webpassword, "admin");
+			break;
+		}
+	}
+
+#if defined(STACK_USE_SNMP_SERVER)
+	Load_config();
+#endif
+
+	SaveSetting();
+
+}
+

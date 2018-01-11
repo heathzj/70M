@@ -1,0 +1,97 @@
+~inc:header.inc~
+<title>Device Alarms</title>
+  <tr>
+  	<td>
+		<div class="pagetab" style="height:590px">			
+				<div style="margin: 10px">
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="center" colspan="3" height="42" bgcolor="#aaa8a8"><center>ALARMS</center></td>
+						</tr>
+					</table>
+					<table border="0" width="100%">
+						<tr>
+							<td align="center" bgcolor="#e2e2e2" width="25%" >
+									<table border="0" width="100%" cellpadding="2">
+									<FORM METHOD=GET action=alarm.htm>
+										<tr>
+											<td align="center"><b>Up Converter Status</b></td>
+											<td align="left"  width="35%"><a id="converteraalarm"><font size=6><b>&bull;</b></font></a></td>
+										</tr>
+									</FORM>
+								</table>						
+							</td>
+						</tr>
+					</table>					
+					<table border="0" width="100%">
+						<tr>
+							<td align="center" colspan="3" height="32" bgcolor="#efefef">
+								<center>
+									<table width="68%" height="80%" border="0" bgcolor="#b4dd56" bordercolor="#d2f28a" >
+										<tr>
+											<td width="15%" align="center" ><b>&nbsp;&nbsp;Legend:&nbsp;&nbsp;</b></td>
+											<td width="7%" align="center" ><font size=6 color='#00FF00'><b>&bull;</b></font></td>
+											<td width="7%" align="left" ><b>- OK &nbsp;&nbsp;</b></td>
+											<td width="9%" align="center" ><font size=6 color='#FF0000'><b>&bull;</b></font></td>
+											<td width="16%" align="left" ><b>- Major Alarm &nbsp;&nbsp;</b></td>
+											<td width="8%" align="center" ><font size=6 color='#FFA500'><b>&bull;</b></font></td>
+											<td width="17%" align="left" ><b>- Minor Alarm &nbsp;&nbsp;</b></td>
+											<td width="8%" align="center" ><font size=6 color='#A8A8A8'><b>&bull;</b></font></td>
+											<td width="13%" align="left" ><b>- N / A &nbsp;&nbsp;</b></td>
+										</tr>
+								  </table>
+								</center>
+							</td>
+						</tr>
+					</table>					
+					<table border="0" width="100%">
+						<tr>
+							<td align="center" colspan="3" height="32" bgcolor="#cac8c8"><center><a href="alarm.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>					
+				</div>			
+~inc:footer.inc~
+<script type="text/javascript">
+
+function updateStatus(xmlData) {
+
+	if(!xmlData)
+	{
+		return;
+	}
+
+	switch(getXMLValue(xmlData,'rcu', 'converteraalarm'))
+	{
+		case '0': document.getElementById('converteraalarm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('converteraalarm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('converteraalarm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('converteraalarm').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData,'rcu', 'converterbalarm'))
+	{
+		case '0': document.getElementById('converterbalarm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('converterbalarm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('converterbalarm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('converterbalarm').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData,'rcu', 'BUCIAlm'))
+	{
+		case '0': document.getElementById('BUCIAlm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('BUCIAlm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('BUCIAlm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('BUCIAlm').style.color = '#A8A8A8'; break;
+	}
+	switch(getXMLValue(xmlData,'rcu', 'LNBIAlm'))
+	{
+		case '0': document.getElementById('LNBIAlm').style.color = '#FF0000'; break;
+		case '1': document.getElementById('LNBIAlm').style.color = '#00FF00'; break;
+		case '2': document.getElementById('LNBIAlm').style.color = '#FFA500'; break;
+		case '3': document.getElementById('LNBIAlm').style.color = '#A8A8A8'; break;
+	}	
+}
+
+newAJAXCommand('status.xml', updateStatus, true);
+
+</script>
+	</body>
+</html>

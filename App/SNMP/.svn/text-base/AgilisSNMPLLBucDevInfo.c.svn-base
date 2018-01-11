@@ -1,0 +1,116 @@
+/***********************************************************/
+/*									                       */
+/* For getting Device Information on both BUCs  		   */
+/*											               */
+/***********************************************************/
+
+#include "AgilisSNMPLL.h"
+
+#if defined STACK_USE_SNMP_SERVER
+
+extern BYTE myRef;
+
+/*      This for getting information on BUC -1  		   */
+/*  Get device ID - Read only - Ascii String  - BUC 1 	   */
+
+BOOL Agilissnmpll_getBUCdeviceID(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{			
+		char i = 0;
+		char count = 0;
+		SNMP_VAL temp = 0;
+		myRef = *ref;
+		
+        if (  BUCinfo[index].info.deviceID[0] == 0 )
+		{
+            myRef = SNMP_END_OF_VAR;
+			return TRUE;
+		}	
+        else
+        {
+			    while(BUCinfo[index].info.deviceID[count] != 0)
+				{ 
+    			    i = BUCinfo[index].info.deviceID[count] - '0';
+    			    if(count == 1)
+    		    	{
+                    	i = i * 10;
+    		    	}
+    	        	temp.byte = temp.byte + i;
+					count++;
+				}
+	            val->byte = temp.byte;
+				myRef = SNMP_END_OF_VAR;
+
+        }     
+       	   
+        *ref = myRef;
+        return TRUE;
+}        
+      
+
+
+/*      This for getting information on BUC -1  		   */
+/*  Get Part  No- Read only - Ascii String  - BUC 1        */
+
+BOOL Agilissnmpll_getBUCPartNo(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+	myRef=*ref;
+
+        if (  BUCinfo[index].info.modelNo[0] == 0u )
+            myRef = SNMP_END_OF_VAR;
+        else
+        {
+            val->byte =  BUCinfo[index].info.modelNo[myRef++];
+            if (BUCinfo[index].info.modelNo[myRef] == 0u )
+                myRef = SNMP_END_OF_VAR;
+        }
+
+        *ref = myRef;
+        return TRUE;
+}
+
+
+
+
+/*      This for getting information on BUC -1       */
+/*  Get Serial No - Read only - Ascii String  - BUC 1 */
+
+BOOL Agilissnmpll_getBUCserialNo(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+		myRef=*ref;
+		if (  BUCinfo[index].info.serialNo[0] == 0u )
+            myRef = SNMP_END_OF_VAR;
+        else
+        {
+            val->byte =  BUCinfo[index].info.serialNo[myRef++];
+            if (  BUCinfo[index].info.serialNo[myRef] == 0u )
+                myRef = SNMP_END_OF_VAR;
+        }
+
+        *ref = myRef;
+        return TRUE;
+}
+
+
+
+
+/*        This for getting information on BUC -1             */
+/*  Get Firmware Version - Read only - Ascii String  - BUC 1 */
+
+BOOL Agilissnmpll_getBUCfirmwareVersion(SNMP_INDEX index, BYTE *ref, SNMP_VAL *val)
+{
+	myRef=*ref;
+	
+	if ( BUCinfo[index].info.firmwareVersion[0] == 0u )
+            myRef = SNMP_END_OF_VAR;
+        else
+        {
+            val->byte =  BUCinfo[index].info.firmwareVersion[myRef++];
+            if (  BUCinfo[index].info.firmwareVersion[myRef] == 0u )
+                myRef = SNMP_END_OF_VAR;
+        }
+
+        *ref = myRef;
+        return TRUE;
+}
+
+#endif

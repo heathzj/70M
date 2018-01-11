@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/projects/ped-software/!svn/ver/8788/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals
+END
+AgilisDualUART.h
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/projects/ped-software/!svn/ver/8788/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/AgilisDualUART.h
+END
+external_flash.c
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/external_flash.c
+END
+comm.h
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/comm.h
+END
+devbt.c
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/devbt.c
+END
+devadc.c
+K 25
+svn:wc:ra_dav:version-url
+V 134
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/devadc.c
+END
+commuart.c
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/commuart.c
+END
+devbt.h
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/devbt.h
+END
+AgilisDualUART.c
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/projects/ped-software/!svn/ver/8788/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/AgilisDualUART.c
+END
+comm.c
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/comm.c
+END
+devadc.h
+K 25
+svn:wc:ra_dav:version-url
+V 134
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/devadc.h
+END
+commuart.h
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/projects/ped-software/!svn/ver/8682/Firmware/RCU/PIC18F97J60/Firmware/Sources/1-1-RCU-T-NewArch/Drivers/External-Peripherals/commuart.h
+END
