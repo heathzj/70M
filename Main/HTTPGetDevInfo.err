@@ -1,34 +1,34 @@
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 174 : suspicious pointer conversion
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 219 : call of function without prototype
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 243 : suspicious pointer conversion
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 278 : suspicious pointer conversion
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 283 : suspicious pointer conversion
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 286 : call of function without prototype
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 309 : suspicious pointer conversion
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 343 : suspicious pointer conversion
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 348 : suspicious pointer conversion
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 351 : call of function without prototype
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 372 : suspicious pointer conversion
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 405 : suspicious pointer conversion
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 410 : suspicious pointer conversion
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 413 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 454 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 500 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 543 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 591 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 625 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 661 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 697 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 732 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 874 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 891 : call of function without prototype
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1012 : suspicious pointer conversion
-Warning[2054] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1020 : suspicious pointer conversion
-Warning[2065] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1205 : static function 'HTTPGet__u8SetDownCvtPower' never referenced
-Warning[2065] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1205 : static function 'HTTPGet__u8SetUpCvtPower' never referenced
-Warning[2065] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1205 : static function 'HTTPGet__boSetOnOff' never referenced
-Warning[2065] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1205 : static function 'HTTPGet__u8SetDownCvtPower' never referenced
-Warning[2065] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1205 : static function 'HTTPGet__u8SetUpCvtPower' never referenced
-Warning[2065] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1205 : static function 'HTTPGet__boSetOnOff' never referenced
-Warning[2064] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1205 : static function 'HTTPPostConfig' not defined
-Warning[2064] D:\Work\Singcom\70M\70M_1213\work\App\WebUI\HTTPGetDevInfo.c 1205 : static function 'HTTPPostlut' not defined
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 174 : suspicious pointer conversion
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 220 : call of function without prototype
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 244 : suspicious pointer conversion
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 279 : suspicious pointer conversion
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 284 : suspicious pointer conversion
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 287 : call of function without prototype
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 310 : suspicious pointer conversion
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 344 : suspicious pointer conversion
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 349 : suspicious pointer conversion
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 352 : call of function without prototype
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 373 : suspicious pointer conversion
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 406 : suspicious pointer conversion
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 411 : suspicious pointer conversion
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 414 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 455 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 501 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 544 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 592 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 626 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 662 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 698 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 733 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 875 : call of function without prototype
+Warning[2058] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 892 : call of function without prototype
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1013 : suspicious pointer conversion
+Warning[2054] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1021 : suspicious pointer conversion
+Warning[2065] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1206 : static function 'HTTPGet__u8SetDownCvtPower' never referenced
+Warning[2065] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1206 : static function 'HTTPGet__u8SetUpCvtPower' never referenced
+Warning[2065] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1206 : static function 'HTTPGet__boSetOnOff' never referenced
+Warning[2065] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1206 : static function 'HTTPGet__u8SetDownCvtPower' never referenced
+Warning[2065] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1206 : static function 'HTTPGet__u8SetUpCvtPower' never referenced
+Warning[2065] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1206 : static function 'HTTPGet__boSetOnOff' never referenced
+Warning[2064] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1206 : static function 'HTTPPostConfig' not defined
+Warning[2064] D:\git\70M\App\WebUI\HTTPGetDevInfo.c 1206 : static function 'HTTPPostlut' not defined

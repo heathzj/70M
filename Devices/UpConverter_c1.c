@@ -85,6 +85,8 @@ void UpCvt_vSetFreq(void)
     {        
         fFreq =  Util_u8String2NFloat((char*)&LCDPrintBuffer[1][0]);
         tempDWORD = (DWORD)(fFreq * 1000.0f);// should deduct 950 000? 950M ~ 2150M
+
+		tempDWORD = nLO_FREQ - tempDWORD;
         
         if ((tempDWORD != stConverter.stUp.u32OutputFreq) && (tempDWORD <= MAXRFFREQ) && (tempDWORD >= MINRFFREQ))
         {

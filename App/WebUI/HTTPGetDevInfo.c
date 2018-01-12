@@ -194,6 +194,7 @@ static BYTE HTTPGet__u8SetUpCvtRFFreq(void)
         }
 	
 
+		tempDWORD = nLO_FREQ - tempDWORD;
 
 
         if ((tempDWORD != stConverter.stUp.u32OutputFreq) && (tempDWORD <= MAXRFFREQ) && (tempDWORD >= MINRFFREQ))

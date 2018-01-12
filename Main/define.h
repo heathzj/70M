@@ -6,6 +6,8 @@
 #include "HardwareProfile.h"
 #include "p18f97j60.h"
 
+#define nLO_FREQ 5250u
+
 #define STATUS_OFF 0
 #define STATUS_ON 1
 
@@ -26,7 +28,7 @@
 
 
 #define MINRFFREQ		(950000ul) // 7680 MHz
-#define MAXRFFREQ		(2150000ul) // 7305 MHz
+#define MAXRFFREQ		(1250000ul) // 7305 MHz
 #define MAXATTEN		(300u)	// 30dB
 #define MINATTEN		(0u)
 #define MAXPOWER		(660u)	// 5dB*10 + 500

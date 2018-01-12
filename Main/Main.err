@@ -1,8 +1,8 @@
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\Main\Main.c 241 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\Main\Main.c 245 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\Main\Main.c 310 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\Main\Main.c 317 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\Main\Main.c 325 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\Main\Main.c 578 : call of function without prototype
-Warning[2058] D:\Work\Singcom\70M\70M_1213\work\Main\Main.c 584 : call of function without prototype
-Warning[2064] D:\Work\Singcom\70M\70M_1213\work\Main\Main.c 667 : static function 'SYS__vLcdDisplayTask' not defined
+Warning[2058] D:\git\70M\Main\Main.c 241 : call of function without prototype
+Warning[2058] D:\git\70M\Main\Main.c 245 : call of function without prototype
+Warning[2058] D:\git\70M\Main\Main.c 310 : call of function without prototype
+Warning[2058] D:\git\70M\Main\Main.c 317 : call of function without prototype
+Warning[2058] D:\git\70M\Main\Main.c 325 : call of function without prototype
+Warning[2058] D:\git\70M\Main\Main.c 578 : call of function without prototype
+Warning[2058] D:\git\70M\Main\Main.c 584 : call of function without prototype
+Warning[2064] D:\git\70M\Main\Main.c 667 : static function 'SYS__vLcdDisplayTask' not defined
