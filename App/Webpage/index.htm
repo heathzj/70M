@@ -2,7 +2,7 @@
 <title>Device Information</title>
  <tr>
   	<td>
-		<div class="pagetab" >
+		<div class="pagetab" style="height:350px">
 			
 				<div style="margin: 10px">
 					<table border="0" width="100%">
@@ -28,7 +28,17 @@
 											<td align="left" ><b>&nbsp;</b></td>
 											<td id="test" align="left"  style="width:200px;"><b>Device Gateway</b></td>
 											<td id="gateway" align="left"><b>~config_gw~</b></td>
-										</tr>										
+										</tr>	
+										<tr>
+											<td align="left" ><b>&nbsp;</b></td>
+											<td align="left"><b>Model Number</b></td>
+											<td id="rcufw" align="left"><b>~DeviceModel~</b></td>
+										</tr>	
+										<tr>
+											<td align="left" ><b>&nbsp;</b></td>
+											<td align="left"><b>Serial Number</b></td>
+											<td id="rcufw" align="left"><b>~DeviceSerial~</b></td>
+										</tr>											
 										<tr>
 											<td align="left" ><b>&nbsp;</b></td>
 											<td align="left"><b>Firmware Version</b></td>
@@ -40,6 +50,11 @@
 							</td>
 						</tr>
 					</table>					
+					<table border="0" width="100%">
+						<tr>
+							<td class="tableHeader" align="left" colspan="3" height="32" width="100%" bgcolor="#cac8c8"><center><a href="index.htm"><b>Refresh Status</b></a></center></td>
+						</tr>						
+					</table>
 				</div>
 ~inc:footer.inc~
 	</body>

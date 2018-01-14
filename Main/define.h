@@ -27,8 +27,8 @@
 
 
 
-#define MINRFFREQ		(950000ul) // 7680 MHz
-#define MAXRFFREQ		(1250000ul) // 7305 MHz
+#define MINRFFREQ		(1000000ul) // 7680 MHz
+#define MAXRFFREQ		(1500000ul) // 7305 MHz
 #define MAXATTEN		(300u)	// 30dB
 #define MINATTEN		(0u)
 #define MAXPOWER		(660u)	// 5dB*10 + 500
@@ -38,6 +38,7 @@
 #define MODULE0			0
 #define MODULE1			1
 #define MODULE2			2
+#define MODULE3 		3
 
 #define MODULE0_ADDRESS		0x36//0x28
 #define MODULE1_ADDRESS		0x28//0x36

@@ -25,6 +25,8 @@ BYTE I2CSlaveAddress = CONVERTER_ADDRESS;
 unsigned char RdI2CBuffer[I2CBUFFLENGTH];
 BYTE WebpageWriteI2CFlag = FALSE;
 
+extern WORD u16LoFreq;
+extern WORD u8LoBand;
 
 
 static BOOL HTTPGet__boInfoConfig(void);
@@ -162,6 +164,7 @@ static BYTE HTTPGet__u8SetUpCvtRFFreq(void)
     BYTE* pcDotPosition;
     BYTE* pcTemp;
     DWORD tempDWORD = 0;
+    DWORD tempDWORD2 = 0;
 	BYTE u8DigitNum = 0;	
 
     ptr = HTTPGetROMArg(curHTTP.data, (ROM BYTE *)"converterarffreq"); /* should also count '=' 17 */
@@ -192,9 +195,37 @@ static BYTE HTTPGet__u8SetUpCvtRFFreq(void)
             }
 			 pcTemp++;
         }
-	
 
-		tempDWORD = nLO_FREQ - tempDWORD;
+
+		if((tempDWORD>=12750000)&&(tempDWORD<13250000))
+		{
+			u16LoFreq = 11750;
+			u8LoBand = 0;
+		}
+		else if((tempDWORD>=13250000)&&(tempDWORD<13750000))
+		{
+			u16LoFreq = 12250;
+			u8LoBand = 1;
+		}
+
+		else if((tempDWORD>=13750000)&&(tempDWORD<14250000))
+		{
+			u16LoFreq = 12750;
+			u8LoBand = 2;
+		}
+
+
+		else if((tempDWORD>=14250000)&&(tempDWORD<14500000))
+		{
+			u16LoFreq = 13250;
+			u8LoBand = 3;
+		}
+		
+			
+        tempDWORD2 = u16LoFreq;
+        tempDWORD2 *= 1000.0f;
+        
+		tempDWORD = tempDWORD - tempDWORD2;// fs - fLo * 1000
 
 
         if ((tempDWORD != stConverter.stUp.u32OutputFreq) && (tempDWORD <= MAXRFFREQ) && (tempDWORD >= MINRFFREQ))
@@ -218,8 +249,10 @@ static BYTE HTTPGet__u8SetUpCvtRFFreq(void)
             }
             
 			UpCvt_vSendI2C();
+			
 
 		}
+		UpCvt_vSendLoI2C();
     }   
     
     

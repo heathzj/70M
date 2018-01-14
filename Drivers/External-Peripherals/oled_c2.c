@@ -16,8 +16,8 @@ char LOStatusString1[9] = {"LOCKED  "};
 char LOStatusString2[9] = {"UNLOCKED"}; 
 
 /*JuZh 950.000MHz to 2150.000MHz */
-char RFFreqString1[12] = {"3625.000MHz"}; /* must update to 3 digits decimal */
-char RFFreqString2[12] = {"3625.000MHz"}; /* must update to 3 digits decimal */
+char RFFreqString1[12] = {"12750.000MHz"}; /* must update to 3 digits decimal */
+char RFFreqString2[12] = {"12750.000MHz"}; /* must update to 3 digits decimal */
 char AttenString1[8] = {"00.0 dB"}; 
 char AttenString2[8] = {"00.0 dB"}; 
 
@@ -67,6 +67,8 @@ tstI2CMsgVOL  stI2CREFMsg;
 tstI2CMsg stI2CLOMsg;
 
 BYTE u8ExtLO = 0;
+BYTE u8LoBand = 0;
+WORD u16LoFreq = 0;
 
 
 char readflag = 0x00;
@@ -106,11 +108,11 @@ typedef struct{
 
 const rom tstMenuDisplay stMenuDisplay[30]=
 {
-	{&Main_vPrintUpConverter,NULL,NULL,NULL,				MENU2,MENU3,	MENU0,MENU4,0,16}, //zj changed 0 -3, blink len 7 to 14
+	{&Main_vPrintUpConverter,NULL,NULL,NULL,				MENU2,MENU3,	MENU0,MENU4,0,14}, //zj changed 0 -3, blink len 7 to 14
 		
 	{&Main_vPrintDownConverter,NULL,NULL,NULL,				MENU2,MENU0,	MENU1,MENU11,8,7},//skip
 	
-	{&Main_vPrintVolCtrl,NULL,NULL,NULL,					MENU3,MENU0,	MENU2,MENU2,16,10},//zj changed	to be fixed page
+	{&Main_vPrintVolCtrl,NULL,NULL,NULL,					MENU3,MENU0,	MENU2,MENU2,15,10},//zj changed	to be fixed page
 	
 	{&Main_vPrintDeviceInfo,NULL,NULL,NULL,					MENU0,MENU2,	MENU3,MENU27,26,13},//zj changed 0 -3
 	
@@ -180,18 +182,18 @@ const rom tstMenuDisplay stMenuDisplay[30]=
 const rom char acLCDTitle[30][nLCDLEN]={
    //1234567890123456789012345678901234567890//
    //0123456789012345678901234567890123456789//     
-    "[DOWN CONVERTER][MAINCTRL][DEVICE INFO] ",
-    "[DOWN CONVERTER][MAINCTRL][DEVICE INFO] ",
-    "[DOWN CONVERTER][MAINCTRL][DEVICE INFO] ",
-    "[DOWN CONVERTER][MAINCTRL][DEVICE INFO] ",
+    "[UP CONVERTER] [MAINCTRL] [DEVICE INFO] ",
+    "[UP CONVERTER] [MAINCTRL] [DEVICE INFO] ",
+    "[UP CONVERTER] [MAINCTRL] [DEVICE INFO] ",
+    "[UP CONVERTER] [MAINCTRL] [DEVICE INFO] ",
     
-    "DC [RF FREQ] [POWER] [SET PWR] [LO STATU",
-    "DC [POWER] [SET PWR] [LO STATUS] [ATTN] ",
-    "DC [SET PWR] [LO STATUS] [ATTN] [ALC] [R",
-    "DC [LO STATUS] [ATTN] [ALC] [RF ENBL] [R",	  
-    "DC [ATTN] [ALC] [RF ENBL] [RF FREQ] [POW",
-    "DC [ALC] [RF ENBL] [RF FREQ] [POWER] [SE",
-    "DC [RF ENBL] [RF FREQ] [POWER] [SET PWR]",
+    "UC [RF FREQ] [POWER] [SET PWR] [LO STATU",
+    "UC [POWER] [SET PWR] [LO STATUS] [ATTN] ",
+    "UC [SET PWR] [LO STATUS] [ATTN] [ALC] [R",
+    "UC [LO STATUS] [ATTN] [ALC] [RF ENBL] [R",	  
+    "UC [ATTN] [ALC] [RF ENBL] [RF FREQ] [POW",
+    "UC [ALC] [RF ENBL] [RF FREQ] [POWER] [SE",
+    "UC [RF ENBL] [RF FREQ] [POWER] [SET PWR]",
 
     
     "DC [RF FREQ] [POWER] [SET PWR] [LO STATU",
@@ -965,7 +967,6 @@ static BYTE SYS__u8UpdateUpConverter()
 
 
 	
-
 		Main_vLEDLO(OFF);
         Main_vLEDRX(OFF); 
            
@@ -986,9 +987,11 @@ static BYTE SYS__u8UpdateUpConverter()
 		/* ZJ don't check down cvt anymore */
 	//	if(stConverter.stDown.u8Lock == 1) //check the other cvt
 		if(u8ExtLO == 1)
+	{
 			Main_vLEDLO(ON);
             
             Main_vLEDRX(ON); 
+	}
         
 	}
 
@@ -1051,7 +1054,8 @@ static BYTE SYS__u8UpdateUpConverter()
     {
         stConverter.stUp.u32OutputFreq = tempDWORD;
 		
-		sprintf(RFFreqString1,"%04ld.%03ldMHz",(nLO_FREQ - stConverter.stUp.u32OutputFreq)/1000,(nLO_FREQ - stConverter.stUp.u32OutputFreq)%1000 );	
+		sprintf(RFFreqString1,"%04ld.%03ldMHz",(u16LoFreq + stConverter.stUp.u32OutputFreq/1000),
+				((DWORD)u16LoFreq*1000 + stConverter.stUp.u32OutputFreq)%1000);	
     
         if(((CurrentMenu == nFREQ_MENU_A) || (CurrentMenu == MENU0)) && (TRUE != EditMode))
         {
@@ -1183,7 +1187,7 @@ static BYTE SYS__u8UpdateDownConverter()
             stMenuDisplay[CurrentMenu].pvfPrintMenu();
         }
 
-		Main_vLEDLO(OFF);
+//		Main_vLEDLO(OFF);
         
 	}
 	else if (((stI2CDCMsg.u8CtrlStatus & nLOCK)!= 0) && (stConverter.stDown.u8AlarmStatus == 0))
@@ -1199,8 +1203,8 @@ static BYTE SYS__u8UpdateDownConverter()
              stMenuDisplay[CurrentMenu].pvfPrintMenu();
         }		
 
-		if(stConverter.stUp.u8Lock == 1)
-			Main_vLEDLO(ON);
+//		if(stConverter.stUp.u8Lock == 1)
+//			Main_vLEDLO(ON);
        
 	}
 
@@ -1594,23 +1598,68 @@ static BYTE SYS__u8UpdateVOL()
 
 static BYTE SYS__u8UpdateLO()
 {
-	BYTE u8TempByte = 0;
-	WORD u16TempWord = 0;
-	BOOL boReturn = FALSE;	
+BYTE u8TempByte = 0;
+WORD u16TempWord = 0;
+BOOL boReturn = FALSE; 
     
-	stI2CLOMsg.u8CtrlStatus&= nI2C_READ;
-	
-	I2C_Send(I2C_LO_ADDR, (char*)&readflag, 1);
-	boReturn = I2C_Read(I2C_LO_ADDR, (char*)&stI2CLOMsg, sizeof(tstI2CMsg));
+stI2CLOMsg.u8CtrlStatus&= nI2C_READ;
+I2C_Send(I2C_LO_ADDR, (char*)&readflag, 1);
+boReturn = I2C_Read(I2C_LO_ADDR, (char*)&stI2CLOMsg, sizeof(tstI2CMsg));
 
-	if(!boReturn)
-		return FALSE;
+if(!boReturn)
+return FALSE;
 
-	if(stI2CLOMsg.u8CtrlStatus & 0x04) //bit2 is lo status
-		u8ExtLO = 1;
-	else
-		u8ExtLO = 0;
-		
+if(stI2CLOMsg.u8CtrlStatus & 0x04)  //bit2 is lo status
+    {
+        if(u8ExtLO == 0)
+        {
+            u8ExtLO = 1;
+            if(stConverter.stUp.u8Lock == 1)
+                Main_vLEDLO(ON);
+            	Main_vLEDRX(ON);
+        }
+        
+        
+    }
+else
+    {
+         if(u8ExtLO == 1)
+        {
+            u8ExtLO = 0;
+            Main_vLEDLO(OFF);
+            Main_vLEDRX(OFF);
+        }
+        
+    }
+
+
+//read bit 3 and bit 4 for band selection
+
+	if((stI2CLOMsg.u8CtrlStatus & 0x08) && (stI2CLOMsg.u8CtrlStatus & 0x10))
+	{
+		u8LoBand = 3;
+		u16LoFreq = 13250;
+
+	}
+	else if((stI2CLOMsg.u8CtrlStatus & 0x08) && !(stI2CLOMsg.u8CtrlStatus & 0x10))
+	{
+		u8LoBand = 2;
+		u16LoFreq = 12750;
+
+	}
+	else if(!(stI2CLOMsg.u8CtrlStatus & 0x08) && (stI2CLOMsg.u8CtrlStatus & 0x10))
+	{
+		u8LoBand = 1;
+		u16LoFreq = 12250;
+
+	}
+	else if(!(stI2CLOMsg.u8CtrlStatus & 0x08) && !(stI2CLOMsg.u8CtrlStatus & 0x10))
+	{
+		u8LoBand = 0;
+		u16LoFreq = 11750;
+
+	}
+
 
 }
 

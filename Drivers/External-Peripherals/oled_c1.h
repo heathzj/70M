@@ -233,6 +233,7 @@ extern tstI2CMessageVOL  stI2CVOLMsg;
 extern tstI2CMsg  stI2CUCMsg;
 extern tstI2CMsg  stI2CDCMsg;
 extern tstI2CMsgVOL  stI2CREFMsg;
+extern tstI2CMsg  stI2CLOMsg;
 
 
 

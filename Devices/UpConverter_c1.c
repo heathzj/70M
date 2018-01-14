@@ -6,6 +6,10 @@
 #include "Util.h"
 
 
+extern WORD u16LoFreq;
+extern WORD u8LoBand;
+
+
 void UpCvt_vPrintFreq(void)
 {
 	strncpy(LCDPrintBuffer[1], RFFreqString1,sizeof(RFFreqString1));	
@@ -73,11 +77,52 @@ void UpCvt_vSendI2C()
 
 }
 
+void UpCvt_vSendLoI2C()
+{
+	//stI2CUCMsg.u16GainCompenVale = 0xFFFF; /* Don't write tables */
+	memset((BYTE*)(&stI2CLOMsg+1),0xff,sizeof(tstI2CMsg)-1);
+
+	switch(u8LoBand)
+	{
+		case 0:
+			stI2CLOMsg.u8CtrlStatus &= ~0x08;
+			stI2CLOMsg.u8CtrlStatus &= ~0x10;
+
+		break;
+
+
+		case 1:
+			stI2CLOMsg.u8CtrlStatus &= ~0x08;
+			stI2CLOMsg.u8CtrlStatus |= 0x10;
+
+
+		break;
+
+		case 2:
+			stI2CLOMsg.u8CtrlStatus |= 0x08;
+			stI2CLOMsg.u8CtrlStatus &= ~0x10;
+
+		break;
+
+		case 3:
+			stI2CLOMsg.u8CtrlStatus |= 0x08;
+			stI2CLOMsg.u8CtrlStatus |= 0x10;
+
+		break;
+
+
+
+	}
+	SetI2C(MODULE3);
+
+}
+
 
 void UpCvt_vSetFreq(void)
 {
 
     DWORD tempDWORD = 0;
+    DWORD tempDWORD2 = 0;
     float fFreq = 0;
                                                                                              
     // update LCD value to Freq/Atten/IP, TBD, update wrt power, ALC, Mute
@@ -86,7 +131,35 @@ void UpCvt_vSetFreq(void)
         fFreq =  Util_u8String2NFloat((char*)&LCDPrintBuffer[1][0]);
         tempDWORD = (DWORD)(fFreq * 1000.0f);// should deduct 950 000? 950M ~ 2150M
 
-		tempDWORD = nLO_FREQ - tempDWORD;
+		if((tempDWORD>=12750000)&&(tempDWORD<13250000))
+		{
+			u16LoFreq = 11750;
+			u8LoBand = 0;
+		}
+		else if((tempDWORD>=13250000)&&(tempDWORD<13750000))
+		{
+			u16LoFreq = 12250;
+			u8LoBand = 1;
+		}
+
+		else if((tempDWORD>=13750000)&&(tempDWORD<14250000))
+		{
+			u16LoFreq = 12750;
+			u8LoBand = 2;
+		}
+
+
+		else if((tempDWORD>=14250000)&&(tempDWORD<14500000))
+		{
+			u16LoFreq = 13250;
+			u8LoBand = 3;
+		}
+
+        tempDWORD2 = u16LoFreq;
+        
+        tempDWORD2 *= 1000.0f;
+        
+		tempDWORD = tempDWORD - tempDWORD2;//fs - lo*1000
         
         if ((tempDWORD != stConverter.stUp.u32OutputFreq) && (tempDWORD <= MAXRFFREQ) && (tempDWORD >= MINRFFREQ))
         {
@@ -94,7 +167,9 @@ void UpCvt_vSetFreq(void)
             stI2CUCMsg.unRfFreq.u32Freq = Util_u16DWORDSwap(tempDWORD);
             strncpy(RFFreqString1 ,LCDPrintBuffer[1], sizeof(RFFreqString1) );
             UpCvt_vSendI2C();
+			
         }
+		UpCvt_vSendLoI2C();
     }
 
 }

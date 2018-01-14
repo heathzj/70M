@@ -338,6 +338,18 @@ void SetI2C(unsigned char module)
 		
 		I2C_Send(I2C_REF_ADDR, (char*)&abTemp, length+1 );
 	}
+	else if(module == MODULE3)
+	{
+		length = sizeof(tstI2CMsg);
+        
+        stI2CLOMsg.u8CtrlStatus |= nI2C_WRITE;
+        
+		memcpy(abTemp+1,(char*)&stI2CLOMsg, length );
+		
+		I2C_Send(I2C_LO_ADDR, (char*)&abTemp, length+1 );
+
+
+	}
 
 	
 }
