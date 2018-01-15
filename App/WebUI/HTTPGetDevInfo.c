@@ -26,7 +26,7 @@ unsigned char RdI2CBuffer[I2CBUFFLENGTH];
 BYTE WebpageWriteI2CFlag = FALSE;
 
 extern WORD u16LoFreq;
-extern WORD u8LoBand;
+extern BYTE u8LoBand;
 
 
 static BOOL HTTPGet__boInfoConfig(void);

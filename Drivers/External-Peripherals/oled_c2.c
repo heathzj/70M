@@ -16,8 +16,8 @@ char LOStatusString1[9] = {"LOCKED  "};
 char LOStatusString2[9] = {"UNLOCKED"}; 
 
 /*JuZh 950.000MHz to 2150.000MHz */
-char RFFreqString1[12] = {"12750.000MHz"}; /* must update to 3 digits decimal */
-char RFFreqString2[12] = {"12750.000MHz"}; /* must update to 3 digits decimal */
+char RFFreqString1[13] = {"12750.000MHz"}; /* must update to 3 digits decimal */
+char RFFreqString2[13] = {"12750.000MHz"}; /* must update to 3 digits decimal */
 char AttenString1[8] = {"00.0 dB"}; 
 char AttenString2[8] = {"00.0 dB"}; 
 
@@ -68,7 +68,7 @@ tstI2CMsg stI2CLOMsg;
 
 BYTE u8ExtLO = 0;
 BYTE u8LoBand = 0;
-WORD u16LoFreq = 0;
+WORD u16LoFreq = 11750;
 
 
 char readflag = 0x00;
@@ -1054,7 +1054,7 @@ static BYTE SYS__u8UpdateUpConverter()
     {
         stConverter.stUp.u32OutputFreq = tempDWORD;
 		
-		sprintf(RFFreqString1,"%04ld.%03ldMHz",(u16LoFreq + stConverter.stUp.u32OutputFreq/1000),
+		sprintf(RFFreqString1,"%05ld.%03ldMHz",(u16LoFreq + stConverter.stUp.u32OutputFreq/1000),
 				((DWORD)u16LoFreq*1000 + stConverter.stUp.u32OutputFreq)%1000);	
     
         if(((CurrentMenu == nFREQ_MENU_A) || (CurrentMenu == MENU0)) && (TRUE != EditMode))

@@ -7,7 +7,7 @@
 
 
 extern WORD u16LoFreq;
-extern WORD u8LoBand;
+extern BYTE u8LoBand;
 
 
 void UpCvt_vPrintFreq(void)

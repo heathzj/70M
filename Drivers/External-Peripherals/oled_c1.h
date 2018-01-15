@@ -23,8 +23,8 @@ extern char FirmwareVersion[4];
 extern char LOStatusString1[9];
 extern char LOStatusString2[9]; 
 
-extern char RFFreqString1[12];
-extern char RFFreqString2[12]; 
+extern char RFFreqString1[13];
+extern char RFFreqString2[13]; 
 extern char AttenString1[8];
 extern char AttenString2[8];
 

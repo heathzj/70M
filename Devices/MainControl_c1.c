@@ -11,7 +11,7 @@ void Main_vPrintUpConverter(void)
 	
 	strcpypgm2ram(LCDPrintBuffer[1], "RF ");
 	strncat(LCDPrintBuffer[1], RFFreqString1,sizeof(RFFreqString1));
-	strcatpgm2ram(LCDPrintBuffer[1], " PWER ");
+	strcatpgm2ram(LCDPrintBuffer[1], " PWR ");
 	strncat(LCDPrintBuffer[1], sUCPower,sizeof(sUCPower));
 	strcatpgm2ram(LCDPrintBuffer[1], " LO ");
 	if (stConverter.stUp.u8Lock == 1)
